@@ -29,6 +29,8 @@ pub mod capabilities;
 pub mod macros; // Macros for reducing boilerplate
 pub mod shared; // Shared utilities for all providers // Compile-time capability verification
 pub mod thinking; // Thinking/reasoning provider trait
+pub mod transform; // Request/Response transformation engine
+pub mod context; // Request/Response context and metadata
 
 // Registry and unified provider
 pub mod base_provider;
