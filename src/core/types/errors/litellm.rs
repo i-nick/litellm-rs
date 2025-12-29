@@ -222,3 +222,349 @@ impl LiteLLMError {
 
 /// Result type alias
 pub type LiteLLMResult<T> = Result<T, LiteLLMError>;
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    // ==================== Constructor Tests ====================
+
+    #[test]
+    fn test_provider_error() {
+        let err = LiteLLMError::provider_error("openai", "API key invalid");
+        assert!(matches!(err, LiteLLMError::Provider { .. }));
+        assert!(err.to_string().contains("openai"));
+        assert!(err.to_string().contains("API key invalid"));
+    }
+
+    #[test]
+    fn test_provider_error_with_source() {
+        let source = std::io::Error::new(std::io::ErrorKind::Other, "source error");
+        let err =
+            LiteLLMError::provider_error_with_source("anthropic", "Connection failed", Box::new(source));
+
+        if let LiteLLMError::Provider { provider, message, source } = err {
+            assert_eq!(provider, "anthropic");
+            assert_eq!(message, "Connection failed");
+            assert!(source.is_some());
+        } else {
+            panic!("Expected Provider error");
+        }
+    }
+
+    #[test]
+    fn test_authentication_error() {
+        let err = LiteLLMError::authentication("Invalid API key");
+        assert!(matches!(err, LiteLLMError::Authentication(_)));
+        assert!(err.to_string().contains("Invalid API key"));
+    }
+
+    #[test]
+    fn test_authorization_error() {
+        let err = LiteLLMError::authorization("Insufficient permissions");
+        assert!(matches!(err, LiteLLMError::Authorization(_)));
+        assert!(err.to_string().contains("Insufficient permissions"));
+    }
+
+    #[test]
+    fn test_validation_error() {
+        let err = LiteLLMError::validation("model", "Model name required");
+        if let LiteLLMError::Validation { field, message } = err {
+            assert_eq!(field, "model");
+            assert_eq!(message, "Model name required");
+        } else {
+            panic!("Expected Validation error");
+        }
+    }
+
+    #[test]
+    fn test_rate_limit_error_with_retry() {
+        let err = LiteLLMError::rate_limit("Too many requests", Some(60));
+        if let LiteLLMError::RateLimit { message, retry_after } = err {
+            assert_eq!(message, "Too many requests");
+            assert_eq!(retry_after, Some(60));
+        } else {
+            panic!("Expected RateLimit error");
+        }
+    }
+
+    #[test]
+    fn test_rate_limit_error_without_retry() {
+        let err = LiteLLMError::rate_limit("Slow down", None);
+        if let LiteLLMError::RateLimit { retry_after, .. } = err {
+            assert!(retry_after.is_none());
+        } else {
+            panic!("Expected RateLimit error");
+        }
+    }
+
+    #[test]
+    fn test_network_error() {
+        let err = LiteLLMError::network("Connection refused");
+        assert!(matches!(err, LiteLLMError::Network(_)));
+        assert!(err.to_string().contains("Connection refused"));
+    }
+
+    #[test]
+    fn test_timeout_error() {
+        let err = LiteLLMError::timeout("completion request");
+        if let LiteLLMError::Timeout { operation } = err {
+            assert_eq!(operation, "completion request");
+        } else {
+            panic!("Expected Timeout error");
+        }
+    }
+
+    #[test]
+    fn test_parsing_error() {
+        let err = LiteLLMError::parsing("Invalid JSON response");
+        assert!(matches!(err, LiteLLMError::Parsing(_)));
+    }
+
+    #[test]
+    fn test_cache_error() {
+        let err = LiteLLMError::cache("Redis connection lost");
+        assert!(matches!(err, LiteLLMError::Cache(_)));
+    }
+
+    #[test]
+    fn test_internal_error() {
+        let err = LiteLLMError::internal("Unexpected state");
+        assert!(matches!(err, LiteLLMError::Internal(_)));
+    }
+
+    #[test]
+    fn test_service_unavailable_error() {
+        let err = LiteLLMError::service_unavailable("Backend overloaded");
+        assert!(matches!(err, LiteLLMError::ServiceUnavailable(_)));
+    }
+
+    #[test]
+    fn test_not_found_error() {
+        let err = LiteLLMError::not_found("model/gpt-5");
+        if let LiteLLMError::NotFound { resource } = err {
+            assert_eq!(resource, "model/gpt-5");
+        } else {
+            panic!("Expected NotFound error");
+        }
+    }
+
+    #[test]
+    fn test_unsupported_operation_error() {
+        let err = LiteLLMError::unsupported_operation("image generation");
+        if let LiteLLMError::UnsupportedOperation { operation } = err {
+            assert_eq!(operation, "image generation");
+        } else {
+            panic!("Expected UnsupportedOperation error");
+        }
+    }
+
+    // ==================== HTTP Status Mapping Tests ====================
+
+    #[test]
+    fn test_http_status_authentication() {
+        let err = LiteLLMError::authentication("Invalid");
+        assert_eq!(err.to_http_status(), 401);
+    }
+
+    #[test]
+    fn test_http_status_authorization() {
+        let err = LiteLLMError::authorization("Denied");
+        assert_eq!(err.to_http_status(), 403);
+    }
+
+    #[test]
+    fn test_http_status_not_found() {
+        let err = LiteLLMError::not_found("resource");
+        assert_eq!(err.to_http_status(), 404);
+    }
+
+    #[test]
+    fn test_http_status_unsupported_operation() {
+        let err = LiteLLMError::unsupported_operation("op");
+        assert_eq!(err.to_http_status(), 405);
+    }
+
+    #[test]
+    fn test_http_status_rate_limit() {
+        let err = LiteLLMError::rate_limit("limited", None);
+        assert_eq!(err.to_http_status(), 429);
+    }
+
+    #[test]
+    fn test_http_status_validation() {
+        let err = LiteLLMError::validation("field", "message");
+        assert_eq!(err.to_http_status(), 400);
+    }
+
+    #[test]
+    fn test_http_status_network() {
+        let err = LiteLLMError::network("failed");
+        assert_eq!(err.to_http_status(), 503);
+    }
+
+    #[test]
+    fn test_http_status_service_unavailable() {
+        let err = LiteLLMError::service_unavailable("down");
+        assert_eq!(err.to_http_status(), 503);
+    }
+
+    #[test]
+    fn test_http_status_timeout() {
+        let err = LiteLLMError::timeout("request");
+        assert_eq!(err.to_http_status(), 504);
+    }
+
+    #[test]
+    fn test_http_status_internal() {
+        let err = LiteLLMError::internal("error");
+        assert_eq!(err.to_http_status(), 500);
+    }
+
+    #[test]
+    fn test_http_status_provider() {
+        let err = LiteLLMError::provider_error("test", "error");
+        assert_eq!(err.to_http_status(), 500);
+    }
+
+    // ==================== Retryable Tests ====================
+
+    #[test]
+    fn test_is_retryable_network() {
+        let err = LiteLLMError::network("failed");
+        assert!(err.is_retryable());
+    }
+
+    #[test]
+    fn test_is_retryable_timeout() {
+        let err = LiteLLMError::timeout("request");
+        assert!(err.is_retryable());
+    }
+
+    #[test]
+    fn test_is_retryable_service_unavailable() {
+        let err = LiteLLMError::service_unavailable("down");
+        assert!(err.is_retryable());
+    }
+
+    #[test]
+    fn test_is_retryable_rate_limit() {
+        let err = LiteLLMError::rate_limit("limited", None);
+        assert!(err.is_retryable());
+    }
+
+    #[test]
+    fn test_is_retryable_provider() {
+        let err = LiteLLMError::provider_error("test", "error");
+        assert!(err.is_retryable());
+    }
+
+    #[test]
+    fn test_is_retryable_internal() {
+        let err = LiteLLMError::internal("error");
+        assert!(err.is_retryable());
+    }
+
+    #[test]
+    fn test_is_not_retryable_authentication() {
+        let err = LiteLLMError::authentication("invalid");
+        assert!(!err.is_retryable());
+    }
+
+    #[test]
+    fn test_is_not_retryable_authorization() {
+        let err = LiteLLMError::authorization("denied");
+        assert!(!err.is_retryable());
+    }
+
+    #[test]
+    fn test_is_not_retryable_validation() {
+        let err = LiteLLMError::validation("field", "message");
+        assert!(!err.is_retryable());
+    }
+
+    #[test]
+    fn test_is_not_retryable_not_found() {
+        let err = LiteLLMError::not_found("resource");
+        assert!(!err.is_retryable());
+    }
+
+    // ==================== Retry Delay Tests ====================
+
+    #[test]
+    fn test_retry_delay_rate_limit_with_retry_after() {
+        let err = LiteLLMError::rate_limit("limited", Some(30));
+        assert_eq!(err.retry_delay(), Some(30));
+    }
+
+    #[test]
+    fn test_retry_delay_rate_limit_without_retry_after() {
+        let err = LiteLLMError::rate_limit("limited", None);
+        assert_eq!(err.retry_delay(), None);
+    }
+
+    #[test]
+    fn test_retry_delay_network() {
+        let err = LiteLLMError::network("failed");
+        assert_eq!(err.retry_delay(), Some(1));
+    }
+
+    #[test]
+    fn test_retry_delay_timeout() {
+        let err = LiteLLMError::timeout("request");
+        assert_eq!(err.retry_delay(), Some(1));
+    }
+
+    #[test]
+    fn test_retry_delay_service_unavailable() {
+        let err = LiteLLMError::service_unavailable("down");
+        assert_eq!(err.retry_delay(), Some(5));
+    }
+
+    #[test]
+    fn test_retry_delay_internal() {
+        let err = LiteLLMError::internal("error");
+        assert_eq!(err.retry_delay(), Some(1));
+    }
+
+    #[test]
+    fn test_retry_delay_authentication() {
+        let err = LiteLLMError::authentication("invalid");
+        assert_eq!(err.retry_delay(), None);
+    }
+
+    // ==================== Display/Debug Tests ====================
+
+    #[test]
+    fn test_error_display_provider() {
+        let err = LiteLLMError::provider_error("openai", "API error");
+        let display = err.to_string();
+        assert!(display.contains("Provider error"));
+        assert!(display.contains("openai"));
+        assert!(display.contains("API error"));
+    }
+
+    #[test]
+    fn test_error_display_validation() {
+        let err = LiteLLMError::validation("temperature", "must be between 0 and 2");
+        let display = err.to_string();
+        assert!(display.contains("temperature"));
+        assert!(display.contains("must be between 0 and 2"));
+    }
+
+    #[test]
+    fn test_error_debug() {
+        let err = LiteLLMError::internal("test error");
+        let debug = format!("{:?}", err);
+        assert!(debug.contains("Internal"));
+    }
+
+    // ==================== From Implementations ====================
+
+    #[test]
+    fn test_from_serde_json_error() {
+        let json_err = serde_json::from_str::<serde_json::Value>("invalid json").unwrap_err();
+        let err: LiteLLMError = json_err.into();
+        assert!(matches!(err, LiteLLMError::Serialization(_)));
+    }
+}
