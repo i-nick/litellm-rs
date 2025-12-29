@@ -244,3 +244,434 @@ impl AzureEmbeddingUtils {
         })
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::core::types::requests::EmbeddingInput;
+
+    // ==================== Validation Tests ====================
+
+    #[test]
+    fn test_validate_request_success_text() {
+        let request = EmbeddingRequest {
+            model: "text-embedding-ada-002".to_string(),
+            input: EmbeddingInput::Text("Hello world".to_string()),
+            dimensions: None,
+            user: None,
+            encoding_format: None,
+            task_type: None,
+        };
+
+        let result = AzureEmbeddingUtils::validate_request(&request);
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_validate_request_success_array() {
+        let request = EmbeddingRequest {
+            model: "text-embedding-ada-002".to_string(),
+            input: EmbeddingInput::Array(vec!["Hello".to_string(), "World".to_string()]),
+            dimensions: None,
+            user: None,
+            encoding_format: None,
+            task_type: None,
+        };
+
+        let result = AzureEmbeddingUtils::validate_request(&request);
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_validate_request_empty_text() {
+        let request = EmbeddingRequest {
+            model: "text-embedding-ada-002".to_string(),
+            input: EmbeddingInput::Text("".to_string()),
+            dimensions: None,
+            user: None,
+            encoding_format: None,
+            task_type: None,
+        };
+
+        let result = AzureEmbeddingUtils::validate_request(&request);
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_validate_request_empty_array() {
+        let request = EmbeddingRequest {
+            model: "text-embedding-ada-002".to_string(),
+            input: EmbeddingInput::Array(vec![]),
+            dimensions: None,
+            user: None,
+            encoding_format: None,
+            task_type: None,
+        };
+
+        let result = AzureEmbeddingUtils::validate_request(&request);
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_validate_request_empty_model() {
+        let request = EmbeddingRequest {
+            model: "".to_string(),
+            input: EmbeddingInput::Text("Hello".to_string()),
+            dimensions: None,
+            user: None,
+            encoding_format: None,
+            task_type: None,
+        };
+
+        let result = AzureEmbeddingUtils::validate_request(&request);
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_validate_request_valid_dimensions() {
+        let request = EmbeddingRequest {
+            model: "text-embedding-3-large".to_string(),
+            input: EmbeddingInput::Text("Hello".to_string()),
+            dimensions: Some(256),
+            user: None,
+            encoding_format: None,
+            task_type: None,
+        };
+
+        let result = AzureEmbeddingUtils::validate_request(&request);
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_validate_request_dimensions_zero() {
+        let request = EmbeddingRequest {
+            model: "text-embedding-3-large".to_string(),
+            input: EmbeddingInput::Text("Hello".to_string()),
+            dimensions: Some(0),
+            user: None,
+            encoding_format: None,
+            task_type: None,
+        };
+
+        let result = AzureEmbeddingUtils::validate_request(&request);
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_validate_request_dimensions_too_large() {
+        let request = EmbeddingRequest {
+            model: "text-embedding-3-large".to_string(),
+            input: EmbeddingInput::Text("Hello".to_string()),
+            dimensions: Some(3073),
+            user: None,
+            encoding_format: None,
+            task_type: None,
+        };
+
+        let result = AzureEmbeddingUtils::validate_request(&request);
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_validate_request_max_dimensions() {
+        let request = EmbeddingRequest {
+            model: "text-embedding-3-large".to_string(),
+            input: EmbeddingInput::Text("Hello".to_string()),
+            dimensions: Some(3072),
+            user: None,
+            encoding_format: None,
+            task_type: None,
+        };
+
+        let result = AzureEmbeddingUtils::validate_request(&request);
+        assert!(result.is_ok());
+    }
+
+    // ==================== Transform Request Tests ====================
+
+    #[test]
+    fn test_transform_request_basic_text() {
+        let request = EmbeddingRequest {
+            model: "text-embedding-ada-002".to_string(),
+            input: EmbeddingInput::Text("Hello world".to_string()),
+            dimensions: None,
+            user: None,
+            encoding_format: None,
+            task_type: None,
+        };
+
+        let result = AzureEmbeddingUtils::transform_request(&request);
+        assert!(result.is_ok());
+
+        let body = result.unwrap();
+        assert_eq!(body["model"], "text-embedding-ada-002");
+        assert_eq!(body["input"], "Hello world");
+    }
+
+    #[test]
+    fn test_transform_request_array_input() {
+        let request = EmbeddingRequest {
+            model: "text-embedding-ada-002".to_string(),
+            input: EmbeddingInput::Array(vec!["Hello".to_string(), "World".to_string()]),
+            dimensions: None,
+            user: None,
+            encoding_format: None,
+            task_type: None,
+        };
+
+        let result = AzureEmbeddingUtils::transform_request(&request);
+        assert!(result.is_ok());
+
+        let body = result.unwrap();
+        assert!(body["input"].is_array());
+        assert_eq!(body["input"].as_array().unwrap().len(), 2);
+    }
+
+    #[test]
+    fn test_transform_request_with_dimensions() {
+        let request = EmbeddingRequest {
+            model: "text-embedding-3-large".to_string(),
+            input: EmbeddingInput::Text("Hello".to_string()),
+            dimensions: Some(256),
+            user: None,
+            encoding_format: None,
+            task_type: None,
+        };
+
+        let result = AzureEmbeddingUtils::transform_request(&request);
+        assert!(result.is_ok());
+
+        let body = result.unwrap();
+        assert_eq!(body["dimensions"], 256);
+    }
+
+    #[test]
+    fn test_transform_request_with_user() {
+        let request = EmbeddingRequest {
+            model: "text-embedding-ada-002".to_string(),
+            input: EmbeddingInput::Text("Hello".to_string()),
+            dimensions: None,
+            user: Some("user-123".to_string()),
+            encoding_format: None,
+            task_type: None,
+        };
+
+        let result = AzureEmbeddingUtils::transform_request(&request);
+        assert!(result.is_ok());
+
+        let body = result.unwrap();
+        assert_eq!(body["user"], "user-123");
+    }
+
+    #[test]
+    fn test_transform_request_with_encoding_format() {
+        let request = EmbeddingRequest {
+            model: "text-embedding-ada-002".to_string(),
+            input: EmbeddingInput::Text("Hello".to_string()),
+            dimensions: None,
+            user: None,
+            encoding_format: Some("base64".to_string()),
+            task_type: None,
+        };
+
+        let result = AzureEmbeddingUtils::transform_request(&request);
+        assert!(result.is_ok());
+
+        let body = result.unwrap();
+        assert_eq!(body["encoding_format"], "base64");
+    }
+
+    #[test]
+    fn test_transform_request_with_all_options() {
+        let request = EmbeddingRequest {
+            model: "text-embedding-3-large".to_string(),
+            input: EmbeddingInput::Text("Hello world".to_string()),
+            dimensions: Some(512),
+            user: Some("user-456".to_string()),
+            encoding_format: Some("float".to_string()),
+            task_type: None,
+        };
+
+        let result = AzureEmbeddingUtils::transform_request(&request);
+        assert!(result.is_ok());
+
+        let body = result.unwrap();
+        assert_eq!(body["model"], "text-embedding-3-large");
+        assert_eq!(body["input"], "Hello world");
+        assert_eq!(body["dimensions"], 512);
+        assert_eq!(body["user"], "user-456");
+        assert_eq!(body["encoding_format"], "float");
+    }
+
+    // ==================== Transform Response Tests ====================
+
+    #[test]
+    fn test_transform_response_basic() {
+        let response = json!({
+            "object": "list",
+            "data": [
+                {
+                    "object": "embedding",
+                    "index": 0,
+                    "embedding": [0.1, 0.2, 0.3, 0.4, 0.5]
+                }
+            ],
+            "model": "text-embedding-ada-002",
+            "usage": {
+                "prompt_tokens": 2,
+                "completion_tokens": 0,
+                "total_tokens": 2
+            }
+        });
+
+        let result = AzureEmbeddingUtils::transform_response(response, "text-embedding-ada-002");
+        assert!(result.is_ok());
+
+        let embedding_response = result.unwrap();
+        assert_eq!(embedding_response.object, "list");
+        assert_eq!(embedding_response.model, "text-embedding-ada-002");
+        assert_eq!(embedding_response.data.len(), 1);
+        assert_eq!(embedding_response.data[0].index, 0);
+        assert_eq!(embedding_response.data[0].embedding.len(), 5);
+    }
+
+    #[test]
+    fn test_transform_response_multiple_embeddings() {
+        let response = json!({
+            "data": [
+                {
+                    "index": 0,
+                    "embedding": [0.1, 0.2, 0.3]
+                },
+                {
+                    "index": 1,
+                    "embedding": [0.4, 0.5, 0.6]
+                }
+            ],
+            "model": "text-embedding-ada-002"
+        });
+
+        let result = AzureEmbeddingUtils::transform_response(response, "text-embedding-ada-002");
+        assert!(result.is_ok());
+
+        let embedding_response = result.unwrap();
+        assert_eq!(embedding_response.data.len(), 2);
+        assert_eq!(embedding_response.data[0].index, 0);
+        assert_eq!(embedding_response.data[1].index, 1);
+    }
+
+    #[test]
+    fn test_transform_response_with_usage() {
+        let response = json!({
+            "data": [
+                {
+                    "index": 0,
+                    "embedding": [0.1, 0.2]
+                }
+            ],
+            "model": "text-embedding-ada-002",
+            "usage": {
+                "prompt_tokens": 10,
+                "completion_tokens": 0,
+                "total_tokens": 10
+            }
+        });
+
+        let result = AzureEmbeddingUtils::transform_response(response, "text-embedding-ada-002");
+        assert!(result.is_ok());
+
+        let embedding_response = result.unwrap();
+        assert!(embedding_response.usage.is_some());
+        let usage = embedding_response.usage.unwrap();
+        assert_eq!(usage.prompt_tokens, 10);
+        assert_eq!(usage.total_tokens, 10);
+    }
+
+    #[test]
+    fn test_transform_response_without_usage() {
+        let response = json!({
+            "data": [
+                {
+                    "index": 0,
+                    "embedding": [0.1, 0.2]
+                }
+            ],
+            "model": "text-embedding-ada-002"
+        });
+
+        let result = AzureEmbeddingUtils::transform_response(response, "text-embedding-ada-002");
+        assert!(result.is_ok());
+
+        let embedding_response = result.unwrap();
+        assert!(embedding_response.usage.is_none());
+    }
+
+    #[test]
+    fn test_transform_response_missing_data() {
+        let response = json!({
+            "model": "text-embedding-ada-002"
+        });
+
+        let result = AzureEmbeddingUtils::transform_response(response, "text-embedding-ada-002");
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_transform_response_missing_embedding() {
+        let response = json!({
+            "data": [
+                {
+                    "index": 0
+                }
+            ],
+            "model": "text-embedding-ada-002"
+        });
+
+        let result = AzureEmbeddingUtils::transform_response(response, "text-embedding-ada-002");
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_transform_response_embedding_values() {
+        let response = json!({
+            "data": [
+                {
+                    "index": 0,
+                    "embedding": [0.123456789, -0.987654321, 0.0]
+                }
+            ]
+        });
+
+        let result = AzureEmbeddingUtils::transform_response(response, "test-model");
+        assert!(result.is_ok());
+
+        let embedding_response = result.unwrap();
+        let embedding = &embedding_response.data[0].embedding;
+        assert_eq!(embedding.len(), 3);
+        // Check values are approximately correct (f64 to f32 conversion)
+        assert!((embedding[0] - 0.123456789_f32).abs() < 0.0001);
+        assert!((embedding[1] - (-0.987654321_f32)).abs() < 0.0001);
+        assert!((embedding[2] - 0.0_f32).abs() < 0.0001);
+    }
+
+    // ==================== Handler Tests ====================
+
+    #[test]
+    fn test_embedding_handler_new_success() {
+        let config = AzureConfig::new()
+            .with_api_key("test-key".to_string())
+            .with_azure_endpoint("https://test.openai.azure.com".to_string());
+
+        let handler = AzureEmbeddingHandler::new(config);
+        assert!(handler.is_ok());
+    }
+
+    #[test]
+    fn test_embedding_handler_new_basic_config() {
+        let config = AzureConfig::new()
+            .with_azure_endpoint("https://test.openai.azure.com".to_string());
+
+        let handler = AzureEmbeddingHandler::new(config);
+        assert!(handler.is_ok());
+    }
+}
