@@ -245,3 +245,252 @@ impl CacheError {
         Self::Other(msg.into())
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    // ==================== CacheKey Tests ====================
+
+    #[test]
+    fn test_string_cache_key_to_cache_key() {
+        let key = "my-cache-key".to_string();
+        assert_eq!(key.to_cache_key(), "my-cache-key");
+    }
+
+    #[test]
+    fn test_string_cache_key_from_cache_key() {
+        let key = String::from_cache_key("restored-key").unwrap();
+        assert_eq!(key, "restored-key");
+    }
+
+    #[test]
+    fn test_string_cache_key_roundtrip() {
+        let original = "test-key-123".to_string();
+        let serialized = original.to_cache_key();
+        let restored = String::from_cache_key(&serialized).unwrap();
+        assert_eq!(original, restored);
+    }
+
+    // ==================== CacheValue Tests ====================
+
+    #[test]
+    fn test_cache_value_to_bytes_string() {
+        let value = "hello world".to_string();
+        let bytes = value.to_bytes();
+        assert!(bytes.is_ok());
+        assert!(!bytes.unwrap().is_empty());
+    }
+
+    #[test]
+    fn test_cache_value_from_bytes_string() {
+        let value = "test value".to_string();
+        let bytes = value.to_bytes().unwrap();
+        let restored = String::from_bytes(&bytes).unwrap();
+        assert_eq!(value, restored);
+    }
+
+    #[test]
+    fn test_cache_value_roundtrip_integer() {
+        let value: i32 = 42;
+        let bytes = value.to_bytes().unwrap();
+        let restored = i32::from_bytes(&bytes).unwrap();
+        assert_eq!(value, restored);
+    }
+
+    #[test]
+    fn test_cache_value_roundtrip_complex() {
+        #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+        struct TestData {
+            id: u64,
+            name: String,
+            active: bool,
+        }
+
+        let value = TestData {
+            id: 123,
+            name: "test".to_string(),
+            active: true,
+        };
+        let bytes = value.to_bytes().unwrap();
+        let restored = TestData::from_bytes(&bytes).unwrap();
+        assert_eq!(value, restored);
+    }
+
+    // ==================== CacheStats Tests ====================
+
+    #[test]
+    fn test_cache_stats_new() {
+        let stats = CacheStats::new();
+        assert_eq!(stats.hits, 0);
+        assert_eq!(stats.misses, 0);
+        assert_eq!(stats.key_count, 0);
+        assert_eq!(stats.memory_usage, 0);
+        assert!((stats.hit_rate - 0.0).abs() < f64::EPSILON);
+    }
+
+    #[test]
+    fn test_cache_stats_default() {
+        let stats = CacheStats::default();
+        assert_eq!(stats.hits, 0);
+        assert_eq!(stats.misses, 0);
+    }
+
+    #[test]
+    fn test_cache_stats_calculate_hit_rate_zero_total() {
+        let mut stats = CacheStats::new();
+        stats.calculate_hit_rate();
+        assert!((stats.hit_rate - 0.0).abs() < f64::EPSILON);
+    }
+
+    #[test]
+    fn test_cache_stats_calculate_hit_rate_all_hits() {
+        let mut stats = CacheStats::new();
+        stats.hits = 100;
+        stats.misses = 0;
+        stats.calculate_hit_rate();
+        assert!((stats.hit_rate - 1.0).abs() < f64::EPSILON);
+    }
+
+    #[test]
+    fn test_cache_stats_calculate_hit_rate_all_misses() {
+        let mut stats = CacheStats::new();
+        stats.hits = 0;
+        stats.misses = 100;
+        stats.calculate_hit_rate();
+        assert!((stats.hit_rate - 0.0).abs() < f64::EPSILON);
+    }
+
+    #[test]
+    fn test_cache_stats_calculate_hit_rate_mixed() {
+        let mut stats = CacheStats::new();
+        stats.hits = 75;
+        stats.misses = 25;
+        stats.calculate_hit_rate();
+        assert!((stats.hit_rate - 0.75).abs() < 0.001);
+    }
+
+    #[test]
+    fn test_cache_stats_clone() {
+        let mut stats = CacheStats::new();
+        stats.hits = 10;
+        stats.key_count = 5;
+        let cloned = stats.clone();
+        assert_eq!(stats.hits, cloned.hits);
+        assert_eq!(stats.key_count, cloned.key_count);
+    }
+
+    #[test]
+    fn test_cache_stats_debug() {
+        let stats = CacheStats::new();
+        let debug = format!("{:?}", stats);
+        assert!(debug.contains("CacheStats"));
+    }
+
+    // ==================== CacheEvent Tests ====================
+
+    #[test]
+    fn test_cache_event_hit() {
+        let event: CacheEvent<String, i32> = CacheEvent::Hit { key: "key1".to_string() };
+        assert!(matches!(event, CacheEvent::Hit { key } if key == "key1"));
+    }
+
+    #[test]
+    fn test_cache_event_miss() {
+        let event: CacheEvent<String, i32> = CacheEvent::Miss { key: "key2".to_string() };
+        assert!(matches!(event, CacheEvent::Miss { key } if key == "key2"));
+    }
+
+    #[test]
+    fn test_cache_event_set() {
+        let event = CacheEvent::Set { key: "key3".to_string(), value: 42 };
+        assert!(matches!(event, CacheEvent::Set { key, value } if key == "key3" && value == 42));
+    }
+
+    #[test]
+    fn test_cache_event_delete() {
+        let event: CacheEvent<String, i32> = CacheEvent::Delete { key: "key4".to_string() };
+        assert!(matches!(event, CacheEvent::Delete { key } if key == "key4"));
+    }
+
+    #[test]
+    fn test_cache_event_expire() {
+        let event: CacheEvent<String, i32> = CacheEvent::Expire { key: "key5".to_string() };
+        assert!(matches!(event, CacheEvent::Expire { key } if key == "key5"));
+    }
+
+    #[test]
+    fn test_cache_event_clear() {
+        let event: CacheEvent<String, i32> = CacheEvent::Clear;
+        assert!(matches!(event, CacheEvent::Clear));
+    }
+
+    #[test]
+    fn test_cache_event_clone() {
+        let event = CacheEvent::Set { key: "key".to_string(), value: 100 };
+        let cloned = event.clone();
+        assert!(matches!(cloned, CacheEvent::Set { key, value } if key == "key" && value == 100));
+    }
+
+    // ==================== CacheError Tests ====================
+
+    #[test]
+    fn test_cache_error_connection() {
+        let err = CacheError::connection("Redis connection failed");
+        assert!(matches!(err, CacheError::Connection(_)));
+        assert!(err.to_string().contains("Connection failed"));
+    }
+
+    #[test]
+    fn test_cache_error_key_not_found() {
+        let err = CacheError::key_not_found("missing-key");
+        assert!(matches!(err, CacheError::KeyNotFound { .. }));
+        assert!(err.to_string().contains("Key not found"));
+        assert!(err.to_string().contains("missing-key"));
+    }
+
+    #[test]
+    fn test_cache_error_cache_full() {
+        let err = CacheError::CacheFull;
+        assert!(err.to_string().contains("Cache is full"));
+    }
+
+    #[test]
+    fn test_cache_error_invalid_ttl() {
+        let err = CacheError::InvalidTTL { ttl_ms: 0 };
+        assert!(err.to_string().contains("Invalid TTL"));
+    }
+
+    #[test]
+    fn test_cache_error_timeout() {
+        let err = CacheError::Timeout;
+        assert!(err.to_string().contains("timeout"));
+    }
+
+    #[test]
+    fn test_cache_error_backend() {
+        let err = CacheError::backend("Backend failure");
+        assert!(matches!(err, CacheError::Backend(_)));
+        assert!(err.to_string().contains("Backend"));
+    }
+
+    #[test]
+    fn test_cache_error_other() {
+        let err = CacheError::other("Some other error");
+        assert!(matches!(err, CacheError::Other(_)));
+    }
+
+    #[test]
+    fn test_cache_error_display() {
+        let err = CacheError::connection("test error");
+        let display = format!("{}", err);
+        assert!(!display.is_empty());
+    }
+
+    #[test]
+    fn test_cache_error_debug() {
+        let err = CacheError::CacheFull;
+        let debug = format!("{:?}", err);
+        assert!(debug.contains("CacheFull"));
+    }
+}

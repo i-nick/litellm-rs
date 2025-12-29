@@ -214,3 +214,66 @@ pub enum MiddlewareError {
     #[error("Other middleware error: {0}")]
     Other(String),
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    // ==================== MiddlewareStack Tests ====================
+
+    #[test]
+    fn test_middleware_stack_new() {
+        let stack: MiddlewareStack<String, String> = MiddlewareStack::new();
+        assert!(stack.middlewares.is_empty());
+    }
+
+    #[test]
+    fn test_middleware_stack_default() {
+        let stack: MiddlewareStack<String, String> = MiddlewareStack::default();
+        assert!(stack.middlewares.is_empty());
+    }
+
+    // ==================== MiddlewareError Tests ====================
+
+    #[test]
+    fn test_middleware_error_execution_failed() {
+        let err = MiddlewareError::ExecutionFailed("Handler failed".to_string());
+        assert!(err.to_string().contains("Middleware chain execution failed"));
+        assert!(err.to_string().contains("Handler failed"));
+    }
+
+    #[test]
+    fn test_middleware_error_invalid_configuration() {
+        let err = MiddlewareError::InvalidConfiguration("Missing required field".to_string());
+        assert!(err.to_string().contains("Invalid middleware configuration"));
+        assert!(err.to_string().contains("Missing required field"));
+    }
+
+    #[test]
+    fn test_middleware_error_timeout() {
+        let err = MiddlewareError::Timeout { timeout_ms: 5000 };
+        assert!(err.to_string().contains("timeout"));
+        assert!(err.to_string().contains("5000"));
+    }
+
+    #[test]
+    fn test_middleware_error_other() {
+        let err = MiddlewareError::Other("Unknown error".to_string());
+        assert!(err.to_string().contains("Unknown error"));
+    }
+
+    #[test]
+    fn test_middleware_error_display() {
+        let err = MiddlewareError::ExecutionFailed("test".to_string());
+        let display = format!("{}", err);
+        assert!(!display.is_empty());
+    }
+
+    #[test]
+    fn test_middleware_error_debug() {
+        let err = MiddlewareError::Timeout { timeout_ms: 1000 };
+        let debug = format!("{:?}", err);
+        assert!(debug.contains("Timeout"));
+        assert!(debug.contains("1000"));
+    }
+}
