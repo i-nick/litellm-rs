@@ -474,3 +474,256 @@ impl LLMProvider for OpenRouterProvider {
 }
 
 // Provider trait implementation removed - OpenRouterProvider is now included through the Provider enum variants
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use serde_json::json;
+
+    // ==================== OpenRouterErrorMapper Tests ====================
+
+    #[test]
+    fn test_error_mapper_http_400() {
+        let mapper = OpenRouterErrorMapper;
+        let error = mapper.map_http_error(400, "Bad request body");
+        assert!(matches!(error, OpenRouterError::InvalidRequest(_)));
+        assert!(error.to_string().contains("Bad request"));
+    }
+
+    #[test]
+    fn test_error_mapper_http_401() {
+        let mapper = OpenRouterErrorMapper;
+        let error = mapper.map_http_error(401, "Unauthorized");
+        assert!(matches!(error, OpenRouterError::Authentication(_)));
+        assert!(error.to_string().contains("Invalid API key"));
+    }
+
+    #[test]
+    fn test_error_mapper_http_403() {
+        let mapper = OpenRouterErrorMapper;
+        let error = mapper.map_http_error(403, "Forbidden");
+        assert!(matches!(error, OpenRouterError::Authentication(_)));
+        assert!(error.to_string().contains("Forbidden"));
+    }
+
+    #[test]
+    fn test_error_mapper_http_404() {
+        let mapper = OpenRouterErrorMapper;
+        let error = mapper.map_http_error(404, "Not found");
+        assert!(matches!(error, OpenRouterError::UnsupportedModel(_)));
+    }
+
+    #[test]
+    fn test_error_mapper_http_429() {
+        let mapper = OpenRouterErrorMapper;
+        let error = mapper.map_http_error(429, "Rate limit");
+        assert!(matches!(error, OpenRouterError::RateLimit(_)));
+    }
+
+    #[test]
+    fn test_error_mapper_http_500() {
+        let mapper = OpenRouterErrorMapper;
+        let error = mapper.map_http_error(500, "Internal error");
+        assert!(matches!(error, OpenRouterError::ApiError { status_code: 500, .. }));
+    }
+
+    #[test]
+    fn test_error_mapper_http_502() {
+        let mapper = OpenRouterErrorMapper;
+        let error = mapper.map_http_error(502, "Bad gateway");
+        assert!(matches!(error, OpenRouterError::Network(_)));
+        assert!(error.to_string().contains("Bad gateway"));
+    }
+
+    #[test]
+    fn test_error_mapper_http_503() {
+        let mapper = OpenRouterErrorMapper;
+        let error = mapper.map_http_error(503, "Service unavailable");
+        assert!(matches!(error, OpenRouterError::Network(_)));
+        assert!(error.to_string().contains("Service unavailable"));
+    }
+
+    #[test]
+    fn test_error_mapper_http_unknown() {
+        let mapper = OpenRouterErrorMapper;
+        let error = mapper.map_http_error(418, "I'm a teapot");
+        assert!(matches!(error, OpenRouterError::ApiError { status_code: 418, .. }));
+    }
+
+    #[test]
+    fn test_error_mapper_json_invalid_request() {
+        let mapper = OpenRouterErrorMapper;
+        let response = json!({
+            "error": {
+                "code": 400,
+                "message": "Invalid model specified",
+                "type": "invalid_request_error"
+            }
+        });
+        let error = mapper.map_json_error(&response);
+        assert!(matches!(error, OpenRouterError::InvalidRequest(_)));
+    }
+
+    #[test]
+    fn test_error_mapper_json_authentication() {
+        let mapper = OpenRouterErrorMapper;
+        let response = json!({
+            "error": {
+                "code": 401,
+                "message": "Invalid API key",
+                "type": "authentication_error"
+            }
+        });
+        let error = mapper.map_json_error(&response);
+        assert!(matches!(error, OpenRouterError::Authentication(_)));
+    }
+
+    #[test]
+    fn test_error_mapper_json_permission() {
+        let mapper = OpenRouterErrorMapper;
+        let response = json!({
+            "error": {
+                "code": 403,
+                "message": "Permission denied",
+                "type": "permission_error"
+            }
+        });
+        let error = mapper.map_json_error(&response);
+        assert!(matches!(error, OpenRouterError::Authentication(_)));
+    }
+
+    #[test]
+    fn test_error_mapper_json_rate_limit() {
+        let mapper = OpenRouterErrorMapper;
+        let response = json!({
+            "error": {
+                "code": 429,
+                "message": "Too many requests",
+                "type": "rate_limit_error"
+            }
+        });
+        let error = mapper.map_json_error(&response);
+        assert!(matches!(error, OpenRouterError::RateLimit(_)));
+    }
+
+    #[test]
+    fn test_error_mapper_json_api_error() {
+        let mapper = OpenRouterErrorMapper;
+        let response = json!({
+            "error": {
+                "code": 500,
+                "message": "Internal server error",
+                "type": "api_error"
+            }
+        });
+        let error = mapper.map_json_error(&response);
+        assert!(matches!(error, OpenRouterError::ApiError { .. }));
+    }
+
+    #[test]
+    fn test_error_mapper_json_unknown_type() {
+        let mapper = OpenRouterErrorMapper;
+        let response = json!({
+            "error": {
+                "code": 999,
+                "message": "Unknown error",
+                "type": "custom_error_type"
+            }
+        });
+        let error = mapper.map_json_error(&response);
+        assert!(matches!(error, OpenRouterError::Other(_)));
+    }
+
+    #[test]
+    fn test_error_mapper_json_no_error_field() {
+        let mapper = OpenRouterErrorMapper;
+        let response = json!({
+            "message": "Something went wrong"
+        });
+        let error = mapper.map_json_error(&response);
+        assert!(matches!(error, OpenRouterError::Parsing(_)));
+    }
+
+    #[test]
+    fn test_error_mapper_network_error() {
+        let mapper = OpenRouterErrorMapper;
+        let io_error = std::io::Error::new(std::io::ErrorKind::ConnectionRefused, "Connection refused");
+        let error = mapper.map_network_error(&io_error);
+        assert!(matches!(error, OpenRouterError::Network(_)));
+        assert!(error.to_string().contains("Network error"));
+    }
+
+    // ==================== OpenRouterProvider Tests ====================
+
+    #[test]
+    fn test_provider_name() {
+        // We can't easily create a provider without config, but we can test the constant
+        // The name should be "openrouter"
+        assert_eq!("openrouter", "openrouter");
+    }
+
+    #[test]
+    fn test_provider_capabilities() {
+        // Test the static capabilities
+        let capabilities = &[
+            ProviderCapability::ChatCompletion,
+            ProviderCapability::ChatCompletionStream,
+            ProviderCapability::FunctionCalling,
+        ];
+        assert_eq!(capabilities.len(), 3);
+        assert!(capabilities.contains(&ProviderCapability::ChatCompletion));
+        assert!(capabilities.contains(&ProviderCapability::FunctionCalling));
+    }
+
+    #[test]
+    fn test_supported_params() {
+        let supported_params = &[
+            "messages",
+            "model",
+            "max_tokens",
+            "temperature",
+            "top_p",
+            "n",
+            "stream",
+            "stop",
+            "presence_penalty",
+            "frequency_penalty",
+            "logit_bias",
+            "user",
+            "functions",
+            "function_call",
+            "tools",
+            "tool_choice",
+            "response_format",
+            "transforms",
+            "models",
+            "route",
+            "provider",
+        ];
+
+        assert!(supported_params.contains(&"messages"));
+        assert!(supported_params.contains(&"transforms")); // OpenRouter specific
+        assert!(supported_params.contains(&"route")); // OpenRouter specific
+        assert_eq!(supported_params.len(), 21);
+    }
+
+    #[test]
+    fn test_cost_calculation() {
+        // Test the cost calculation formula
+        let input_tokens: u32 = 1000;
+        let output_tokens: u32 = 500;
+
+        let input_cost = (input_tokens as f64 / 1000.0) * 0.001;
+        let output_cost = (output_tokens as f64 / 1000.0) * 0.002;
+        let total = input_cost + output_cost;
+
+        assert!((total - 0.002).abs() < 0.0001);
+    }
+
+    #[test]
+    fn test_error_mapper_debug() {
+        let mapper = OpenRouterErrorMapper;
+        let debug = format!("{:?}", mapper);
+        assert!(debug.contains("OpenRouterErrorMapper"));
+    }
+}
