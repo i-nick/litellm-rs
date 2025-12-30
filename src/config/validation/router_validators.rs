@@ -61,3 +61,204 @@ impl Validate for LoadBalancerConfig {
         Ok(())
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use super::super::trait_def::Validate;  // Import the trait explicitly
+
+    // Helper to call the Validate trait method explicitly
+    fn validate_config<T: Validate>(config: &T) -> Result<(), String> {
+        Validate::validate(config)
+    }
+
+    fn create_valid_circuit_breaker_config() -> CircuitBreakerConfig {
+        CircuitBreakerConfig {
+            failure_threshold: 5,
+            recovery_timeout: 60,
+            min_requests: 10,
+            ..Default::default()
+        }
+    }
+
+    fn create_valid_retry_config() -> RetryConfig {
+        RetryConfig {
+            base_delay: 100,
+            max_delay: 1000,
+            backoff_multiplier: 2.0,
+            ..Default::default()
+        }
+    }
+
+    // ==================== CircuitBreakerConfig Validation Tests ====================
+
+    #[test]
+    fn test_circuit_breaker_config_valid() {
+        let config = create_valid_circuit_breaker_config();
+        assert!(validate_config(&config).is_ok());
+    }
+
+    #[test]
+    fn test_circuit_breaker_zero_failure_threshold() {
+        let mut config = create_valid_circuit_breaker_config();
+        config.failure_threshold = 0;
+
+        let result = validate_config(&config);
+        assert!(result.is_err());
+        assert!(result.unwrap_err().contains("failure threshold"));
+    }
+
+    #[test]
+    fn test_circuit_breaker_high_failure_threshold() {
+        let mut config = create_valid_circuit_breaker_config();
+        config.failure_threshold = 100;
+
+        assert!(validate_config(&config).is_ok());
+    }
+
+    #[test]
+    fn test_circuit_breaker_zero_recovery_timeout() {
+        let mut config = create_valid_circuit_breaker_config();
+        config.recovery_timeout = 0;
+
+        let result = validate_config(&config);
+        assert!(result.is_err());
+        assert!(result.unwrap_err().contains("recovery timeout"));
+    }
+
+    #[test]
+    fn test_circuit_breaker_long_recovery_timeout() {
+        let mut config = create_valid_circuit_breaker_config();
+        config.recovery_timeout = 3600; // 1 hour
+
+        assert!(validate_config(&config).is_ok());
+    }
+
+    #[test]
+    fn test_circuit_breaker_zero_min_requests() {
+        let mut config = create_valid_circuit_breaker_config();
+        config.min_requests = 0;
+
+        let result = validate_config(&config);
+        assert!(result.is_err());
+        assert!(result.unwrap_err().contains("min requests"));
+    }
+
+    #[test]
+    fn test_circuit_breaker_high_min_requests() {
+        let mut config = create_valid_circuit_breaker_config();
+        config.min_requests = 1000;
+
+        assert!(validate_config(&config).is_ok());
+    }
+
+    // ==================== RetryConfig Validation Tests ====================
+
+    #[test]
+    fn test_retry_config_valid() {
+        let config = create_valid_retry_config();
+        assert!(validate_config(&config).is_ok());
+    }
+
+    #[test]
+    fn test_retry_zero_base_delay() {
+        let mut config = create_valid_retry_config();
+        config.base_delay = 0;
+
+        let result = validate_config(&config);
+        assert!(result.is_err());
+        assert!(result.unwrap_err().contains("base delay"));
+    }
+
+    #[test]
+    fn test_retry_max_delay_equals_base_delay() {
+        let mut config = create_valid_retry_config();
+        config.base_delay = 100;
+        config.max_delay = 100;
+
+        let result = validate_config(&config);
+        assert!(result.is_err());
+        assert!(result.unwrap_err().contains("max delay must be greater than base delay"));
+    }
+
+    #[test]
+    fn test_retry_max_delay_less_than_base_delay() {
+        let mut config = create_valid_retry_config();
+        config.base_delay = 200;
+        config.max_delay = 100;
+
+        let result = validate_config(&config);
+        assert!(result.is_err());
+        assert!(result.unwrap_err().contains("max delay must be greater than base delay"));
+    }
+
+    #[test]
+    fn test_retry_valid_delay_range() {
+        let mut config = create_valid_retry_config();
+        config.base_delay = 100;
+        config.max_delay = 10000;
+
+        assert!(validate_config(&config).is_ok());
+    }
+
+    #[test]
+    fn test_retry_backoff_multiplier_exactly_one() {
+        let mut config = create_valid_retry_config();
+        config.backoff_multiplier = 1.0;
+
+        let result = validate_config(&config);
+        assert!(result.is_err());
+        assert!(result.unwrap_err().contains("backoff multiplier must be greater than 1.0"));
+    }
+
+    #[test]
+    fn test_retry_backoff_multiplier_less_than_one() {
+        let mut config = create_valid_retry_config();
+        config.backoff_multiplier = 0.5;
+
+        let result = validate_config(&config);
+        assert!(result.is_err());
+        assert!(result.unwrap_err().contains("backoff multiplier must be greater than 1.0"));
+    }
+
+    #[test]
+    fn test_retry_backoff_multiplier_valid() {
+        let mut config = create_valid_retry_config();
+        config.backoff_multiplier = 1.5;
+
+        assert!(validate_config(&config).is_ok());
+    }
+
+    #[test]
+    fn test_retry_backoff_multiplier_high() {
+        let mut config = create_valid_retry_config();
+        config.backoff_multiplier = 10.0;
+
+        assert!(validate_config(&config).is_ok());
+    }
+
+    // ==================== RouterConfig Validation Tests ====================
+
+    #[test]
+    fn test_router_config_valid() {
+        let config = RouterConfig::default();
+        assert!(validate_config(&config).is_ok());
+    }
+
+    #[test]
+    fn test_router_config_with_invalid_circuit_breaker() {
+        let mut config = RouterConfig::default();
+        config.circuit_breaker.failure_threshold = 0;
+
+        let result = validate_config(&config);
+        assert!(result.is_err());
+    }
+
+    // ==================== LoadBalancerConfig Validation Tests ====================
+
+    #[test]
+    fn test_load_balancer_config_valid() {
+        let config = LoadBalancerConfig::default();
+        assert!(validate_config(&config).is_ok());
+    }
+}
