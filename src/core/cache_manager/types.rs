@@ -233,3 +233,460 @@ impl AtomicCacheStats {
         self.total_size_bytes.store(0, Ordering::Relaxed);
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::thread;
+
+    // ==================== CacheConfig Tests ====================
+
+    #[test]
+    fn test_cache_config_default() {
+        let config = CacheConfig::default();
+        assert_eq!(config.max_entries, 10000);
+        assert_eq!(config.default_ttl, Duration::from_secs(3600));
+        assert!(config.enable_semantic);
+        assert!((config.similarity_threshold - 0.95).abs() < 0.001);
+        assert_eq!(config.min_prompt_length, 10);
+        assert!(config.enable_compression);
+    }
+
+    #[test]
+    fn test_cache_config_custom() {
+        let config = CacheConfig {
+            max_entries: 5000,
+            default_ttl: Duration::from_secs(1800),
+            enable_semantic: false,
+            similarity_threshold: 0.8,
+            min_prompt_length: 20,
+            enable_compression: false,
+        };
+        assert_eq!(config.max_entries, 5000);
+        assert!(!config.enable_semantic);
+    }
+
+    #[test]
+    fn test_cache_config_clone() {
+        let config1 = CacheConfig::default();
+        let config2 = config1.clone();
+        assert_eq!(config1.max_entries, config2.max_entries);
+        assert_eq!(config1.default_ttl, config2.default_ttl);
+    }
+
+    #[test]
+    fn test_cache_config_serialize() {
+        let config = CacheConfig::default();
+        let json = serde_json::to_string(&config).unwrap();
+        assert!(json.contains("max_entries"));
+        assert!(json.contains("10000"));
+    }
+
+    #[test]
+    fn test_cache_config_deserialize() {
+        let json = r#"{
+            "max_entries": 5000,
+            "default_ttl": {"secs": 600, "nanos": 0},
+            "enable_semantic": false,
+            "similarity_threshold": 0.9,
+            "min_prompt_length": 5,
+            "enable_compression": true
+        }"#;
+        let config: CacheConfig = serde_json::from_str(json).unwrap();
+        assert_eq!(config.max_entries, 5000);
+        assert!(!config.enable_semantic);
+    }
+
+    // ==================== CacheEntry Tests ====================
+
+    #[test]
+    fn test_cache_entry_new() {
+        let entry = CacheEntry::new("test value", Duration::from_secs(60), 100);
+        assert_eq!(entry.value, "test value");
+        assert_eq!(entry.access_count, 0);
+        assert_eq!(entry.size_bytes, 100);
+    }
+
+    #[test]
+    fn test_cache_entry_not_expired() {
+        let entry = CacheEntry::new("test", Duration::from_secs(3600), 10);
+        assert!(!entry.is_expired());
+    }
+
+    #[test]
+    fn test_cache_entry_expired() {
+        let entry = CacheEntry::new("test", Duration::from_millis(1), 10);
+        thread::sleep(Duration::from_millis(10));
+        assert!(entry.is_expired());
+    }
+
+    #[test]
+    fn test_cache_entry_mark_accessed() {
+        let mut entry = CacheEntry::new("test", Duration::from_secs(60), 10);
+        assert_eq!(entry.access_count, 0);
+
+        entry.mark_accessed();
+        assert_eq!(entry.access_count, 1);
+
+        entry.mark_accessed();
+        entry.mark_accessed();
+        assert_eq!(entry.access_count, 3);
+    }
+
+    #[test]
+    fn test_cache_entry_age() {
+        let entry = CacheEntry::new("test", Duration::from_secs(60), 10);
+        thread::sleep(Duration::from_millis(10));
+        let age = entry.age();
+        assert!(age >= Duration::from_millis(10));
+    }
+
+    #[test]
+    fn test_cache_entry_clone() {
+        let entry1 = CacheEntry::new(42, Duration::from_secs(60), 8);
+        let entry2 = entry1.clone();
+        assert_eq!(entry1.value, entry2.value);
+        assert_eq!(entry1.size_bytes, entry2.size_bytes);
+    }
+
+    #[test]
+    fn test_cache_entry_with_struct_value() {
+        #[derive(Clone, Debug, PartialEq)]
+        struct Response {
+            content: String,
+            tokens: u32,
+        }
+
+        let response = Response {
+            content: "Hello".to_string(),
+            tokens: 10,
+        };
+        let entry = CacheEntry::new(response.clone(), Duration::from_secs(60), 50);
+        assert_eq!(entry.value, response);
+    }
+
+    // ==================== CacheKey Tests ====================
+
+    #[test]
+    fn test_cache_key_creation() {
+        let key = CacheKey {
+            model: Arc::from("gpt-4"),
+            request_hash: 12345,
+            user_id: None,
+        };
+        assert_eq!(&*key.model, "gpt-4");
+        assert_eq!(key.request_hash, 12345);
+        assert!(key.user_id.is_none());
+    }
+
+    #[test]
+    fn test_cache_key_with_user_id() {
+        let key = CacheKey {
+            model: Arc::from("gpt-4"),
+            request_hash: 12345,
+            user_id: Some(Arc::from("user-123")),
+        };
+        assert_eq!(key.user_id, Some(Arc::from("user-123")));
+    }
+
+    #[test]
+    fn test_cache_key_equality() {
+        let key1 = CacheKey {
+            model: Arc::from("gpt-4"),
+            request_hash: 12345,
+            user_id: None,
+        };
+        let key2 = CacheKey {
+            model: Arc::from("gpt-4"),
+            request_hash: 12345,
+            user_id: None,
+        };
+        assert_eq!(key1, key2);
+    }
+
+    #[test]
+    fn test_cache_key_inequality_model() {
+        let key1 = CacheKey {
+            model: Arc::from("gpt-4"),
+            request_hash: 12345,
+            user_id: None,
+        };
+        let key2 = CacheKey {
+            model: Arc::from("gpt-3.5"),
+            request_hash: 12345,
+            user_id: None,
+        };
+        assert_ne!(key1, key2);
+    }
+
+    #[test]
+    fn test_cache_key_inequality_hash() {
+        let key1 = CacheKey {
+            model: Arc::from("gpt-4"),
+            request_hash: 12345,
+            user_id: None,
+        };
+        let key2 = CacheKey {
+            model: Arc::from("gpt-4"),
+            request_hash: 54321,
+            user_id: None,
+        };
+        assert_ne!(key1, key2);
+    }
+
+    #[test]
+    fn test_cache_key_hash_trait() {
+        use std::collections::HashSet;
+
+        let key1 = CacheKey {
+            model: Arc::from("gpt-4"),
+            request_hash: 12345,
+            user_id: None,
+        };
+        let key2 = key1.clone();
+
+        let mut set = HashSet::new();
+        set.insert(key1);
+        assert!(set.contains(&key2));
+    }
+
+    #[test]
+    fn test_cache_key_clone() {
+        let key1 = CacheKey {
+            model: Arc::from("gpt-4"),
+            request_hash: 12345,
+            user_id: Some(Arc::from("user-1")),
+        };
+        let key2 = key1.clone();
+        assert_eq!(key1, key2);
+    }
+
+    // ==================== CacheStats Tests ====================
+
+    #[test]
+    fn test_cache_stats_default() {
+        let stats = CacheStats::default();
+        assert_eq!(stats.l1_hits, 0);
+        assert_eq!(stats.l1_misses, 0);
+        assert_eq!(stats.l2_hits, 0);
+        assert_eq!(stats.l2_misses, 0);
+        assert_eq!(stats.semantic_hits, 0);
+        assert_eq!(stats.semantic_misses, 0);
+        assert_eq!(stats.evictions, 0);
+        assert_eq!(stats.total_size_bytes, 0);
+    }
+
+    #[test]
+    fn test_cache_stats_hit_rate_zero() {
+        let stats = CacheStats::default();
+        assert_eq!(stats.hit_rate(), 0.0);
+    }
+
+    #[test]
+    fn test_cache_stats_hit_rate_100_percent() {
+        let stats = CacheStats {
+            l1_hits: 100,
+            l1_misses: 0,
+            l2_hits: 0,
+            l2_misses: 0,
+            semantic_hits: 0,
+            semantic_misses: 0,
+            evictions: 0,
+            total_size_bytes: 0,
+        };
+        assert_eq!(stats.hit_rate(), 1.0);
+    }
+
+    #[test]
+    fn test_cache_stats_hit_rate_50_percent() {
+        let stats = CacheStats {
+            l1_hits: 50,
+            l1_misses: 50,
+            l2_hits: 0,
+            l2_misses: 0,
+            semantic_hits: 0,
+            semantic_misses: 0,
+            evictions: 0,
+            total_size_bytes: 0,
+        };
+        assert_eq!(stats.hit_rate(), 0.5);
+    }
+
+    #[test]
+    fn test_cache_stats_hit_rate_combined() {
+        let stats = CacheStats {
+            l1_hits: 30,
+            l1_misses: 20,
+            l2_hits: 20,
+            l2_misses: 10,
+            semantic_hits: 10,
+            semantic_misses: 10,
+            evictions: 0,
+            total_size_bytes: 0,
+        };
+        // Total hits = 30 + 20 + 10 = 60
+        // Total requests = 60 + 20 + 10 + 10 = 100
+        assert_eq!(stats.hit_rate(), 0.6);
+    }
+
+    #[test]
+    fn test_cache_stats_clone() {
+        let stats1 = CacheStats {
+            l1_hits: 100,
+            l1_misses: 50,
+            l2_hits: 25,
+            l2_misses: 10,
+            semantic_hits: 5,
+            semantic_misses: 2,
+            evictions: 10,
+            total_size_bytes: 1024,
+        };
+        let stats2 = stats1.clone();
+        assert_eq!(stats1.l1_hits, stats2.l1_hits);
+        assert_eq!(stats1.total_size_bytes, stats2.total_size_bytes);
+    }
+
+    // ==================== AtomicCacheStats Tests ====================
+
+    #[test]
+    fn test_atomic_cache_stats_default() {
+        let stats = AtomicCacheStats::default();
+        assert_eq!(stats.l1_hits.load(Ordering::Relaxed), 0);
+        assert_eq!(stats.l1_misses.load(Ordering::Relaxed), 0);
+    }
+
+    #[test]
+    fn test_atomic_cache_stats_increment() {
+        let stats = AtomicCacheStats::default();
+        stats.l1_hits.fetch_add(1, Ordering::Relaxed);
+        stats.l1_hits.fetch_add(1, Ordering::Relaxed);
+        assert_eq!(stats.l1_hits.load(Ordering::Relaxed), 2);
+    }
+
+    #[test]
+    fn test_atomic_cache_stats_snapshot() {
+        let atomic_stats = AtomicCacheStats::default();
+        atomic_stats.l1_hits.store(100, Ordering::Relaxed);
+        atomic_stats.l1_misses.store(50, Ordering::Relaxed);
+        atomic_stats.l2_hits.store(25, Ordering::Relaxed);
+        atomic_stats.evictions.store(10, Ordering::Relaxed);
+        atomic_stats.total_size_bytes.store(1024, Ordering::Relaxed);
+
+        let snapshot = atomic_stats.snapshot();
+        assert_eq!(snapshot.l1_hits, 100);
+        assert_eq!(snapshot.l1_misses, 50);
+        assert_eq!(snapshot.l2_hits, 25);
+        assert_eq!(snapshot.evictions, 10);
+        assert_eq!(snapshot.total_size_bytes, 1024);
+    }
+
+    #[test]
+    fn test_atomic_cache_stats_reset() {
+        let stats = AtomicCacheStats::default();
+        stats.l1_hits.store(100, Ordering::Relaxed);
+        stats.l1_misses.store(50, Ordering::Relaxed);
+        stats.evictions.store(10, Ordering::Relaxed);
+        stats.total_size_bytes.store(1024, Ordering::Relaxed);
+
+        stats.reset();
+
+        assert_eq!(stats.l1_hits.load(Ordering::Relaxed), 0);
+        assert_eq!(stats.l1_misses.load(Ordering::Relaxed), 0);
+        assert_eq!(stats.evictions.load(Ordering::Relaxed), 0);
+        assert_eq!(stats.total_size_bytes.load(Ordering::Relaxed), 0);
+    }
+
+    #[test]
+    fn test_atomic_cache_stats_concurrent_updates() {
+        use std::sync::Arc;
+
+        let stats = Arc::new(AtomicCacheStats::default());
+        let mut handles = vec![];
+
+        for _ in 0..10 {
+            let stats_clone = Arc::clone(&stats);
+            let handle = thread::spawn(move || {
+                for _ in 0..100 {
+                    stats_clone.l1_hits.fetch_add(1, Ordering::Relaxed);
+                }
+            });
+            handles.push(handle);
+        }
+
+        for handle in handles {
+            handle.join().unwrap();
+        }
+
+        assert_eq!(stats.l1_hits.load(Ordering::Relaxed), 1000);
+    }
+
+    #[test]
+    fn test_atomic_cache_stats_snapshot_independence() {
+        let atomic_stats = AtomicCacheStats::default();
+        atomic_stats.l1_hits.store(100, Ordering::Relaxed);
+
+        let snapshot = atomic_stats.snapshot();
+
+        // Modify atomic stats after snapshot
+        atomic_stats.l1_hits.store(200, Ordering::Relaxed);
+
+        // Snapshot should retain original value
+        assert_eq!(snapshot.l1_hits, 100);
+        assert_eq!(atomic_stats.l1_hits.load(Ordering::Relaxed), 200);
+    }
+
+    // ==================== SemanticCacheMap Type Alias Test ====================
+
+    #[test]
+    fn test_semantic_cache_map_type() {
+        let mut map: SemanticCacheMap = HashMap::new();
+
+        let key = CacheKey {
+            model: Arc::from("gpt-4"),
+            request_hash: 12345,
+            user_id: None,
+        };
+
+        map.insert("embedding_hash".to_string(), vec![(key.clone(), 0.95)]);
+
+        assert!(map.contains_key("embedding_hash"));
+        let entries = map.get("embedding_hash").unwrap();
+        assert_eq!(entries.len(), 1);
+        assert_eq!(entries[0].0, key);
+        assert!((entries[0].1 - 0.95).abs() < 0.001);
+    }
+
+    // ==================== Integration Tests ====================
+
+    #[test]
+    fn test_cache_entry_workflow() {
+        let config = CacheConfig::default();
+        let mut entry = CacheEntry::new("cached response", config.default_ttl, 50);
+
+        assert!(!entry.is_expired());
+        assert_eq!(entry.access_count, 0);
+
+        entry.mark_accessed();
+        entry.mark_accessed();
+        entry.mark_accessed();
+
+        assert_eq!(entry.access_count, 3);
+        assert!(entry.age() < config.default_ttl);
+    }
+
+    #[test]
+    fn test_stats_hit_rate_precision() {
+        let stats = CacheStats {
+            l1_hits: 333,
+            l1_misses: 667,
+            l2_hits: 0,
+            l2_misses: 0,
+            semantic_hits: 0,
+            semantic_misses: 0,
+            evictions: 0,
+            total_size_bytes: 0,
+        };
+        let rate = stats.hit_rate();
+        assert!((rate - 0.333).abs() < 0.001);
+    }
+}
