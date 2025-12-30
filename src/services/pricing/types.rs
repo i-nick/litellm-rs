@@ -109,7 +109,7 @@ pub struct CostResult {
 }
 
 /// Type of cost calculation method
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, PartialEq)]
 pub enum CostType {
     /// Cost calculated based on token count
     TokenBased,
