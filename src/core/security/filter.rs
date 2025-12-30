@@ -273,6 +273,23 @@ impl Default for ContentFilter {
 mod tests {
     use super::*;
 
+    // ==================== ContentFilter Creation Tests ====================
+
+    #[test]
+    fn test_content_filter_new() {
+        let filter = ContentFilter::new();
+        assert_eq!(filter.pii_patterns.len(), 4); // SSN, Email, Phone, CreditCard
+        assert_eq!(filter.moderation_rules.len(), 2); // HateSpeech, Violence
+    }
+
+    #[test]
+    fn test_content_filter_default() {
+        let filter = ContentFilter::default();
+        assert_eq!(filter.pii_patterns.len(), 4);
+    }
+
+    // ==================== PII Detection Tests ====================
+
     #[tokio::test]
     async fn test_pii_detection() {
         let filter = ContentFilter::new();
@@ -280,6 +297,245 @@ mod tests {
 
         let result = filter.filter_text(text).await.unwrap();
         assert!(!result.issues.is_empty());
+        assert!(result.modified_content.is_some());
+    }
+
+    #[tokio::test]
+    async fn test_ssn_detection() {
+        let filter = ContentFilter::new();
+        let text = "SSN: 123-45-6789";
+
+        let result = filter.filter_text(text).await.unwrap();
+        let ssn_issues: Vec<_> = result.issues.iter().filter(|i| i.issue_type.contains("SSN")).collect();
+        assert!(!ssn_issues.is_empty());
+        assert!(result.modified_content.unwrap().contains("XXX-XX-XXXX"));
+    }
+
+    #[tokio::test]
+    async fn test_email_detection() {
+        let filter = ContentFilter::new();
+        let text = "Contact: user@example.com";
+
+        let result = filter.filter_text(text).await.unwrap();
+        let email_issues: Vec<_> = result.issues.iter().filter(|i| i.issue_type.contains("Email")).collect();
+        assert!(!email_issues.is_empty());
+        // Email uses partial mask (keep_start: 2)
+        assert!(result.modified_content.is_some());
+    }
+
+    #[tokio::test]
+    async fn test_phone_detection() {
+        let filter = ContentFilter::new();
+        let text = "Call me at 123-456-7890";
+
+        let result = filter.filter_text(text).await.unwrap();
+        let phone_issues: Vec<_> = result.issues.iter().filter(|i| i.issue_type.contains("Phone")).collect();
+        assert!(!phone_issues.is_empty());
+        assert!(result.modified_content.unwrap().contains("XXX-XXX-XXXX"));
+    }
+
+    #[tokio::test]
+    async fn test_credit_card_detection() {
+        let filter = ContentFilter::new();
+        let text = "Card: 1234-5678-9012-3456";
+
+        let result = filter.filter_text(text).await.unwrap();
+        let cc_issues: Vec<_> = result.issues.iter().filter(|i| i.issue_type.contains("CreditCard")).collect();
+        assert!(!cc_issues.is_empty());
+        assert!(result.modified_content.unwrap().contains("XXXX-XXXX-XXXX-XXXX"));
+    }
+
+    #[tokio::test]
+    async fn test_multiple_pii_types() {
+        let filter = ContentFilter::new();
+        let text = "SSN: 123-45-6789, Phone: 123-456-7890, Card: 1234-5678-9012-3456";
+
+        let result = filter.filter_text(text).await.unwrap();
+        assert!(result.issues.len() >= 3);
+        assert!(result.modified_content.is_some());
+    }
+
+    #[tokio::test]
+    async fn test_no_pii_detected() {
+        let filter = ContentFilter::new();
+        let text = "This is clean text without any PII";
+
+        let result = filter.filter_text(text).await.unwrap();
+        let pii_issues: Vec<_> = result.issues.iter().filter(|i| i.issue_type.starts_with("PII_")).collect();
+        assert!(pii_issues.is_empty());
+        assert!(result.modified_content.is_none());
+    }
+
+    // ==================== Moderation Tests ====================
+
+    #[tokio::test]
+    async fn test_hate_speech_detection() {
+        let filter = ContentFilter::new();
+        let text = "This contains hate speech";
+
+        let result = filter.filter_text(text).await.unwrap();
+        let hate_issues: Vec<_> = result.issues.iter().filter(|i| i.issue_type.contains("HateSpeech")).collect();
+        assert!(!hate_issues.is_empty());
+        assert!(result.blocked);
+    }
+
+    #[tokio::test]
+    async fn test_racist_content_detection() {
+        let filter = ContentFilter::new();
+        let text = "This is racist content";
+
+        let result = filter.filter_text(text).await.unwrap();
+        assert!(result.blocked);
+    }
+
+    #[tokio::test]
+    async fn test_violence_detection() {
+        let filter = ContentFilter::new();
+        let text = "Content about violence";
+
+        let result = filter.filter_text(text).await.unwrap();
+        let violence_issues: Vec<_> = result.issues.iter().filter(|i| i.issue_type.contains("Violence")).collect();
+        assert!(!violence_issues.is_empty());
+        // Violence is a warning, not a block
+        assert!(!result.blocked);
+    }
+
+    #[tokio::test]
+    async fn test_kill_keyword_detection() {
+        let filter = ContentFilter::new();
+        let text = "Content with kill keyword";
+
+        let result = filter.filter_text(text).await.unwrap();
+        let violence_issues: Vec<_> = result.issues.iter().filter(|i| i.issue_type.contains("Violence")).collect();
+        assert!(!violence_issues.is_empty());
+    }
+
+    #[tokio::test]
+    async fn test_clean_content() {
+        let filter = ContentFilter::new();
+        let text = "This is perfectly clean content";
+
+        let result = filter.filter_text(text).await.unwrap();
+        assert!(!result.blocked);
+        assert!(result.modified_content.is_none());
+    }
+
+    // ==================== Profanity Tests ====================
+
+    #[tokio::test]
+    async fn test_profanity_filtered() {
+        let filter = ContentFilter::new();
+        // Use known profanity words from the ProfanityFilter
+        let text = "This is badword1 text";
+
+        let result = filter.filter_text(text).await.unwrap();
+        let profanity_issues: Vec<_> = result.issues.iter().filter(|i| i.issue_type == "PROFANITY").collect();
+        assert!(!profanity_issues.is_empty());
+    }
+
+    // ==================== FilterResult Tests ====================
+
+    #[tokio::test]
+    async fn test_filter_result_confidence() {
+        let filter = ContentFilter::new();
+        let clean_text = "Normal text";
+
+        let result = filter.filter_text(clean_text).await.unwrap();
+        assert!((result.confidence - 1.0).abs() < 0.01); // Clean text = 1.0 confidence
+    }
+
+    #[tokio::test]
+    async fn test_filter_result_confidence_with_issues() {
+        let filter = ContentFilter::new();
+        let text = "SSN: 123-45-6789";
+
+        let result = filter.filter_text(text).await.unwrap();
+        assert!(result.confidence > 0.0);
+        assert!(result.confidence < 1.0);
+    }
+
+    // ==================== PIIReplacement Tests ====================
+
+    #[test]
+    fn test_pii_pattern_structures() {
+        let patterns = ContentFilter::default_pii_patterns();
+
+        assert_eq!(patterns.len(), 4);
+
+        // SSN pattern
+        let ssn = patterns.iter().find(|p| p.name == "SSN").unwrap();
+        assert!((ssn.confidence - 0.95).abs() < 0.01);
+
+        // Email pattern
+        let email = patterns.iter().find(|p| p.name == "Email").unwrap();
+        assert!((email.confidence - 0.9).abs() < 0.01);
+
+        // Phone pattern
+        let phone = patterns.iter().find(|p| p.name == "Phone").unwrap();
+        assert!((phone.confidence - 0.85).abs() < 0.01);
+
+        // CreditCard pattern
+        let cc = patterns.iter().find(|p| p.name == "CreditCard").unwrap();
+        assert!((cc.confidence - 0.9).abs() < 0.01);
+    }
+
+    // ==================== ModerationRule Tests ====================
+
+    #[test]
+    fn test_moderation_rule_structures() {
+        let rules = ContentFilter::default_moderation_rules();
+
+        assert_eq!(rules.len(), 2);
+
+        let hate_rule = rules.iter().find(|r| r.name == "Hate Speech").unwrap();
+        matches!(hate_rule.action, ModerationAction::Block);
+
+        let violence_rule = rules.iter().find(|r| r.name == "Violence").unwrap();
+        matches!(violence_rule.action, ModerationAction::Warn);
+    }
+
+    // ==================== Edge Cases ====================
+
+    #[tokio::test]
+    async fn test_empty_text() {
+        let filter = ContentFilter::new();
+        let text = "";
+
+        let result = filter.filter_text(text).await.unwrap();
+        assert!(!result.blocked);
+        assert!(result.issues.is_empty());
+    }
+
+    #[tokio::test]
+    async fn test_whitespace_only() {
+        let filter = ContentFilter::new();
+        let text = "   \t\n   ";
+
+        let result = filter.filter_text(text).await.unwrap();
+        assert!(!result.blocked);
+    }
+
+    #[tokio::test]
+    async fn test_case_insensitive_moderation() {
+        let filter = ContentFilter::new();
+
+        // Uppercase
+        let result1 = filter.filter_text("HATE").await.unwrap();
+        assert!(result1.blocked);
+
+        // Mixed case
+        let result2 = filter.filter_text("HaTe").await.unwrap();
+        assert!(result2.blocked);
+    }
+
+    #[tokio::test]
+    async fn test_combined_pii_and_moderation() {
+        let filter = ContentFilter::new();
+        let text = "SSN: 123-45-6789 and this is hate speech";
+
+        let result = filter.filter_text(text).await.unwrap();
+        assert!(result.blocked);
+        assert!(result.issues.len() >= 2);
         assert!(result.modified_content.is_some());
     }
 }
