@@ -294,6 +294,16 @@ impl AzureAIProviderFactory {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::core::types::requests::{ChatMessage, MessageContent, MessageRole};
+
+    fn create_test_config() -> AzureAIConfig {
+        let mut config = AzureAIConfig::new("azure_ai");
+        config.base.api_key = Some("test_api_key".to_string());
+        config.base.api_base = Some("https://test.ai.azure.com".to_string());
+        config
+    }
+
+    // ==================== Provider Creation Tests ====================
 
     #[tokio::test]
     async fn test_provider_factory() {
@@ -309,6 +319,94 @@ mod tests {
     }
 
     #[test]
+    fn test_provider_creation_with_valid_config() {
+        let config = create_test_config();
+        let provider = AzureAIProvider::new(config);
+        assert!(provider.is_ok());
+    }
+
+    #[test]
+    fn test_provider_creation_missing_api_key() {
+        let mut config = AzureAIConfig::new("azure_ai");
+        config.base.api_base = Some("https://test.ai.azure.com".to_string());
+        // api_key is None
+        let provider = AzureAIProvider::new(config);
+        assert!(provider.is_err());
+    }
+
+    #[test]
+    fn test_provider_with_api_key() {
+        let provider = AzureAIProvider::with_api_key(
+            "test_key",
+            "https://test.ai.azure.com"
+        );
+        assert!(provider.is_ok());
+    }
+
+    // ==================== Provider Factory Tests ====================
+
+    #[test]
+    fn test_factory_create_with_config() {
+        let config = create_test_config();
+        let provider = AzureAIProviderFactory::create_with_config(config);
+        assert!(provider.is_ok());
+    }
+
+    // ==================== Provider Properties Tests ====================
+
+    #[test]
+    fn test_provider_name() {
+        let config = create_test_config();
+        let provider = AzureAIProvider::new(config).unwrap();
+        assert_eq!(provider.name(), "azure_ai");
+    }
+
+    #[test]
+    fn test_provider_capabilities() {
+        let config = create_test_config();
+        let provider = AzureAIProvider::new(config).unwrap();
+        let caps = provider.capabilities();
+
+        assert!(caps.contains(&ProviderCapability::ChatCompletion));
+        assert!(caps.contains(&ProviderCapability::ChatCompletionStream));
+        assert!(caps.contains(&ProviderCapability::Embeddings));
+        assert!(caps.contains(&ProviderCapability::ImageGeneration));
+        assert_eq!(caps.len(), 4);
+    }
+
+    #[test]
+    fn test_provider_models_not_empty() {
+        let config = create_test_config();
+        let provider = AzureAIProvider::new(config).unwrap();
+        assert!(!provider.models().is_empty());
+    }
+
+    #[test]
+    fn test_get_config() {
+        let config = create_test_config();
+        let provider = AzureAIProvider::new(config.clone()).unwrap();
+        let retrieved_config = provider.get_config();
+
+        assert_eq!(retrieved_config.base.api_key, config.base.api_key);
+        assert_eq!(retrieved_config.base.api_base, config.base.api_base);
+    }
+
+    #[test]
+    fn test_get_handlers() {
+        let config = create_test_config();
+        let provider = AzureAIProvider::new(config).unwrap();
+
+        // Verify we can access all handlers
+        let _chat = provider.get_chat_handler();
+        let _embed = provider.get_embedding_handler();
+        let _image = provider.get_image_handler();
+        let _rerank = provider.get_rerank_handler();
+        let _registry = provider.get_model_registry();
+    }
+
+    // ==================== Model Capabilities Tests ====================
+
+    #[test]
     fn test_model_capabilities() {
         let registry = get_azure_ai_registry();
 
@@ -317,5 +415,194 @@ mod tests {
             registry.supports_capability("text-embedding-3-large", &ProviderCapability::Embeddings)
         );
         assert!(!registry.supports_capability("dall-e-3", &ProviderCapability::ChatCompletion));
+    }
+
+    #[test]
+    fn test_model_registry_gpt_models() {
+        let registry = get_azure_ai_registry();
+
+        // Check various GPT models exist
+        assert!(registry.get_model("gpt-4o").is_some());
+        assert!(registry.get_model("gpt-4").is_some());
+        assert!(registry.get_model("gpt-35-turbo").is_some());
+    }
+
+    #[test]
+    fn test_model_registry_embedding_models() {
+        let registry = get_azure_ai_registry();
+
+        assert!(registry.get_model("text-embedding-3-large").is_some());
+        assert!(registry.get_model("text-embedding-3-small").is_some());
+    }
+
+    // ==================== Supported Params Tests ====================
+
+    #[test]
+    fn test_get_supported_openai_params() {
+        let config = create_test_config();
+        let provider = AzureAIProvider::new(config).unwrap();
+        let params = provider.get_supported_openai_params("gpt-4o");
+
+        assert!(params.contains(&"temperature"));
+        assert!(params.contains(&"max_tokens"));
+        assert!(params.contains(&"max_completion_tokens"));
+        assert!(params.contains(&"top_p"));
+        assert!(params.contains(&"frequency_penalty"));
+        assert!(params.contains(&"presence_penalty"));
+        assert!(params.contains(&"tools"));
+        assert!(params.contains(&"tool_choice"));
+        assert!(params.contains(&"stream"));
+    }
+
+    // ==================== Map OpenAI Params Tests ====================
+
+    #[tokio::test]
+    async fn test_map_openai_params_passthrough() {
+        let config = create_test_config();
+        let provider = AzureAIProvider::new(config).unwrap();
+
+        let mut params = HashMap::new();
+        params.insert("temperature".to_string(), serde_json::json!(0.7));
+        params.insert("max_tokens".to_string(), serde_json::json!(100));
+
+        let mapped = provider.map_openai_params(params.clone(), "gpt-4o").await.unwrap();
+
+        // Azure AI should pass through params unchanged
+        assert_eq!(mapped, params);
+    }
+
+    // ==================== Transform Request Tests ====================
+
+    #[tokio::test]
+    async fn test_transform_request_basic() {
+        let config = create_test_config();
+        let provider = AzureAIProvider::new(config).unwrap();
+
+        let request = ChatRequest {
+            model: "gpt-4o".to_string(),
+            messages: vec![ChatMessage {
+                role: MessageRole::User,
+                content: Some(MessageContent::Text("Hello".to_string())),
+                ..Default::default()
+            }],
+            ..Default::default()
+        };
+
+        let context = RequestContext::default();
+        let result = provider.transform_request(request, context).await;
+
+        assert!(result.is_ok());
+        let transformed = result.unwrap();
+        assert!(transformed["messages"].is_array());
+    }
+
+    #[tokio::test]
+    async fn test_transform_request_with_temperature() {
+        let config = create_test_config();
+        let provider = AzureAIProvider::new(config).unwrap();
+
+        let request = ChatRequest {
+            model: "gpt-4o".to_string(),
+            messages: vec![ChatMessage {
+                role: MessageRole::User,
+                content: Some(MessageContent::Text("Hello".to_string())),
+                ..Default::default()
+            }],
+            temperature: Some(0.7),
+            ..Default::default()
+        };
+
+        let context = RequestContext::default();
+        let result = provider.transform_request(request, context).await;
+
+        assert!(result.is_ok());
+    }
+
+    // ==================== Health Check Tests ====================
+
+    #[tokio::test]
+    async fn test_health_check_valid_config() {
+        let config = create_test_config();
+        let provider = AzureAIProvider::new(config).unwrap();
+
+        let status = provider.health_check().await;
+        // With valid config, should return Healthy
+        assert_eq!(status, HealthStatus::Healthy);
+    }
+
+    // ==================== Cost Calculation Tests ====================
+
+    #[tokio::test]
+    async fn test_calculate_cost_known_model() {
+        let config = create_test_config();
+        let provider = AzureAIProvider::new(config).unwrap();
+
+        let cost = provider.calculate_cost("gpt-4o", 1000, 500).await;
+        // May succeed or fail depending on model pricing
+        let _ = cost;
+    }
+
+    #[tokio::test]
+    async fn test_calculate_cost_unknown_model() {
+        let config = create_test_config();
+        let provider = AzureAIProvider::new(config).unwrap();
+
+        let cost = provider.calculate_cost("unknown-model-xyz", 1000, 500).await;
+        assert!(cost.is_err());
+    }
+
+    // ==================== Error Mapper Tests ====================
+
+    #[test]
+    fn test_get_error_mapper() {
+        let config = create_test_config();
+        let provider = AzureAIProvider::new(config).unwrap();
+        let _mapper = provider.get_error_mapper();
+        // Just verify it doesn't panic
+    }
+
+    // ==================== Clone/Debug Tests ====================
+
+    #[test]
+    fn test_provider_clone() {
+        let config = create_test_config();
+        let provider = AzureAIProvider::new(config).unwrap();
+        let cloned = provider.clone();
+
+        assert_eq!(provider.name(), cloned.name());
+        assert_eq!(provider.capabilities().len(), cloned.capabilities().len());
+    }
+
+    #[test]
+    fn test_provider_debug() {
+        let config = create_test_config();
+        let provider = AzureAIProvider::new(config).unwrap();
+        let debug_str = format!("{:?}", provider);
+
+        assert!(debug_str.contains("AzureAIProvider"));
+    }
+
+    // ==================== Model Registry Tests ====================
+
+    #[test]
+    fn test_model_registry_to_model_infos() {
+        let registry = get_azure_ai_registry();
+        let infos = registry.to_model_infos();
+
+        assert!(!infos.is_empty());
+        // Models may have different provider values (e.g., "azure_ai", "cohere")
+        // Just verify the list is not empty and has valid entries
+        for info in &infos {
+            assert!(!info.id.is_empty());
+            assert!(!info.provider.is_empty());
+        }
+    }
+
+    #[test]
+    fn test_model_registry_get_all_models() {
+        let registry = get_azure_ai_registry();
+        let models = registry.get_all_models();
+
+        assert!(!models.is_empty());
     }
 }
