@@ -1,0 +1,392 @@
+//! Unit tests for Together AI provider
+
+#[cfg(test)]
+mod tests {
+    use super::super::*;
+    use crate::core::traits::provider::llm_provider::trait_definition::LLMProvider;
+    use crate::core::types::common::ProviderCapability;
+
+    #[tokio::test]
+    async fn test_provider_creation() {
+        let config = TogetherConfig {
+            api_key: Some("test-key".to_string()),
+            ..Default::default()
+        };
+
+        let provider = TogetherProvider::new(config).await;
+        assert!(provider.is_ok());
+    }
+
+    #[tokio::test]
+    async fn test_provider_with_api_key() {
+        let provider = TogetherProvider::with_api_key("test-key").await;
+        assert!(provider.is_ok());
+    }
+
+    #[test]
+    fn test_provider_name() {
+        tokio::runtime::Runtime::new().unwrap().block_on(async {
+            let provider = TogetherProvider::with_api_key("test-key").await.unwrap();
+            assert_eq!(provider.name(), "together");
+        });
+    }
+
+    #[test]
+    fn test_provider_capabilities() {
+        tokio::runtime::Runtime::new().unwrap().block_on(async {
+            let provider = TogetherProvider::with_api_key("test-key").await.unwrap();
+            let capabilities = provider.capabilities();
+
+            assert!(capabilities.contains(&ProviderCapability::ChatCompletion));
+            assert!(capabilities.contains(&ProviderCapability::ChatCompletionStream));
+            assert!(capabilities.contains(&ProviderCapability::ToolCalling));
+            assert!(capabilities.contains(&ProviderCapability::Embeddings));
+        });
+    }
+
+    #[test]
+    fn test_model_info() {
+        tokio::runtime::Runtime::new().unwrap().block_on(async {
+            let provider = TogetherProvider::with_api_key("test-key").await.unwrap();
+            let models = provider.models();
+
+            assert!(!models.is_empty());
+
+            // Check if Llama models are present
+            let llama_models: Vec<_> = models
+                .iter()
+                .filter(|m| m.id.to_lowercase().contains("llama"))
+                .collect();
+            assert!(!llama_models.is_empty());
+
+            // Check if DeepSeek models are present
+            let deepseek_models: Vec<_> = models
+                .iter()
+                .filter(|m| m.id.to_lowercase().contains("deepseek"))
+                .collect();
+            assert!(!deepseek_models.is_empty());
+        });
+    }
+
+    #[test]
+    fn test_model_pricing() {
+        tokio::runtime::Runtime::new().unwrap().block_on(async {
+            let provider = TogetherProvider::with_api_key("test-key").await.unwrap();
+            let models = provider.models();
+
+            // All models should have pricing information
+            for model in models {
+                assert!(model.input_cost_per_1k_tokens.is_some());
+                assert!(model.output_cost_per_1k_tokens.is_some());
+                assert_eq!(model.currency, "USD");
+            }
+        });
+    }
+
+    #[test]
+    fn test_supported_openai_params() {
+        tokio::runtime::Runtime::new().unwrap().block_on(async {
+            let provider = TogetherProvider::with_api_key("test-key").await.unwrap();
+
+            // Test model with function calling support
+            let params = provider
+                .get_supported_openai_params("meta-llama/Llama-3.3-70B-Instruct-Turbo");
+            assert!(params.contains(&"temperature"));
+            assert!(params.contains(&"max_tokens"));
+            assert!(params.contains(&"tools"));
+            assert!(params.contains(&"response_format"));
+
+            // Test vision model (no function calling)
+            let vision_params = provider
+                .get_supported_openai_params("meta-llama/Llama-3.2-90B-Vision-Instruct-Turbo");
+            assert!(vision_params.contains(&"temperature"));
+            assert!(!vision_params.contains(&"tools"));
+            assert!(!vision_params.contains(&"response_format"));
+        });
+    }
+
+    #[test]
+    fn test_should_handle_response_format() {
+        use crate::core::types::requests::{ChatMessage, ChatRequest, MessageRole, ResponseFormat};
+
+        tokio::runtime::Runtime::new().unwrap().block_on(async {
+            let provider = TogetherProvider::with_api_key("test-key").await.unwrap();
+
+            // Test model with function calling - should not need special handling
+            let request_with_fc = ChatRequest {
+                model: "meta-llama/Llama-3.3-70B-Instruct-Turbo".to_string(),
+                messages: vec![ChatMessage {
+                    role: MessageRole::User,
+                    content: Some(crate::core::types::requests::MessageContent::Text(
+                        "Hello".to_string(),
+                    )),
+                    ..Default::default()
+                }],
+                response_format: Some(ResponseFormat {
+                    format_type: "json_object".to_string(),
+                    json_schema: None,
+                    response_type: None,
+                }),
+                ..Default::default()
+            };
+            assert!(!provider.should_handle_response_format(&request_with_fc));
+
+            // Test vision model - should need special handling
+            let request_vision = ChatRequest {
+                model: "meta-llama/Llama-3.2-90B-Vision-Instruct-Turbo".to_string(),
+                messages: vec![ChatMessage {
+                    role: MessageRole::User,
+                    content: Some(crate::core::types::requests::MessageContent::Text(
+                        "Hello".to_string(),
+                    )),
+                    ..Default::default()
+                }],
+                response_format: Some(ResponseFormat {
+                    format_type: "json_object".to_string(),
+                    json_schema: None,
+                    response_type: None,
+                }),
+                ..Default::default()
+            };
+            assert!(provider.should_handle_response_format(&request_vision));
+
+            // Test without response_format
+            let request_no_format = ChatRequest {
+                model: "meta-llama/Llama-3.2-90B-Vision-Instruct-Turbo".to_string(),
+                messages: vec![ChatMessage {
+                    role: MessageRole::User,
+                    content: Some(crate::core::types::requests::MessageContent::Text(
+                        "Hello".to_string(),
+                    )),
+                    ..Default::default()
+                }],
+                ..Default::default()
+            };
+            assert!(!provider.should_handle_response_format(&request_no_format));
+        });
+    }
+
+    #[tokio::test]
+    async fn test_cost_calculation() {
+        let provider = TogetherProvider::with_api_key("test-key").await.unwrap();
+
+        // Test cost calculation for a known model
+        let cost = provider
+            .calculate_cost("meta-llama/Llama-3.3-70B-Instruct-Turbo", 1000, 1000)
+            .await;
+        assert!(cost.is_ok());
+
+        let total_cost = cost.unwrap();
+        assert!(total_cost > 0.0);
+
+        // Test cost calculation for unknown model
+        let unknown_cost = provider.calculate_cost("unknown-model", 1000, 1000).await;
+        assert!(unknown_cost.is_err());
+    }
+
+    #[test]
+    fn test_error_mapping() {
+        use crate::core::traits::error_mapper::trait_def::ErrorMapper;
+
+        let mapper = error::TogetherErrorMapper;
+
+        // Test 401 error mapping
+        let auth_error = mapper.map_http_error(401, "Unauthorized");
+        match auth_error {
+            error::TogetherError::AuthenticationError(_) => {}
+            _ => panic!("Expected AuthenticationError"),
+        }
+
+        // Test 429 error mapping
+        let rate_error = mapper.map_http_error(429, "Too many requests");
+        match rate_error {
+            error::TogetherError::RateLimitError(_) => {}
+            _ => panic!("Expected RateLimitError"),
+        }
+
+        // Test 404 error mapping
+        let not_found = mapper.map_http_error(404, "Not found");
+        match not_found {
+            error::TogetherError::ModelNotFoundError(_) => {}
+            _ => panic!("Expected ModelNotFoundError"),
+        }
+    }
+
+    #[test]
+    fn test_error_retryability() {
+        use crate::core::types::errors::ProviderErrorTrait;
+
+        // Rate limit errors should be retryable
+        let rate_error = error::TogetherError::RateLimitError("Rate limited".to_string());
+        assert!(rate_error.is_retryable());
+        assert!(rate_error.retry_delay().is_some());
+
+        // Service unavailable should be retryable
+        let service_error =
+            error::TogetherError::ServiceUnavailableError("Service down".to_string());
+        assert!(service_error.is_retryable());
+        assert!(service_error.retry_delay().is_some());
+
+        // Authentication errors should not be retryable
+        let auth_error = error::TogetherError::AuthenticationError("Bad key".to_string());
+        assert!(!auth_error.is_retryable());
+        assert!(auth_error.retry_delay().is_none());
+
+        // Rerank errors should not be retryable
+        let rerank_error = error::TogetherError::RerankError("Rerank failed".to_string());
+        assert!(!rerank_error.is_retryable());
+        assert!(rerank_error.retry_delay().is_none());
+    }
+
+    #[test]
+    fn test_model_capabilities() {
+        tokio::runtime::Runtime::new().unwrap().block_on(async {
+            let provider = TogetherProvider::with_api_key("test-key").await.unwrap();
+            let models = provider.models();
+
+            // Check tool-capable models have proper capabilities
+            let tool_models: Vec<_> = models.iter().filter(|m| m.supports_tools).collect();
+
+            for model in tool_models {
+                assert!(
+                    model
+                        .capabilities
+                        .contains(&ProviderCapability::ToolCalling)
+                );
+            }
+
+            // Check vision models have multimodal support
+            let vision_models: Vec<_> = models
+                .iter()
+                .filter(|m| m.id.to_lowercase().contains("vision"))
+                .collect();
+
+            for model in vision_models {
+                assert!(model.supports_multimodal);
+            }
+        });
+    }
+
+    #[test]
+    fn test_model_info_functions() {
+        use super::super::model_info::*;
+
+        // Test get_model_info
+        let info = get_model_info("meta-llama/Llama-3.3-70B-Instruct-Turbo");
+        assert!(info.is_some());
+        let info = info.unwrap();
+        assert!(info.supports_tools);
+        assert!(!info.is_embedding);
+
+        // Test is_function_calling_model
+        assert!(is_function_calling_model(
+            "meta-llama/Llama-3.3-70B-Instruct-Turbo"
+        ));
+        assert!(!is_function_calling_model(
+            "meta-llama/Llama-3.2-90B-Vision-Instruct-Turbo"
+        ));
+
+        // Test get_embedding_models
+        let embedding_models = get_embedding_models();
+        assert!(!embedding_models.is_empty());
+        for model in embedding_models {
+            assert!(is_embedding_model(model));
+        }
+
+        // Test get_rerank_models
+        let rerank_models = get_rerank_models();
+        assert!(!rerank_models.is_empty());
+        for model in rerank_models {
+            assert!(is_rerank_model(model));
+        }
+    }
+
+    #[test]
+    fn test_rerank_request_creation() {
+        let request = RerankRequest::new(
+            "Salesforce/Llama-Rank-V1",
+            "What is machine learning?",
+            vec![
+                "Machine learning is a subset of AI".to_string(),
+                "Deep learning uses neural networks".to_string(),
+            ],
+        );
+
+        assert_eq!(request.model, "Salesforce/Llama-Rank-V1");
+        assert_eq!(request.query, "What is machine learning?");
+        assert_eq!(request.documents.len(), 2);
+    }
+
+    #[test]
+    fn test_rerank_request_with_options() {
+        let request = RerankRequest::new(
+            "Salesforce/Llama-Rank-V1",
+            "test query",
+            vec!["doc1".to_string()],
+        )
+        .with_top_n(5)
+        .with_return_documents(false);
+
+        assert_eq!(request.top_n, Some(5));
+        assert_eq!(request.return_documents, Some(false));
+    }
+
+    #[test]
+    fn test_config_defaults() {
+        let config = TogetherConfig::default();
+        assert!(config.api_key.is_none());
+        assert!(config.api_base.is_none());
+        assert_eq!(config.timeout, 60);
+        assert_eq!(config.max_retries, 3);
+        assert!(!config.debug);
+    }
+
+    #[test]
+    fn test_config_get_api_base() {
+        let config = TogetherConfig::default();
+        assert_eq!(config.get_api_base(), "https://api.together.xyz/v1");
+
+        let custom_config = TogetherConfig {
+            api_base: Some("https://custom.together.xyz".to_string()),
+            ..Default::default()
+        };
+        assert_eq!(custom_config.get_api_base(), "https://custom.together.xyz");
+    }
+
+    #[test]
+    fn test_config_validation() {
+        let valid_config = TogetherConfig {
+            api_key: Some("test-key".to_string()),
+            ..Default::default()
+        };
+        assert!(valid_config.validate().is_ok());
+
+        let invalid_timeout_config = TogetherConfig {
+            api_key: Some("test-key".to_string()),
+            timeout: 0,
+            ..Default::default()
+        };
+        assert!(invalid_timeout_config.validate().is_err());
+    }
+
+    #[test]
+    fn test_together_model_enum() {
+        let model = TogetherModel::Llama3_3_70B_Instruct_Turbo;
+        assert_eq!(format!("{:?}", model), "Llama3_3_70B_Instruct_Turbo");
+
+        let deepseek = TogetherModel::DeepSeekV3;
+        assert_eq!(format!("{:?}", deepseek), "DeepSeekV3");
+    }
+
+    #[test]
+    fn test_pricing_category() {
+        use super::super::model_info::get_pricing_category;
+
+        assert_eq!(get_pricing_category("model-3b"), Some("together-ai-up-to-4b"));
+        assert_eq!(get_pricing_category("model-7b"), Some("together-ai-4.1b-8b"));
+        assert_eq!(
+            get_pricing_category("model-70b"),
+            Some("together-ai-41.1b-80b")
+        );
+    }
+}

@@ -20,6 +20,8 @@ pub mod mistral;
 pub mod moonshot;
 pub mod openai;
 pub mod openrouter;
+pub mod perplexity;
+pub mod replicate;
 pub mod v0;
 pub mod vertex_ai;
 pub mod xai;
@@ -84,6 +86,8 @@ pub enum ProviderType {
     Groq,
     XAI,
     Cloudflare,
+    Perplexity,
+    Replicate,
     Custom(String),
 }
 
@@ -106,6 +110,8 @@ impl From<&str> for ProviderType {
             "groq" => ProviderType::Groq,
             "xai" => ProviderType::XAI,
             "cloudflare" | "cf" | "workers-ai" => ProviderType::Cloudflare,
+            "perplexity" | "perplexity-ai" | "pplx" => ProviderType::Perplexity,
+            "replicate" | "replicate-ai" => ProviderType::Replicate,
             _ => ProviderType::Custom(s.to_string()),
         }
     }
@@ -130,6 +136,8 @@ impl std::fmt::Display for ProviderType {
             ProviderType::Groq => write!(f, "groq"),
             ProviderType::XAI => write!(f, "xai"),
             ProviderType::Cloudflare => write!(f, "cloudflare"),
+            ProviderType::Perplexity => write!(f, "perplexity"),
+            ProviderType::Replicate => write!(f, "replicate"),
             ProviderType::Custom(name) => write!(f, "{}", name),
         }
     }
