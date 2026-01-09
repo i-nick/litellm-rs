@@ -6,16 +6,20 @@
 pub mod base;
 
 // Provider modules
+pub mod amazon_nova;
 pub mod anthropic;
 pub mod azure;
 pub mod azure_ai;
 pub mod bedrock;
 pub mod cloudflare;
+pub mod dashscope;
 pub mod deepinfra;
 pub mod deepseek;
+pub mod fal_ai;
 pub mod gemini;
 pub mod groq;
 pub mod meta_llama;
+pub mod minimax;
 pub mod mistral;
 pub mod moonshot;
 pub mod openai;
@@ -28,11 +32,11 @@ pub mod xai;
 
 // Shared utilities and architecture
 pub mod capabilities;
+pub mod context;
 pub mod macros; // Macros for reducing boilerplate
 pub mod shared; // Shared utilities for all providers // Compile-time capability verification
 pub mod thinking; // Thinking/reasoning provider trait (modular)
-pub mod transform; // Request/Response transformation engine
-pub mod context; // Request/Response context and metadata
+pub mod transform; // Request/Response transformation engine // Request/Response context and metadata
 
 // Registry and unified provider
 pub mod base_provider;
@@ -83,11 +87,15 @@ pub enum ProviderType {
     MetaLlama,
     Mistral,
     Moonshot,
+    Minimax,
+    Dashscope,
     Groq,
     XAI,
     Cloudflare,
     Perplexity,
     Replicate,
+    FalAI,
+    AmazonNova,
     Custom(String),
 }
 
@@ -107,11 +115,15 @@ impl From<&str> for ProviderType {
             "meta_llama" | "llama" | "meta-llama" => ProviderType::MetaLlama,
             "mistral" | "mistralai" => ProviderType::Mistral,
             "moonshot" | "moonshot-ai" => ProviderType::Moonshot,
+            "minimax" | "minimax-ai" => ProviderType::Minimax,
+            "dashscope" | "alibaba" | "qwen" | "tongyi" => ProviderType::Dashscope,
             "groq" => ProviderType::Groq,
             "xai" => ProviderType::XAI,
             "cloudflare" | "cf" | "workers-ai" => ProviderType::Cloudflare,
             "perplexity" | "perplexity-ai" | "pplx" => ProviderType::Perplexity,
             "replicate" | "replicate-ai" => ProviderType::Replicate,
+            "fal_ai" | "fal-ai" | "fal" => ProviderType::FalAI,
+            "amazon_nova" | "amazon-nova" | "nova" => ProviderType::AmazonNova,
             _ => ProviderType::Custom(s.to_string()),
         }
     }
@@ -133,11 +145,15 @@ impl std::fmt::Display for ProviderType {
             ProviderType::MetaLlama => write!(f, "meta_llama"),
             ProviderType::Mistral => write!(f, "mistral"),
             ProviderType::Moonshot => write!(f, "moonshot"),
+            ProviderType::Minimax => write!(f, "minimax"),
+            ProviderType::Dashscope => write!(f, "dashscope"),
             ProviderType::Groq => write!(f, "groq"),
             ProviderType::XAI => write!(f, "xai"),
             ProviderType::Cloudflare => write!(f, "cloudflare"),
             ProviderType::Perplexity => write!(f, "perplexity"),
             ProviderType::Replicate => write!(f, "replicate"),
+            ProviderType::FalAI => write!(f, "fal_ai"),
+            ProviderType::AmazonNova => write!(f, "amazon_nova"),
             ProviderType::Custom(name) => write!(f, "{}", name),
         }
     }
