@@ -101,10 +101,12 @@ mod tests {
 
     #[test]
     fn test_completion_options_with_values() {
-        let mut opts = CompletionOptions::default();
-        opts.temperature = Some(0.5);
-        opts.max_tokens = Some(100);
-        opts.stream = true;
+        let opts = CompletionOptions {
+            temperature: Some(0.5),
+            max_tokens: Some(100),
+            stream: true,
+            ..Default::default()
+        };
 
         assert_eq!(opts.temperature, Some(0.5));
         assert_eq!(opts.max_tokens, Some(100));
@@ -113,9 +115,11 @@ mod tests {
 
     #[test]
     fn test_completion_options_serialization() {
-        let mut opts = CompletionOptions::default();
-        opts.temperature = Some(0.5);
-        opts.max_tokens = Some(100);
+        let opts = CompletionOptions {
+            temperature: Some(0.5),
+            max_tokens: Some(100),
+            ..Default::default()
+        };
 
         let json = serde_json::to_value(&opts).unwrap();
         assert_eq!(json["temperature"], 0.5);
@@ -173,10 +177,12 @@ mod tests {
 
     #[test]
     fn test_completion_options_api_config() {
-        let mut opts = CompletionOptions::default();
-        opts.api_key = Some("sk-test".to_string());
-        opts.api_base = Some("https://api.example.com".to_string());
-        opts.timeout = Some(30);
+        let opts = CompletionOptions {
+            api_key: Some("sk-test".to_string()),
+            api_base: Some("https://api.example.com".to_string()),
+            timeout: Some(30),
+            ..Default::default()
+        };
 
         assert_eq!(opts.api_key, Some("sk-test".to_string()));
         assert_eq!(opts.timeout, Some(30));

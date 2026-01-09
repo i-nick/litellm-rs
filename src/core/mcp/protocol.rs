@@ -196,7 +196,7 @@ pub enum McpMessage {
 
 impl McpMessage {
     /// Try to parse from JSON string
-    pub fn from_str(s: &str) -> Result<Self, serde_json::Error> {
+    pub fn parse(s: &str) -> Result<Self, serde_json::Error> {
         serde_json::from_str(s)
     }
 
@@ -386,9 +386,9 @@ mod tests {
     }
 
     #[test]
-    fn test_mcp_message_from_str() {
+    fn test_mcp_message_parse() {
         let json = r#"{"jsonrpc":"2.0","method":"test","id":1}"#;
-        let msg = McpMessage::from_str(json).unwrap();
+        let msg = McpMessage::parse(json).unwrap();
         match msg {
             McpMessage::Request(req) => {
                 assert_eq!(req.method, "test");

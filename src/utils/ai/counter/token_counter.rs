@@ -571,11 +571,8 @@ mod tests {
         // Try to use more tokens than the context window
         let result = counter.check_context_window("gpt-4", 100_000, Some(100_000));
         assert!(result.is_ok());
-        // Should return false if it exceeds
-        let fits = result.unwrap();
-        // Depending on gpt-4's context, this might or might not fit
-        // Just verify the function works
-        assert!(fits == true || fits == false);
+        // Verify the function returns a boolean (regardless of value)
+        let _fits = result.unwrap();
     }
 
     #[test]

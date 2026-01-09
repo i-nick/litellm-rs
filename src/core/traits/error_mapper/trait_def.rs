@@ -21,24 +21,9 @@ use serde_json::Value;
 ///
 /// # Implementation Guide
 ///
-/// Implement this trait for each provider to handle their specific error formats:
-///
-/// ```rust,ignore
-/// use litellm_rs::core::traits::error_mapper::ErrorMapper;
-/// use litellm_rs::core::types::errors::ProviderErrorTrait;
-///
-/// struct MyProviderErrorMapper;
-///
-/// impl<E: ProviderErrorTrait> ErrorMapper<E> for MyProviderErrorMapper {
-///     fn map_http_error(&self, status: u16, body: &str) -> E {
-///         match status {
-///             401 => E::authentication_failed("Invalid API key"),
-///             429 => E::rate_limited(Some(60)),
-///             _ => E::network_error(&format!("HTTP {}: {}", status, body)),
-///         }
-///     }
-/// }
-/// ```
+/// Implement this trait for each provider to handle their specific error formats.
+/// The ErrorMapper trait is generic over the error type E which must implement
+/// ProviderErrorTrait. See `GenericErrorMapper` for a reference implementation.
 pub trait ErrorMapper<E>: Send + Sync + 'static
 where
     E: ProviderErrorTrait,

@@ -103,8 +103,10 @@ mod tests {
     /// Test server config validation for port 0
     #[test]
     fn test_server_config_port_zero() {
-        let mut config = ServerConfig::default();
-        config.port = 0;
+        let config = ServerConfig {
+            port: 0,
+            ..Default::default()
+        };
 
         let result = config.validate();
         assert!(result.is_err());
@@ -114,8 +116,10 @@ mod tests {
     /// Test server config validation for timeout 0
     #[test]
     fn test_server_config_timeout_zero() {
-        let mut config = ServerConfig::default();
-        config.timeout = 0;
+        let config = ServerConfig {
+            timeout: 0,
+            ..Default::default()
+        };
 
         let result = config.validate();
         assert!(result.is_err());
@@ -125,8 +129,10 @@ mod tests {
     /// Test server config validation for max_body_size 0
     #[test]
     fn test_server_config_max_body_size_zero() {
-        let mut config = ServerConfig::default();
-        config.max_body_size = 0;
+        let config = ServerConfig {
+            max_body_size: 0,
+            ..Default::default()
+        };
 
         let result = config.validate();
         assert!(result.is_err());
@@ -162,9 +168,11 @@ mod tests {
     /// Test CORS validation for wildcard with credentials
     #[test]
     fn test_cors_config_wildcard_with_credentials() {
-        let mut config = CorsConfig::default();
-        config.allowed_origins = vec!["*".to_string()];
-        config.allow_credentials = true;
+        let config = CorsConfig {
+            allowed_origins: vec!["*".to_string()],
+            allow_credentials: true,
+            ..Default::default()
+        };
 
         let result = config.validate();
         assert!(result.is_err());
@@ -174,19 +182,26 @@ mod tests {
     /// Test CORS allows all origins detection
     #[test]
     fn test_cors_allows_all_origins() {
-        let mut config = CorsConfig::default();
-
         // Empty origins means allow all
-        config.allowed_origins = vec![];
-        assert!(config.allows_all_origins());
+        let config_empty = CorsConfig {
+            allowed_origins: vec![],
+            ..Default::default()
+        };
+        assert!(config_empty.allows_all_origins());
 
         // Explicit wildcard
-        config.allowed_origins = vec!["*".to_string()];
-        assert!(config.allows_all_origins());
+        let config_wildcard = CorsConfig {
+            allowed_origins: vec!["*".to_string()],
+            ..Default::default()
+        };
+        assert!(config_wildcard.allows_all_origins());
 
         // Specific origins
-        config.allowed_origins = vec!["https://example.com".to_string()];
-        assert!(!config.allows_all_origins());
+        let config_specific = CorsConfig {
+            allowed_origins: vec!["https://example.com".to_string()],
+            ..Default::default()
+        };
+        assert!(!config_specific.allows_all_origins());
     }
 
     // ==================== ProviderConfig Defaults ====================

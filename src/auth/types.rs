@@ -386,12 +386,10 @@ mod tests {
 
     #[test]
     fn test_auth_method_extraction() {
-        let methods = vec![
-            AuthMethod::Jwt("jwt-token".to_string()),
+        let methods = [AuthMethod::Jwt("jwt-token".to_string()),
             AuthMethod::ApiKey("api-key".to_string()),
             AuthMethod::Session("session-id".to_string()),
-            AuthMethod::None,
-        ];
+            AuthMethod::None];
 
         let method_types: Vec<&str> = methods
             .iter()
@@ -408,8 +406,8 @@ mod tests {
 
     #[test]
     fn test_permission_check_simulation() {
-        let user_permissions = vec!["read".to_string(), "write".to_string()];
-        let required_permissions = vec!["read".to_string(), "delete".to_string()];
+        let user_permissions = ["read".to_string(), "write".to_string()];
+        let required_permissions = ["read".to_string(), "delete".to_string()];
 
         let has_all = required_permissions
             .iter()

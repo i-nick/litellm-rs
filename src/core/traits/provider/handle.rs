@@ -23,18 +23,10 @@ use super::llm_provider::trait_definition::LLMProvider;
 /// - Simplified interface for routing decisions
 ///
 /// # Example
-/// ```rust,ignore
-/// use crate::core::traits::provider::ProviderHandle;
 ///
-/// // Create a handle with weight 1.0
-/// let handle = ProviderHandle::new(my_provider, 1.0);
-///
-/// // Check if enabled
-/// if handle.is_enabled() {
-///     // Route request to this provider
-///     let response = handle.chat_completion(request, context).await?;
-/// }
-/// ```
+/// The `ProviderHandle` wraps any type implementing `LLMProvider` with type erasure
+/// for flexible provider management in routing systems. See the routing module
+/// for usage examples.
 pub struct ProviderHandle {
     name: String,
     provider: std::sync::Arc<dyn std::any::Any + Send + Sync>,

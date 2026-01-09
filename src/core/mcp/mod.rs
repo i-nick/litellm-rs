@@ -16,13 +16,13 @@
 //!
 //! # Usage
 //!
-//! ```rust,ignore
-//! use litellm_rs::core::mcp::{McpGateway, McpServerConfig, Transport};
-//!
+//! ```rust,no_run
+//! # use litellm_rs::core::mcp::{McpGateway, McpServerConfig, Transport, AuthConfig};
+//! # async fn example() -> Result<(), Box<dyn std::error::Error>> {
 //! // Configure MCP servers
 //! let config = McpServerConfig {
 //!     name: "github".to_string(),
-//!     url: "https://api.github.com/mcp".to_string(),
+//!     url: "https://api.github.com/mcp".parse()?,
 //!     transport: Transport::Http,
 //!     auth: Some(AuthConfig::bearer("token123")),
 //!     ..Default::default()
@@ -36,7 +36,10 @@
 //! let tools = gateway.list_tools("github").await?;
 //!
 //! // Call a tool
+//! let params = serde_json::json!({});
 //! let result = gateway.call_tool("github", "get_repo", params).await?;
+//! # Ok(())
+//! # }
 //! ```
 //!
 //! # Configuration

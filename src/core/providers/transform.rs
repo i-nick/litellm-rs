@@ -300,13 +300,19 @@ pub struct ModelMapping {
     pub parameter_mappings: HashMap<String, String>,
 }
 
+impl Default for DefaultTransformEngine {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl DefaultTransformEngine {
     pub fn new() -> Self {
         let mut engine = Self {
             pipelines: HashMap::new(),
             model_mappings: HashMap::new(),
         };
-        
+
         engine.init_default_mappings();
         engine.init_default_pipelines();
         engine
@@ -625,9 +631,13 @@ impl DefaultTransformEngine {
 }
 
 // Example transformation implementations
+#[derive(Default)]
 pub struct AnthropicMessageTransform;
+#[derive(Default)]
 pub struct AnthropicParameterTransform;
+#[derive(Default)]
 pub struct GoogleMessageTransform;
+#[derive(Default)]
 pub struct GoogleParameterTransform;
 
 impl AnthropicMessageTransform {

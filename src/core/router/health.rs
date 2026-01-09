@@ -312,11 +312,13 @@ mod tests {
 
     #[test]
     fn test_provider_health_status_clone() {
-        let mut status = ProviderHealthStatus::default();
-        status.healthy = false;
-        status.consecutive_failures = 5;
-        status.last_error = Some("Connection refused".to_string());
-        status.response_time = Some(Duration::from_millis(100));
+        let status = ProviderHealthStatus {
+            healthy: false,
+            consecutive_failures: 5,
+            last_error: Some("Connection refused".to_string()),
+            response_time: Some(Duration::from_millis(100)),
+            ..Default::default()
+        };
 
         let cloned = status.clone();
         assert!(!cloned.healthy);
@@ -336,11 +338,13 @@ mod tests {
 
     #[test]
     fn test_provider_health_status_with_success() {
-        let mut status = ProviderHealthStatus::default();
-        status.healthy = true;
-        status.last_success = Some(Instant::now());
-        status.response_time = Some(Duration::from_millis(50));
-        status.consecutive_failures = 0;
+        let status = ProviderHealthStatus {
+            healthy: true,
+            last_success: Some(Instant::now()),
+            response_time: Some(Duration::from_millis(50)),
+            consecutive_failures: 0,
+            ..Default::default()
+        };
 
         assert!(status.healthy);
         assert!(status.last_success.is_some());
@@ -349,10 +353,12 @@ mod tests {
 
     #[test]
     fn test_provider_health_status_with_error() {
-        let mut status = ProviderHealthStatus::default();
-        status.healthy = false;
-        status.last_error = Some("Timeout".to_string());
-        status.consecutive_failures = 3;
+        let status = ProviderHealthStatus {
+            healthy: false,
+            last_error: Some("Timeout".to_string()),
+            consecutive_failures: 3,
+            ..Default::default()
+        };
 
         assert!(!status.healthy);
         assert_eq!(status.last_error, Some("Timeout".to_string()));
@@ -361,13 +367,14 @@ mod tests {
 
     #[test]
     fn test_provider_health_status_reset_after_success() {
-        let mut status = ProviderHealthStatus::default();
+        // Start with a status that has failures
+        let mut status = ProviderHealthStatus {
+            consecutive_failures: 2,
+            last_error: Some("Previous error".to_string()),
+            ..Default::default()
+        };
 
-        // Simulate failures
-        status.consecutive_failures = 2;
-        status.last_error = Some("Previous error".to_string());
-
-        // Simulate success
+        // Simulate success - this resets the counters
         status.healthy = true;
         status.consecutive_failures = 0;
         status.last_success = Some(Instant::now());
@@ -425,11 +432,15 @@ mod tests {
     fn test_router_health_status_with_mixed_providers() {
         let mut providers = HashMap::new();
 
-        let mut healthy_provider = ProviderHealthStatus::default();
-        healthy_provider.healthy = true;
+        let healthy_provider = ProviderHealthStatus {
+            healthy: true,
+            ..Default::default()
+        };
 
-        let mut unhealthy_provider = ProviderHealthStatus::default();
-        unhealthy_provider.healthy = false;
+        let unhealthy_provider = ProviderHealthStatus {
+            healthy: false,
+            ..Default::default()
+        };
 
         providers.insert("openai".to_string(), healthy_provider);
         providers.insert("anthropic".to_string(), unhealthy_provider);
@@ -452,14 +463,20 @@ mod tests {
     fn test_overall_health_any_healthy() {
         let mut providers = HashMap::new();
 
-        let mut status1 = ProviderHealthStatus::default();
-        status1.healthy = false;
+        let status1 = ProviderHealthStatus {
+            healthy: false,
+            ..Default::default()
+        };
 
-        let mut status2 = ProviderHealthStatus::default();
-        status2.healthy = true;
+        let status2 = ProviderHealthStatus {
+            healthy: true,
+            ..Default::default()
+        };
 
-        let mut status3 = ProviderHealthStatus::default();
-        status3.healthy = false;
+        let status3 = ProviderHealthStatus {
+            healthy: false,
+            ..Default::default()
+        };
 
         providers.insert("p1".to_string(), status1);
         providers.insert("p2".to_string(), status2);
@@ -474,11 +491,15 @@ mod tests {
     fn test_overall_health_all_unhealthy() {
         let mut providers = HashMap::new();
 
-        let mut status1 = ProviderHealthStatus::default();
-        status1.healthy = false;
+        let status1 = ProviderHealthStatus {
+            healthy: false,
+            ..Default::default()
+        };
 
-        let mut status2 = ProviderHealthStatus::default();
-        status2.healthy = false;
+        let status2 = ProviderHealthStatus {
+            healthy: false,
+            ..Default::default()
+        };
 
         providers.insert("p1".to_string(), status1);
         providers.insert("p2".to_string(), status2);
@@ -492,11 +513,15 @@ mod tests {
     fn test_overall_health_all_healthy() {
         let mut providers = HashMap::new();
 
-        let mut status1 = ProviderHealthStatus::default();
-        status1.healthy = true;
+        let status1 = ProviderHealthStatus {
+            healthy: true,
+            ..Default::default()
+        };
 
-        let mut status2 = ProviderHealthStatus::default();
-        status2.healthy = true;
+        let status2 = ProviderHealthStatus {
+            healthy: true,
+            ..Default::default()
+        };
 
         providers.insert("p1".to_string(), status1);
         providers.insert("p2".to_string(), status2);
@@ -528,29 +553,35 @@ mod tests {
     #[test]
     fn test_consecutive_failures_threshold() {
         let max_failures = 3u32;
-        let mut status = ProviderHealthStatus::default();
 
-        // Below threshold
-        status.consecutive_failures = 2;
-        assert!(status.consecutive_failures < max_failures);
-        assert!(status.healthy);
+        // Below threshold - still healthy
+        let status_below = ProviderHealthStatus {
+            consecutive_failures: 2,
+            healthy: true,
+            ..Default::default()
+        };
+        assert!(status_below.consecutive_failures < max_failures);
+        assert!(status_below.healthy);
 
-        // At threshold
-        status.consecutive_failures = 3;
-        if status.consecutive_failures >= max_failures {
-            status.healthy = false;
-        }
-        assert!(!status.healthy);
+        // At threshold - should be unhealthy
+        let status_at = ProviderHealthStatus {
+            consecutive_failures: 3,
+            healthy: false,
+            ..Default::default()
+        };
+        assert!(status_at.consecutive_failures >= max_failures);
+        assert!(!status_at.healthy);
     }
 
     #[test]
     fn test_failure_reset_on_success() {
-        let mut status = ProviderHealthStatus::default();
-
-        // Accumulate failures
-        status.consecutive_failures = 2;
-        status.last_error = Some("Error".to_string());
-        status.healthy = true; // Still healthy, not yet at threshold
+        // Start with accumulated failures (still healthy, not yet at threshold)
+        let mut status = ProviderHealthStatus {
+            consecutive_failures: 2,
+            last_error: Some("Error".to_string()),
+            healthy: true,
+            ..Default::default()
+        };
 
         // Success resets counters
         status.consecutive_failures = 0;
@@ -596,14 +627,20 @@ mod tests {
     fn test_filter_healthy_providers() {
         let mut providers = HashMap::new();
 
-        let mut status1 = ProviderHealthStatus::default();
-        status1.healthy = true;
+        let status1 = ProviderHealthStatus {
+            healthy: true,
+            ..Default::default()
+        };
 
-        let mut status2 = ProviderHealthStatus::default();
-        status2.healthy = false;
+        let status2 = ProviderHealthStatus {
+            healthy: false,
+            ..Default::default()
+        };
 
-        let mut status3 = ProviderHealthStatus::default();
-        status3.healthy = true;
+        let status3 = ProviderHealthStatus {
+            healthy: true,
+            ..Default::default()
+        };
 
         providers.insert("openai".to_string(), status1);
         providers.insert("anthropic".to_string(), status2);
@@ -625,12 +662,16 @@ mod tests {
     fn test_filter_unhealthy_providers() {
         let mut providers = HashMap::new();
 
-        let mut status1 = ProviderHealthStatus::default();
-        status1.healthy = true;
+        let status1 = ProviderHealthStatus {
+            healthy: true,
+            ..Default::default()
+        };
 
-        let mut status2 = ProviderHealthStatus::default();
-        status2.healthy = false;
-        status2.last_error = Some("Rate limited".to_string());
+        let status2 = ProviderHealthStatus {
+            healthy: false,
+            last_error: Some("Rate limited".to_string()),
+            ..Default::default()
+        };
 
         providers.insert("openai".to_string(), status1);
         providers.insert("anthropic".to_string(), status2);
@@ -686,8 +727,10 @@ mod tests {
 
     #[test]
     fn test_high_failure_count() {
-        let mut status = ProviderHealthStatus::default();
-        status.consecutive_failures = u32::MAX;
+        let status = ProviderHealthStatus {
+            consecutive_failures: u32::MAX,
+            ..Default::default()
+        };
         assert_eq!(status.consecutive_failures, u32::MAX);
     }
 }

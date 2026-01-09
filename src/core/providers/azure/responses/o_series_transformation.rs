@@ -4,6 +4,7 @@ use super::{AzureProcessedResponse, AzureResponseMetadata, ResponseMetrics};
 use serde::{Deserialize, Serialize};
 
 /// O-Series specific response processor
+#[derive(Debug, Clone, Default)]
 pub struct OSeriesResponseProcessor;
 
 impl OSeriesResponseProcessor {
@@ -70,6 +71,7 @@ impl OSeriesResponseProcessor {
 }
 
 /// O-Series response transformation
+#[derive(Debug, Clone, Default)]
 pub struct OSeriesResponseTransformation;
 
 impl OSeriesResponseTransformation {
@@ -133,17 +135,6 @@ impl OSeriesResponseTransformation {
     }
 }
 
-impl Default for OSeriesResponseProcessor {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
-impl Default for OSeriesResponseTransformation {
-    fn default() -> Self {
-        Self::new()
-    }
-}
 
 #[cfg(test)]
 mod tests {
@@ -161,7 +152,7 @@ mod tests {
 
     #[test]
     fn test_o_series_processor_default() {
-        let processor = OSeriesResponseProcessor::default();
+        let processor = OSeriesResponseProcessor;
         let _ = processor;
     }
 
@@ -297,7 +288,7 @@ mod tests {
 
     #[test]
     fn test_o_series_transformation_default() {
-        let transformation = OSeriesResponseTransformation::default();
+        let transformation = OSeriesResponseTransformation;
         let _ = transformation;
     }
 

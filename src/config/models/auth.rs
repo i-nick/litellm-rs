@@ -41,7 +41,6 @@ impl Default for AuthConfig {
     }
 }
 
-#[allow(dead_code)]
 impl AuthConfig {
     /// Merge auth configurations
     pub fn merge(mut self, other: Self) -> Self {
@@ -138,7 +137,6 @@ impl Default for RbacConfig {
     }
 }
 
-#[allow(dead_code)]
 impl RbacConfig {
     /// Merge RBAC configurations
     pub fn merge(mut self, other: Self) -> Self {

@@ -23,7 +23,6 @@ pub struct Config {
     pub gateway: GatewayConfig,
 }
 
-#[allow(dead_code)]
 impl Config {
     /// Load configuration from file
     pub async fn from_file<P: AsRef<Path>>(path: P) -> Result<Self> {

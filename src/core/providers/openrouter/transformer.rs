@@ -253,8 +253,8 @@ mod tests {
         assert_eq!(headers.get("Authorization").unwrap(), "Bearer sk-test-key");
         assert_eq!(headers.get("Content-Type").unwrap(), "application/json");
         assert!(headers.get("User-Agent").unwrap().contains("LiteLLM-RS"));
-        assert!(headers.get("HTTP-Referer").is_none());
-        assert!(headers.get("X-Title").is_none());
+        assert!(!headers.contains_key("HTTP-Referer"));
+        assert!(!headers.contains_key("X-Title"));
     }
 
     #[test]

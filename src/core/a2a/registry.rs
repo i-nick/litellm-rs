@@ -176,27 +176,43 @@ impl AgentRegistry {
     pub async fn stats(&self) -> RegistryStats {
         let agents = self.agents.read().await;
 
-        let mut stats = RegistryStats::default();
-        stats.total_agents = agents.len();
+        let mut healthy_agents = 0;
+        let mut degraded_agents = 0;
+        let mut unhealthy_agents = 0;
+        let mut disabled_agents = 0;
+        let mut unknown_agents = 0;
+        let mut enabled_agents = 0;
+        let mut total_invocations = 0;
+        let mut total_cost = 0.0;
 
         for entry in agents.values() {
             match entry.state {
-                AgentState::Healthy => stats.healthy_agents += 1,
-                AgentState::Degraded => stats.degraded_agents += 1,
-                AgentState::Unhealthy => stats.unhealthy_agents += 1,
-                AgentState::Disabled => stats.disabled_agents += 1,
-                AgentState::Unknown => stats.unknown_agents += 1,
+                AgentState::Healthy => healthy_agents += 1,
+                AgentState::Degraded => degraded_agents += 1,
+                AgentState::Unhealthy => unhealthy_agents += 1,
+                AgentState::Disabled => disabled_agents += 1,
+                AgentState::Unknown => unknown_agents += 1,
             }
 
             if entry.config.enabled {
-                stats.enabled_agents += 1;
+                enabled_agents += 1;
             }
 
-            stats.total_invocations += entry.invocation_count;
-            stats.total_cost += entry.total_cost;
+            total_invocations += entry.invocation_count;
+            total_cost += entry.total_cost;
         }
 
-        stats
+        RegistryStats {
+            total_agents: agents.len(),
+            enabled_agents,
+            healthy_agents,
+            degraded_agents,
+            unhealthy_agents,
+            disabled_agents,
+            unknown_agents,
+            total_invocations,
+            total_cost,
+        }
     }
 }
 

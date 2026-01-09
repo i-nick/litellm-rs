@@ -649,8 +649,8 @@ mod tests {
         let embedding = &embedding_response.data[0].embedding;
         assert_eq!(embedding.len(), 3);
         // Check values are approximately correct (f64 to f32 conversion)
-        assert!((embedding[0] - 0.123456789_f32).abs() < 0.0001);
-        assert!((embedding[1] - (-0.987654321_f32)).abs() < 0.0001);
+        assert!((embedding[0] - 0.123_456_79_f32).abs() < 0.0001);
+        assert!((embedding[1] - (-0.987_654_3_f32)).abs() < 0.0001);
         assert!((embedding[2] - 0.0_f32).abs() < 0.0001);
     }
 

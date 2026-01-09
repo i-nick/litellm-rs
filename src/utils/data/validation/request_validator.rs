@@ -577,7 +577,7 @@ mod tests {
         // Create a valid base64 encoded image (minimal PNG)
         let base64_data = base64::Engine::encode(
             &base64::engine::general_purpose::STANDARD,
-            &[0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A],
+            [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A],
         );
         let data_url = format!("data:image/png;base64,{}", base64_data);
         let result = RequestValidator::validate_image_url(&data_url);

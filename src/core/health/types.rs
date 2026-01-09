@@ -328,12 +328,10 @@ mod tests {
 
     #[test]
     fn test_health_check_results_collection() {
-        let results = vec![
-            HealthCheckResult::healthy(50),
+        let results = [HealthCheckResult::healthy(50),
             HealthCheckResult::healthy(60),
             HealthCheckResult::degraded("Slow".to_string(), 200),
-            HealthCheckResult::unhealthy("Error".to_string(), 500),
-        ];
+            HealthCheckResult::unhealthy("Error".to_string(), 500)];
 
         // Count healthy results
         let healthy_count = results.iter()
@@ -357,12 +355,10 @@ mod tests {
     #[test]
     fn test_provider_health_simulation() {
         // Simulate health checks for multiple providers
-        let provider_checks = vec![
-            ("openai", HealthCheckResult::healthy(45)),
+        let provider_checks = [("openai", HealthCheckResult::healthy(45)),
             ("anthropic", HealthCheckResult::healthy(55)),
             ("azure", HealthCheckResult::degraded("High latency".to_string(), 300)),
-            ("offline-provider", HealthCheckResult::unhealthy("Connection refused".to_string(), 5000)),
-        ];
+            ("offline-provider", HealthCheckResult::unhealthy("Connection refused".to_string(), 5000))];
 
         // Find best provider by score
         let best = provider_checks.iter()

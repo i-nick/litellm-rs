@@ -548,7 +548,7 @@ mod tests {
         // Just verify the registry loads without error - distill models
         // may or may not exist depending on the pricing database
         assert!(
-            registry.get_all_models().len() > 0,
+            !registry.get_all_models().is_empty(),
             "Registry should have at least some models"
         );
     }

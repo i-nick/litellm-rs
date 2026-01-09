@@ -134,7 +134,7 @@ mod tests {
     fn test_routing_result_ok() {
         let result: RoutingResult<String> = Ok("provider-1".to_string());
         assert!(result.is_ok());
-        assert_eq!(result.unwrap(), "provider-1");
+        assert!(matches!(result, Ok(ref s) if s == "provider-1"));
     }
 
     #[test]

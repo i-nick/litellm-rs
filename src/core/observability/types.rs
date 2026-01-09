@@ -150,9 +150,9 @@ mod tests {
 
     #[test]
     fn test_metric_value_gauge() {
-        let metric = MetricValue::Gauge(3.14);
+        let metric = MetricValue::Gauge(1.234);
         if let MetricValue::Gauge(v) = metric {
-            assert!((v - 3.14).abs() < 0.001);
+            assert!((v - 1.234).abs() < 0.001);
         } else {
             panic!("Expected Gauge variant");
         }
@@ -215,13 +215,11 @@ mod tests {
 
     #[test]
     fn test_log_level_variants() {
-        let levels = vec![
-            LogLevel::Error,
+        let levels = [LogLevel::Error,
             LogLevel::Warn,
             LogLevel::Info,
             LogLevel::Debug,
-            LogLevel::Trace,
-        ];
+            LogLevel::Trace];
         assert_eq!(levels.len(), 5);
     }
 
@@ -359,14 +357,12 @@ mod tests {
 
     #[test]
     fn test_alert_condition_variants() {
-        let conditions = vec![
-            AlertCondition::GreaterThan,
+        let conditions = [AlertCondition::GreaterThan,
             AlertCondition::LessThan,
             AlertCondition::Equal,
             AlertCondition::NotEqual,
             AlertCondition::GreaterThanOrEqual,
-            AlertCondition::LessThanOrEqual,
-        ];
+            AlertCondition::LessThanOrEqual];
         assert_eq!(conditions.len(), 6);
     }
 
@@ -381,13 +377,11 @@ mod tests {
 
     #[test]
     fn test_alert_severity_variants() {
-        let severities = vec![
-            AlertSeverity::Critical,
+        let severities = [AlertSeverity::Critical,
             AlertSeverity::High,
             AlertSeverity::Medium,
             AlertSeverity::Low,
-            AlertSeverity::Info,
-        ];
+            AlertSeverity::Info];
         assert_eq!(severities.len(), 5);
     }
 

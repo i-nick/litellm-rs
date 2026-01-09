@@ -5,6 +5,7 @@
 use serde_json::{Value, json};
 use std::collections::HashMap;
 
+#[derive(Debug, Clone, Default)]
 pub struct DeepInfraChatTransformation;
 
 impl DeepInfraChatTransformation {
@@ -157,11 +158,6 @@ impl DeepInfraChatTransformation {
     }
 }
 
-impl Default for DeepInfraChatTransformation {
-    fn default() -> Self {
-        Self::new()
-    }
-}
 
 #[cfg(test)]
 mod tests {
@@ -178,7 +174,7 @@ mod tests {
 
     #[test]
     fn test_deepinfra_chat_transformation_default() {
-        let transformation = DeepInfraChatTransformation::default();
+        let transformation = DeepInfraChatTransformation;
         let params = transformation.get_supported_openai_params("any-model");
         assert!(!params.is_empty());
     }

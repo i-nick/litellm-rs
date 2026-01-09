@@ -11,7 +11,11 @@ mod error;
 mod model_config;
 mod provider;
 mod sigv4;
+mod transformation;
 mod utils;
+
+#[cfg(test)]
+mod provider_tests;
 
 // Feature modules
 pub mod agents;

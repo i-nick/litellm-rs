@@ -239,7 +239,7 @@ mod tests {
 
     #[test]
     fn test_provider_error_with_source() {
-        let source = std::io::Error::new(std::io::ErrorKind::Other, "source error");
+        let source = std::io::Error::other("source error");
         let err =
             LiteLLMError::provider_error_with_source("anthropic", "Connection failed", Box::new(source));
 

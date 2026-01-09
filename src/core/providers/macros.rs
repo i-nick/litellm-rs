@@ -11,8 +11,14 @@ use crate::core::providers::unified_provider::ProviderError;
 /// Extract a required string value from configuration JSON
 ///
 /// # Example
-/// ```ignore
+/// ```rust
+/// # use litellm_rs::core::providers::macros::require_config_str;
+/// # fn example() -> Result<(), litellm_rs::ProviderError> {
+/// let config = serde_json::json!({"api_key": "sk-123"});
 /// let api_key = require_config_str(&config, "api_key", "openai")?;
+/// assert_eq!(api_key, "sk-123");
+/// # Ok(())
+/// # }
 /// ```
 #[inline]
 pub fn require_config_str<'a>(
@@ -73,12 +79,17 @@ pub fn get_config_bool_or(config: &serde_json::Value, key: &str, default: bool) 
 /// Macro to extract required configuration value with provider context
 ///
 /// # Example
-/// ```ignore
+/// ```rust
+/// # use litellm_rs::require_config;
+/// # fn example() -> Result<(), litellm_rs::ProviderError> {
+/// let config = serde_json::json!({"api_key": "sk-123", "timeout": 30});
 /// // Extract required string
-/// let api_key = require_config!(config, "api_key", str, "openai")?;
+/// let api_key = require_config!(&config, "api_key", str, "openai")?;
 ///
 /// // Extract required u64
-/// let timeout = require_config!(config, "timeout", u64, "openai")?;
+/// let timeout = require_config!(&config, "timeout", u64, "openai")?;
+/// # Ok(())
+/// # }
 /// ```
 #[macro_export]
 macro_rules! require_config {

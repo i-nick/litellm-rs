@@ -1072,13 +1072,11 @@ mod tests {
     #[test]
     fn test_provider_capabilities() {
         use crate::core::types::common::ProviderCapability;
-        let expected = vec![
-            ProviderCapability::ChatCompletion,
+        let expected = [ProviderCapability::ChatCompletion,
             ProviderCapability::ChatCompletionStream,
             ProviderCapability::Embeddings,
             ProviderCapability::ImageGeneration,
-            ProviderCapability::ToolCalling,
-        ];
+            ProviderCapability::ToolCalling];
         assert_eq!(expected.len(), 5);
     }
 
@@ -1326,15 +1324,17 @@ mod tests {
 
     #[test]
     fn test_vertex_ai_provider_config_with_custom_values() {
-        let mut config = VertexAIProviderConfig::default();
-        config.project_id = "test-project".to_string();
-        config.location = "us-central1".to_string();
-        config.api_base = Some("https://custom.api.com".to_string());
+        let config = VertexAIProviderConfig {
+            project_id: "test-project".to_string(),
+            location: "us-central1".to_string(),
+            api_base: Some("https://custom.api.com".to_string()),
+            ..Default::default()
+        };
 
         assert_eq!(config.project_id, "test-project");
         assert_eq!(config.location, "us-central1");
         assert!(config.api_base.is_some());
-        assert_eq!(config.api_base.unwrap(), "https://custom.api.com");
+        assert_eq!(config.api_base.expect("api_base should be Some"), "https://custom.api.com");
     }
 
     // ==================== VertexAIError Tests ====================

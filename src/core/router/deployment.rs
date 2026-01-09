@@ -219,10 +219,10 @@ impl Clone for DeploymentState {
 ///
 /// ## Example
 ///
-/// ```rust,ignore
-/// use litellm_rs::core::providers::Provider;
-/// use litellm_rs::core::router::deployment::{Deployment, DeploymentConfig};
-///
+/// ```rust,no_run
+/// # use litellm_rs::core::router::deployment::{Deployment, DeploymentConfig};
+/// # use litellm_rs::Provider;
+/// # fn example(provider: Provider) {
 /// let deployment = Deployment::new(
 ///     "openai-gpt4-primary".to_string(),
 ///     provider,
@@ -236,6 +236,7 @@ impl Clone for DeploymentState {
 ///     ..Default::default()
 /// })
 /// .with_tags(vec!["production".to_string(), "fast".to_string()]);
+/// # }
 /// ```
 #[derive(Debug, Clone)]
 pub struct Deployment {

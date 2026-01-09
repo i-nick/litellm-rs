@@ -11,23 +11,25 @@
 //! - OpenAI (via embeddings + similarity)
 //!
 //! ## Example
-//! ```rust,ignore
-//! use litellm_rs::core::rerank::{RerankRequest, RerankProvider};
-//!
+//! ```rust,no_run
+//! # use litellm_rs::core::rerank::{RerankRequest, RerankDocument, RerankProvider};
+//! # async fn example() -> Result<(), Box<dyn std::error::Error>> {
 //! let request = RerankRequest {
 //!     model: "cohere/rerank-english-v3.0".to_string(),
 //!     query: "What is the capital of France?".to_string(),
 //!     documents: vec![
-//!         "Paris is the capital of France.".to_string(),
-//!         "London is the capital of England.".to_string(),
-//!         "Berlin is the capital of Germany.".to_string(),
+//!         RerankDocument::text("Paris is the capital of France."),
+//!         RerankDocument::text("London is the capital of England."),
+//!         RerankDocument::text("Berlin is the capital of Germany."),
 //!     ],
 //!     top_n: Some(2),
 //!     return_documents: Some(true),
 //!     ..Default::default()
 //! };
 //!
-//! let response = provider.rerank(request).await?;
+//! // provider.rerank(request).await? would be called here
+//! # Ok(())
+//! # }
 //! ```
 
 mod cache;

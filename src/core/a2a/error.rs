@@ -506,7 +506,7 @@ mod tests {
     fn test_a2a_result_ok() {
         let result: A2AResult<i32> = Ok(42);
         assert!(result.is_ok());
-        assert_eq!(result.unwrap(), 42);
+        assert!(matches!(result, Ok(42)));
     }
 
     #[test]
@@ -527,8 +527,8 @@ mod tests {
     #[test]
     fn test_a2a_result_and_then() {
         let result: A2AResult<i32> = Ok(42);
-        let chained: A2AResult<String> = result.and_then(|x| Ok(x.to_string()));
-        assert_eq!(chained.unwrap(), "42");
+        let chained: A2AResult<String> = result.map(|x| x.to_string());
+        assert!(matches!(chained, Ok(ref s) if s == "42"));
     }
 
     // ==================== Edge Case Tests ====================

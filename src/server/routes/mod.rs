@@ -2,8 +2,6 @@
 //!
 //! This module contains all HTTP route handlers organized by functionality.
 
-#![allow(dead_code)]
-
 pub mod ai;
 pub mod auth;
 pub mod health;
@@ -27,7 +25,6 @@ pub struct ApiResponse<T> {
     pub meta: Option<serde_json::Value>,
 }
 
-#[allow(dead_code)]
 impl<T> ApiResponse<T>
 where
     T: serde::Serialize,
@@ -43,6 +40,7 @@ where
     }
 
     /// Create a successful response with metadata
+    #[allow(dead_code)]
     pub fn success_with_meta(data: T, meta: serde_json::Value) -> Self {
         Self {
             success: true,

@@ -107,15 +107,13 @@ mod tests {
 
     #[test]
     fn test_routing_strategy_all_variants() {
-        let strategies = vec![
-            RoutingStrategy::SimpleShuffle,
+        let strategies = [RoutingStrategy::SimpleShuffle,
             RoutingStrategy::LeastBusy,
             RoutingStrategy::UsageBased,
             RoutingStrategy::LatencyBased,
             RoutingStrategy::CostBased,
             RoutingStrategy::RateLimitAware,
-            RoutingStrategy::RoundRobin,
-        ];
+            RoutingStrategy::RoundRobin];
 
         assert_eq!(strategies.len(), 7);
     }

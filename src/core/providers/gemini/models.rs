@@ -1189,7 +1189,7 @@ mod tests {
     fn test_estimate_tokens() {
         let tokens = CostCalculator::estimate_tokens("Hello, world!");
         // "Hello, world!" is 13 characters, ~4 tokens (13/4 = 3.25, ceil = 4)
-        assert!(tokens >= 3 && tokens <= 5);
+        assert!((3..=5).contains(&tokens));
     }
 
     #[test]

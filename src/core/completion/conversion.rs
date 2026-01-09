@@ -137,8 +137,10 @@ mod tests {
     #[test]
     fn test_convert_to_chat_completion_request_with_temperature() {
         let messages = vec![create_test_message(MessageRole::User, "Test")];
-        let mut options = CompletionOptions::default();
-        options.temperature = Some(0.7);
+        let options = CompletionOptions {
+            temperature: Some(0.7),
+            ..Default::default()
+        };
 
         let result = convert_to_chat_completion_request("gpt-4", messages, options).unwrap();
 
@@ -148,8 +150,10 @@ mod tests {
     #[test]
     fn test_convert_to_chat_completion_request_with_max_tokens() {
         let messages = vec![create_test_message(MessageRole::User, "Test")];
-        let mut options = CompletionOptions::default();
-        options.max_tokens = Some(1000);
+        let options = CompletionOptions {
+            max_tokens: Some(1000),
+            ..Default::default()
+        };
 
         let result = convert_to_chat_completion_request("gpt-4", messages, options).unwrap();
 
@@ -159,8 +163,10 @@ mod tests {
     #[test]
     fn test_convert_to_chat_completion_request_with_top_p() {
         let messages = vec![create_test_message(MessageRole::User, "Test")];
-        let mut options = CompletionOptions::default();
-        options.top_p = Some(0.9);
+        let options = CompletionOptions {
+            top_p: Some(0.9),
+            ..Default::default()
+        };
 
         let result = convert_to_chat_completion_request("gpt-4", messages, options).unwrap();
 
@@ -170,9 +176,11 @@ mod tests {
     #[test]
     fn test_convert_to_chat_completion_request_with_penalties() {
         let messages = vec![create_test_message(MessageRole::User, "Test")];
-        let mut options = CompletionOptions::default();
-        options.frequency_penalty = Some(0.5);
-        options.presence_penalty = Some(0.3);
+        let options = CompletionOptions {
+            frequency_penalty: Some(0.5),
+            presence_penalty: Some(0.3),
+            ..Default::default()
+        };
 
         let result = convert_to_chat_completion_request("gpt-4", messages, options).unwrap();
 
@@ -183,8 +191,10 @@ mod tests {
     #[test]
     fn test_convert_to_chat_completion_request_with_stop() {
         let messages = vec![create_test_message(MessageRole::User, "Test")];
-        let mut options = CompletionOptions::default();
-        options.stop = Some(vec!["END".to_string(), "STOP".to_string()]);
+        let options = CompletionOptions {
+            stop: Some(vec!["END".to_string(), "STOP".to_string()]),
+            ..Default::default()
+        };
 
         let result = convert_to_chat_completion_request("gpt-4", messages, options).unwrap();
 
@@ -194,8 +204,10 @@ mod tests {
     #[test]
     fn test_convert_to_chat_completion_request_with_stream() {
         let messages = vec![create_test_message(MessageRole::User, "Test")];
-        let mut options = CompletionOptions::default();
-        options.stream = true;
+        let options = CompletionOptions {
+            stream: true,
+            ..Default::default()
+        };
 
         let result = convert_to_chat_completion_request("gpt-4", messages, options).unwrap();
 
@@ -205,8 +217,10 @@ mod tests {
     #[test]
     fn test_convert_to_chat_completion_request_with_user() {
         let messages = vec![create_test_message(MessageRole::User, "Test")];
-        let mut options = CompletionOptions::default();
-        options.user = Some("user_123".to_string());
+        let options = CompletionOptions {
+            user: Some("user_123".to_string()),
+            ..Default::default()
+        };
 
         let result = convert_to_chat_completion_request("gpt-4", messages, options).unwrap();
 
@@ -216,8 +230,10 @@ mod tests {
     #[test]
     fn test_convert_to_chat_completion_request_with_seed() {
         let messages = vec![create_test_message(MessageRole::User, "Test")];
-        let mut options = CompletionOptions::default();
-        options.seed = Some(42);
+        let options = CompletionOptions {
+            seed: Some(42),
+            ..Default::default()
+        };
 
         let result = convert_to_chat_completion_request("gpt-4", messages, options).unwrap();
 
@@ -227,8 +243,10 @@ mod tests {
     #[test]
     fn test_convert_to_chat_completion_request_with_n() {
         let messages = vec![create_test_message(MessageRole::User, "Test")];
-        let mut options = CompletionOptions::default();
-        options.n = Some(3);
+        let options = CompletionOptions {
+            n: Some(3),
+            ..Default::default()
+        };
 
         let result = convert_to_chat_completion_request("gpt-4", messages, options).unwrap();
 
@@ -238,9 +256,11 @@ mod tests {
     #[test]
     fn test_convert_to_chat_completion_request_with_logprobs() {
         let messages = vec![create_test_message(MessageRole::User, "Test")];
-        let mut options = CompletionOptions::default();
-        options.logprobs = Some(true);
-        options.top_logprobs = Some(5);
+        let options = CompletionOptions {
+            logprobs: Some(true),
+            top_logprobs: Some(5),
+            ..Default::default()
+        };
 
         let result = convert_to_chat_completion_request("gpt-4", messages, options).unwrap();
 
@@ -283,17 +303,19 @@ mod tests {
     #[test]
     fn test_convert_to_chat_completion_request_all_options() {
         let messages = vec![create_test_message(MessageRole::User, "Test")];
-        let mut options = CompletionOptions::default();
-        options.temperature = Some(0.8);
-        options.max_tokens = Some(500);
-        options.top_p = Some(0.95);
-        options.frequency_penalty = Some(0.2);
-        options.presence_penalty = Some(0.1);
-        options.stop = Some(vec!["END".to_string()]);
-        options.stream = true;
-        options.user = Some("user_456".to_string());
-        options.seed = Some(123);
-        options.n = Some(2);
+        let options = CompletionOptions {
+            temperature: Some(0.8),
+            max_tokens: Some(500),
+            top_p: Some(0.95),
+            frequency_penalty: Some(0.2),
+            presence_penalty: Some(0.1),
+            stop: Some(vec!["END".to_string()]),
+            stream: true,
+            user: Some("user_456".to_string()),
+            seed: Some(123),
+            n: Some(2),
+            ..Default::default()
+        };
 
         let result = convert_to_chat_completion_request("claude-3", messages, options).unwrap();
 

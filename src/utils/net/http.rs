@@ -13,11 +13,13 @@
 //!
 //! # Usage
 //!
-//! ```rust,ignore
-//! use litellm_rs::utils::net::http::get_shared_client;
-//!
+//! ```rust,no_run
+//! # use litellm_rs::utils::net::http::get_shared_client;
+//! # async fn example() -> Result<(), Box<dyn std::error::Error>> {
 //! let client = get_shared_client();
 //! let response = client.get("https://api.openai.com").send().await?;
+//! # Ok(())
+//! # }
 //! ```
 
 use dashmap::DashMap;

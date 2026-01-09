@@ -32,7 +32,6 @@ pub struct GatewayConfig {
     pub enterprise: EnterpriseConfig,
 }
 
-#[allow(dead_code)]
 impl GatewayConfig {
     pub fn from_env() -> crate::utils::error::Result<Self> {
         Ok(Self {
@@ -49,7 +48,6 @@ impl GatewayConfig {
     }
 }
 
-#[allow(dead_code)]
 impl GatewayConfig {
     /// Merge two configurations, with other taking precedence
     pub fn merge(mut self, other: Self) -> Self {
@@ -200,8 +198,10 @@ mod tests {
     }
 
     fn create_valid_config() -> GatewayConfig {
-        let mut config = GatewayConfig::default();
-        config.providers = vec![create_test_provider("test-provider")];
+        let mut config = GatewayConfig {
+            providers: vec![create_test_provider("test-provider")],
+            ..Default::default()
+        };
         config.storage.database.url = "postgres://localhost/test".to_string();
         config.auth.jwt_secret = "test-secret-key".to_string();
         config
@@ -490,8 +490,10 @@ mod tests {
     #[test]
     fn test_gateway_config_merge_providers() {
         let base = create_valid_config();
-        let mut other = GatewayConfig::default();
-        other.providers = vec![create_test_provider("other-provider")];
+        let mut other = GatewayConfig {
+            providers: vec![create_test_provider("other-provider")],
+            ..Default::default()
+        };
         other.storage.database.url = "postgres://other".to_string();
         other.auth.jwt_secret = "other-secret".to_string();
 

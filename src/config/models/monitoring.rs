@@ -17,7 +17,6 @@ pub struct MonitoringConfig {
     pub health: HealthConfig,
 }
 
-#[allow(dead_code)]
 impl MonitoringConfig {
     /// Merge monitoring configurations
     pub fn merge(mut self, other: Self) -> Self {
@@ -52,7 +51,6 @@ impl Default for MetricsConfig {
     }
 }
 
-#[allow(dead_code)]
 impl MetricsConfig {
     /// Merge metrics configurations
     pub fn merge(mut self, other: Self) -> Self {
@@ -92,7 +90,6 @@ impl Default for TracingConfig {
     }
 }
 
-#[allow(dead_code)]
 impl TracingConfig {
     /// Merge tracing configurations
     pub fn merge(mut self, other: Self) -> Self {
@@ -129,7 +126,6 @@ impl Default for HealthConfig {
     }
 }
 
-#[allow(dead_code)]
 impl HealthConfig {
     /// Merge health configurations
     pub fn merge(mut self, other: Self) -> Self {

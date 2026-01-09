@@ -35,7 +35,6 @@ impl Default for CacheConfig {
     }
 }
 
-#[allow(dead_code)]
 impl CacheConfig {
     /// Merge cache configurations
     pub fn merge(mut self, other: Self) -> Self {

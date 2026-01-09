@@ -17,7 +17,6 @@ pub struct StorageConfig {
     pub vector_db: Option<VectorDbConfig>,
 }
 
-#[allow(dead_code)]
 impl StorageConfig {
     /// Merge storage configurations
     pub fn merge(mut self, other: Self) -> Self {
@@ -61,7 +60,6 @@ impl Default for DatabaseConfig {
     }
 }
 
-#[allow(dead_code)]
 impl DatabaseConfig {
     /// Merge database configurations
     pub fn merge(mut self, other: Self) -> Self {
@@ -112,7 +110,6 @@ impl Default for RedisConfig {
     }
 }
 
-#[allow(dead_code)]
 impl RedisConfig {
     /// Merge Redis configurations
     pub fn merge(mut self, other: Self) -> Self {

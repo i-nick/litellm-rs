@@ -314,15 +314,22 @@ mod tests {
 
     #[test]
     fn test_alert_stats_with_data() {
-        let mut stats = AlertStats::default();
-        stats.total_alerts = 100;
-        stats.failed_notifications = 5;
-        stats.alerts_by_severity.insert("critical".to_string(), 10);
-        stats.alerts_by_severity.insert("warning".to_string(), 30);
-        stats.alerts_by_severity.insert("info".to_string(), 60);
-        stats.alerts_by_source.insert("api".to_string(), 50);
-        stats.alerts_by_source.insert("worker".to_string(), 50);
-        stats.last_alert = Some(chrono::Utc::now());
+        let mut alerts_by_severity = HashMap::new();
+        alerts_by_severity.insert("critical".to_string(), 10);
+        alerts_by_severity.insert("warning".to_string(), 30);
+        alerts_by_severity.insert("info".to_string(), 60);
+
+        let mut alerts_by_source = HashMap::new();
+        alerts_by_source.insert("api".to_string(), 50);
+        alerts_by_source.insert("worker".to_string(), 50);
+
+        let stats = AlertStats {
+            total_alerts: 100,
+            failed_notifications: 5,
+            alerts_by_severity,
+            alerts_by_source,
+            last_alert: Some(chrono::Utc::now()),
+        };
 
         assert_eq!(stats.total_alerts, 100);
         assert_eq!(stats.failed_notifications, 5);
@@ -333,9 +340,13 @@ mod tests {
 
     #[test]
     fn test_alert_stats_clone() {
-        let mut original = AlertStats::default();
-        original.total_alerts = 42;
-        original.alerts_by_severity.insert("warning".to_string(), 20);
+        let mut alerts_by_severity = HashMap::new();
+        alerts_by_severity.insert("warning".to_string(), 20);
+        let original = AlertStats {
+            total_alerts: 42,
+            alerts_by_severity,
+            ..Default::default()
+        };
 
         let cloned = original.clone();
         assert_eq!(original.total_alerts, cloned.total_alerts);
@@ -347,10 +358,14 @@ mod tests {
 
     #[test]
     fn test_alert_stats_serialize() {
-        let mut stats = AlertStats::default();
-        stats.total_alerts = 50;
-        stats.failed_notifications = 2;
-        stats.alerts_by_severity.insert("info".to_string(), 50);
+        let mut alerts_by_severity = HashMap::new();
+        alerts_by_severity.insert("info".to_string(), 50);
+        let stats = AlertStats {
+            total_alerts: 50,
+            failed_notifications: 2,
+            alerts_by_severity,
+            ..Default::default()
+        };
 
         let json = serde_json::to_string(&stats).unwrap();
         assert!(json.contains("total_alerts"));

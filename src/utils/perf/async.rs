@@ -260,6 +260,9 @@ mod tests {
     use std::sync::Arc;
     use std::sync::atomic::{AtomicUsize, Ordering};
 
+    // Type alias to avoid clippy::type_complexity warning
+    type BoxedFuture<T, E> = std::pin::Pin<Box<dyn Future<Output = std::result::Result<T, E>> + Send>>;
+
     // ConcurrentRunner tests
     #[tokio::test]
     async fn test_concurrent_runner_basic() {
@@ -326,9 +329,7 @@ mod tests {
     #[tokio::test]
     async fn test_concurrent_runner_empty_futures() {
         let runner = ConcurrentRunner::new(2);
-        let futures: Vec<
-            std::pin::Pin<Box<dyn Future<Output = std::result::Result<i32, String>> + Send>>,
-        > = Vec::new();
+        let futures: Vec<BoxedFuture<i32, String>> = Vec::new();
 
         let results: Vec<std::result::Result<i32, String>> = runner.run_concurrent(futures).await;
         assert_eq!(results.len(), 0);

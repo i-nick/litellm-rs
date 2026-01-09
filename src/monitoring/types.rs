@@ -564,7 +564,7 @@ mod tests {
     #[test]
     fn test_alert_severity_serialization() {
         let severity = AlertSeverity::Warning;
-        let json = serde_json::to_value(&severity).unwrap();
+        let json = serde_json::to_value(severity).unwrap();
         assert_eq!(json, "Warning");
     }
 
@@ -585,7 +585,7 @@ mod tests {
         ];
 
         for (severity, expected) in variants {
-            let json = serde_json::to_value(&severity).unwrap();
+            let json = serde_json::to_value(severity).unwrap();
             assert_eq!(json.as_str().unwrap(), expected);
         }
     }

@@ -276,7 +276,7 @@ mod tests {
 
         let p50 = hist.percentile(50.0);
         // For 100 values, p50 should be around 50.5
-        assert!(p50 >= 49.0 && p50 <= 52.0);
+        assert!((49.0..=52.0).contains(&p50));
     }
 
     #[test]
@@ -288,7 +288,7 @@ mod tests {
 
         let p90 = hist.percentile(90.0);
         // For 100 values, p90 should be around 90
-        assert!(p90 >= 89.0 && p90 <= 92.0);
+        assert!((89.0..=92.0).contains(&p90));
     }
 
     #[test]
@@ -300,7 +300,7 @@ mod tests {
 
         let p99 = hist.percentile(99.0);
         // For 100 values, p99 should be around 99
-        assert!(p99 >= 98.0 && p99 <= 100.0);
+        assert!((98.0..=100.0).contains(&p99));
     }
 
     #[test]

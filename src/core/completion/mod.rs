@@ -5,9 +5,9 @@
 //! to call 100+ LLM APIs using OpenAI format.
 //!
 //! # Example
-//! ```ignore
-//! use litellm_rs::{completion, user_message, system_message};
-//!
+//! ```rust,no_run
+//! # use litellm_rs::{completion, user_message, system_message};
+//! # async fn example() -> Result<(), Box<dyn std::error::Error>> {
 //! let response = completion(
 //!     "gpt-4",
 //!     vec![
@@ -16,6 +16,8 @@
 //!     ],
 //!     None,
 //! ).await?;
+//! # Ok(())
+//! # }
 //! ```
 
 mod conversion;

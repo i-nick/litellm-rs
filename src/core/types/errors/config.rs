@@ -143,7 +143,7 @@ mod tests {
     fn test_config_result_ok() {
         let result: ConfigResult<String> = Ok("success".to_string());
         assert!(result.is_ok());
-        assert_eq!(result.unwrap(), "success");
+        assert!(matches!(result, Ok(ref s) if s == "success"));
     }
 
     #[test]

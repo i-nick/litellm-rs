@@ -410,14 +410,18 @@ mod tests {
     fn test_result_ok() {
         let result: Result<i32> = Ok(42);
         assert!(result.is_ok());
-        assert_eq!(result.unwrap(), 42);
+        assert!(matches!(result, Ok(42)));
     }
 
     #[test]
     fn test_result_err() {
-        let result: Result<i32> = Err(GatewayError::Validation("Invalid".to_string()));
+        let err = GatewayError::Validation("Invalid".to_string());
+        let result: Result<i32> = Err(err);
         assert!(result.is_err());
-        assert!(result.unwrap_err().to_string().contains("Validation"));
+        match result {
+            Err(e) => assert!(e.to_string().contains("Validation")),
+            Ok(_) => panic!("Expected Err variant"),
+        }
     }
 
     // ==================== Error Conversion Tests ====================
@@ -462,13 +466,11 @@ mod tests {
 
     #[test]
     fn test_provider_errors() {
-        let errors = vec![
-            GatewayError::ProviderUnavailable("down".to_string()),
+        let errors = [GatewayError::ProviderUnavailable("down".to_string()),
             GatewayError::ProviderNotFound("openai".to_string()),
             GatewayError::NoProvidersAvailable("none".to_string()),
             GatewayError::NoProvidersForModel("gpt-4".to_string()),
-            GatewayError::NoHealthyProviders("all failed".to_string()),
-        ];
+            GatewayError::NoHealthyProviders("all failed".to_string())];
 
         assert_eq!(errors.len(), 5);
     }

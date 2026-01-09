@@ -74,6 +74,7 @@ pub struct InferenceStatus {
     pub tokens_input: u32,
 }
 
+#[derive(Debug, Clone, Default)]
 pub struct DeepInfraRerankTransformation;
 
 impl DeepInfraRerankTransformation {
@@ -243,11 +244,6 @@ impl DeepInfraRerankTransformation {
     }
 }
 
-impl Default for DeepInfraRerankTransformation {
-    fn default() -> Self {
-        Self::new()
-    }
-}
 
 #[cfg(test)]
 mod tests {
@@ -263,7 +259,7 @@ mod tests {
 
     #[test]
     fn test_deepinfra_rerank_transformation_default() {
-        let transformation = DeepInfraRerankTransformation::default();
+        let transformation = DeepInfraRerankTransformation;
         let params = transformation.get_supported_cohere_rerank_params();
         assert!(!params.is_empty());
     }

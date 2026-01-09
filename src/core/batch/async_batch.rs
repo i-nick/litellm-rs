@@ -148,19 +148,22 @@ impl AsyncBatchExecutor {
     /// Vector of results in the same order as input items
     ///
     /// # Example
-    /// ```rust,ignore
-    /// use litellm_rs::core::batch::{AsyncBatchExecutor, AsyncBatchConfig};
-    ///
+    /// ```rust,no_run
+    /// # use litellm_rs::core::batch::{AsyncBatchExecutor, AsyncBatchConfig};
+    /// # use std::time::Duration;
+    /// # async fn example() {
     /// let executor = AsyncBatchExecutor::new(
     ///     AsyncBatchConfig::new()
     ///         .with_concurrency(5)
     ///         .with_timeout(Duration::from_secs(30))
     /// );
     ///
-    /// let requests = vec![request1, request2, request3];
+    /// let requests: Vec<String> = vec!["req1".into(), "req2".into(), "req3".into()];
     /// let results = executor.execute(requests, |req| async move {
-    ///     provider.complete(req).await
+    ///     // Process each request
+    ///     Ok::<_, litellm_rs::GatewayError>(format!("processed: {}", req))
     /// }).await;
+    /// # }
     /// ```
     pub async fn execute<T, R, F, Fut>(
         &self,

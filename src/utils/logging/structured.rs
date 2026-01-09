@@ -643,7 +643,7 @@ mod tests {
     fn test_structured_logger_error_with_error() {
         let context = LogContext::new();
         let logger = StructuredLogger::new(context);
-        let error = std::io::Error::new(std::io::ErrorKind::Other, "test error");
+        let error = std::io::Error::other("test error");
         logger.error("Test error message", Some(&error));
     }
 

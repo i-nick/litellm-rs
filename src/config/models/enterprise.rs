@@ -18,7 +18,6 @@ pub struct EnterpriseConfig {
     pub advanced_analytics: bool,
 }
 
-#[allow(dead_code)]
 impl EnterpriseConfig {
     /// Merge enterprise configurations
     pub fn merge(mut self, other: Self) -> Self {

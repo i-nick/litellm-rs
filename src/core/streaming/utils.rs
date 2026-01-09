@@ -233,11 +233,9 @@ mod tests {
     #[test]
     fn test_streaming_workflow() {
         // Simulate a streaming workflow
-        let lines = vec![
-            "data: {\"choices\":[{\"delta\":{\"content\":\"Hello\"}}]}",
+        let lines = ["data: {\"choices\":[{\"delta\":{\"content\":\"Hello\"}}]}",
             "data: {\"choices\":[{\"delta\":{\"content\":\" world\"}}]}",
-            "data: [DONE]",
-        ];
+            "data: [DONE]"];
 
         for (i, line) in lines.iter().enumerate() {
             let parsed = parse_sse_line(line);

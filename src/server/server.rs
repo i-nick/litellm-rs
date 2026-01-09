@@ -18,7 +18,6 @@ use std::sync::Arc;
 use tracing::{debug, info, warn};
 
 /// HTTP server
-#[allow(dead_code)]
 pub struct HttpServer {
     /// Server configuration
     config: ServerConfig,
@@ -26,7 +25,6 @@ pub struct HttpServer {
     state: AppState,
 }
 
-#[allow(dead_code)]
 impl HttpServer {
     /// Create a new HTTP server
     pub async fn new(config: &Config) -> Result<Self> {

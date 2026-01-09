@@ -10,18 +10,12 @@ use crate::core::cost::{
 use async_trait::async_trait;
 
 /// Anthropic Cost Calculator - delegates to generic implementation
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct AnthropicCostCalculator;
 
 impl AnthropicCostCalculator {
     pub fn new() -> Self {
         Self
-    }
-}
-
-impl Default for AnthropicCostCalculator {
-    fn default() -> Self {
-        Self::new()
     }
 }
 
@@ -88,7 +82,7 @@ mod tests {
 
     #[test]
     fn test_anthropic_cost_calculator_default() {
-        let calc = AnthropicCostCalculator::default();
+        let calc = AnthropicCostCalculator;
         assert_eq!(calc.provider_name(), "anthropic");
     }
 

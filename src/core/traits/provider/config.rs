@@ -16,8 +16,9 @@ use std::fmt::Debug;
 /// - Clone and Debug for testability
 ///
 /// # Example
-/// ```rust,ignore
+/// ```rust
 /// use std::time::Duration;
+/// use litellm_rs::core::traits::ProviderConfig;
 ///
 /// #[derive(Debug, Clone)]
 /// struct MyProviderConfig {

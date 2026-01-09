@@ -102,7 +102,7 @@ mod tests {
     #[test]
     fn test_cooldown_reason_clone() {
         let reason = CooldownReason::RateLimit;
-        let cloned = reason.clone();
+        let cloned = reason;
         assert_eq!(reason, cloned);
     }
 
@@ -128,15 +128,13 @@ mod tests {
 
     #[test]
     fn test_cooldown_reason_all_variants() {
-        let reasons = vec![
-            CooldownReason::RateLimit,
+        let reasons = [CooldownReason::RateLimit,
             CooldownReason::AuthError,
             CooldownReason::NotFound,
             CooldownReason::Timeout,
             CooldownReason::ConsecutiveFailures,
             CooldownReason::HighFailureRate,
-            CooldownReason::Manual,
-        ];
+            CooldownReason::Manual];
 
         assert_eq!(reasons.len(), 7);
         // Verify all are unique

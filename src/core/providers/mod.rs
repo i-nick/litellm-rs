@@ -28,14 +28,20 @@ pub mod xai;
 pub mod capabilities;
 pub mod macros; // Macros for reducing boilerplate
 pub mod shared; // Shared utilities for all providers // Compile-time capability verification
-pub mod thinking; // Thinking/reasoning provider trait
+pub mod thinking; // Thinking/reasoning provider trait (modular)
 pub mod transform; // Request/Response transformation engine
 pub mod context; // Request/Response context and metadata
 
 // Registry and unified provider
 pub mod base_provider;
+pub mod contextual_error;
+pub mod provider_error_conversions;
 pub mod provider_registry;
 pub mod unified_provider;
+
+// Test modules (only compiled during tests)
+#[cfg(test)]
+mod unified_provider_tests;
 
 // Export main types
 pub use crate::core::traits::provider::llm_provider::trait_definition::LLMProvider;
@@ -45,6 +51,7 @@ use crate::core::types::responses::{
     ChatChunk, ChatResponse, EmbeddingResponse, ImageGenerationResponse,
 };
 use chrono::{DateTime, Utc};
+pub use contextual_error::ContextualError;
 pub use provider_registry::ProviderRegistry;
 pub use unified_provider::{ProviderError, UnifiedProviderError}; // Both for compatibility
 

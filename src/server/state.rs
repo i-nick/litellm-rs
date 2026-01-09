@@ -12,7 +12,6 @@ use std::sync::Arc;
 /// multiple request handlers. All fields are wrapped in Arc for efficient
 /// sharing across threads.
 #[derive(Clone)]
-#[allow(dead_code)]
 pub struct AppState {
     /// Gateway configuration (shared read-only)
     pub config: Arc<Config>,

@@ -365,11 +365,12 @@ mod tests {
 
     #[test]
     fn test_error_metrics_storage_critical_vs_warnings() {
-        let mut storage = ErrorMetricsStorage::default();
-
-        storage.critical_errors = 5;
-        storage.warnings = 50;
-        storage.total_errors = 55;
+        let storage = ErrorMetricsStorage {
+            critical_errors: 5,
+            warnings: 50,
+            total_errors: 55,
+            ..Default::default()
+        };
 
         let critical_ratio = storage.critical_errors as f64 / storage.total_errors as f64;
         assert!(critical_ratio < 0.1);
@@ -398,10 +399,11 @@ mod tests {
 
     #[test]
     fn test_performance_metrics_storage_cache_stats() {
-        let mut storage = PerformanceMetricsStorage::default();
-
-        storage.cache_hits = 800;
-        storage.cache_misses = 200;
+        let storage = PerformanceMetricsStorage {
+            cache_hits: 800,
+            cache_misses: 200,
+            ..Default::default()
+        };
 
         let total = storage.cache_hits + storage.cache_misses;
         let hit_rate = storage.cache_hits as f64 / total as f64;

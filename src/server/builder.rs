@@ -9,12 +9,10 @@ use crate::utils::error::{GatewayError, Result};
 use tracing::info;
 
 /// Server builder for easier configuration
-#[allow(dead_code)]
 pub struct ServerBuilder {
     config: Option<Config>,
 }
 
-#[allow(dead_code)]
 impl ServerBuilder {
     /// Create a new server builder
     pub fn new() -> Self {
@@ -44,7 +42,6 @@ impl Default for ServerBuilder {
 }
 
 /// Run the server with automatic configuration loading
-#[allow(dead_code)]
 pub async fn run_server() -> Result<()> {
     info!("🚀 Starting Rust LiteLLM Gateway");
 

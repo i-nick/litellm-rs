@@ -17,7 +17,6 @@ pub struct RouterConfig {
     pub load_balancer: LoadBalancerConfig,
 }
 
-#[allow(dead_code)]
 impl RouterConfig {
     /// Merge router configurations
     pub fn merge(mut self, other: Self) -> Self {
@@ -91,7 +90,6 @@ impl Default for CircuitBreakerConfig {
     }
 }
 
-#[allow(dead_code)]
 impl CircuitBreakerConfig {
     /// Merge circuit breaker configurations
     pub fn merge(mut self, other: Self) -> Self {
@@ -135,7 +133,6 @@ impl Default for LoadBalancerConfig {
     }
 }
 
-#[allow(dead_code)]
 impl LoadBalancerConfig {
     /// Merge load balancer configurations
     pub fn merge(mut self, other: Self) -> Self {

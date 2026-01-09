@@ -8,6 +8,8 @@ use tracing::{info, warn};
 
 impl HttpServer {
     /// Graceful shutdown signal handler
+    ///
+    /// Public API for external callers to use for graceful shutdown handling.
     #[allow(dead_code)]
     pub async fn shutdown_signal() {
         let ctrl_c = async {
@@ -122,7 +124,7 @@ mod tests {
 
     #[test]
     fn test_format_bind_error_os_error_48() {
-        let error = Error::new(ErrorKind::Other, "os error 48");
+        let error = Error::other("os error 48");
         let result = HttpServer::format_bind_error(error, "0.0.0.0:3000", 3000);
 
         let error_msg = result.to_string();
@@ -132,7 +134,7 @@ mod tests {
 
     #[test]
     fn test_format_bind_error_os_error_98() {
-        let error = Error::new(ErrorKind::Other, "os error 98");
+        let error = Error::other("os error 98");
         let result = HttpServer::format_bind_error(error, "127.0.0.1:9000", 9000);
 
         let error_msg = result.to_string();
@@ -152,7 +154,7 @@ mod tests {
 
     #[test]
     fn test_format_bind_error_os_error_13() {
-        let error = Error::new(ErrorKind::Other, "os error 13");
+        let error = Error::other("os error 13");
         let result = HttpServer::format_bind_error(error, "0.0.0.0:443", 443);
 
         let error_msg = result.to_string();
@@ -162,7 +164,7 @@ mod tests {
 
     #[test]
     fn test_format_bind_error_generic() {
-        let error = Error::new(ErrorKind::Other, "Network unreachable");
+        let error = Error::other("Network unreachable");
         let result = HttpServer::format_bind_error(error, "192.168.1.1:8080", 8080);
 
         let error_msg = result.to_string();

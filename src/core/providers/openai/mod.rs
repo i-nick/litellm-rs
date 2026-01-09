@@ -3,9 +3,13 @@
 //! Complete OpenAI API integration following the unified provider architecture.
 //! Supports all OpenAI services: Chat, Images, Audio, Embeddings, Fine-tuning, etc.
 
+mod api_methods;
 pub mod client;
+#[cfg(test)]
+mod client_tests;
 pub mod config;
 pub mod error;
+pub mod error_mapper;
 pub mod models;
 pub mod provider;
 pub mod streaming;
@@ -28,5 +32,6 @@ pub use capabilities::*;
 pub use client::OpenAIProvider;
 pub use config::OpenAIConfig;
 pub use error::OpenAIError;
+pub use error_mapper::OpenAIErrorMapper;
 pub use models::{OpenAIModelRegistry, get_openai_registry};
 pub use transformer::{OpenAIRequestTransformer, OpenAIResponseTransformer, OpenAITransformer};

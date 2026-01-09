@@ -366,7 +366,7 @@ mod tests {
 
         session.set_data("string", "hello");
         session.set_data("number", 123);
-        session.set_data("float", 3.14);
+        session.set_data("float", 1.234);
         session.set_data("bool", true);
         session.set_data("null", serde_json::Value::Null);
 

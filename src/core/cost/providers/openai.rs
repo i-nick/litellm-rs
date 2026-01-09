@@ -10,7 +10,7 @@ use crate::core::cost::{
 use async_trait::async_trait;
 
 /// OpenAI Cost Calculator - delegates to generic implementation
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct OpenAICostCalculator;
 
 impl OpenAICostCalculator {
@@ -60,12 +60,6 @@ impl OpenAICostCalculator {
         Err(CostError::MissingPricing {
             model: model.to_string(),
         })
-    }
-}
-
-impl Default for OpenAICostCalculator {
-    fn default() -> Self {
-        Self::new()
     }
 }
 
@@ -124,7 +118,7 @@ mod tests {
 
     #[test]
     fn test_openai_cost_calculator_default() {
-        let calc = OpenAICostCalculator::default();
+        let calc = OpenAICostCalculator;
         assert_eq!(calc.provider_name(), "openai");
     }
 

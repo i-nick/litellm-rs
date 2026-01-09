@@ -9,20 +9,25 @@
 //!
 //! ## Migration Guide
 //!
-//! Replace:
-//! ```ignore
+//! Replace the legacy LoadBalancer:
+//! ```rust,no_run
+//! # use litellm_rs::core::router::load_balancer::LoadBalancer;
+//! # use litellm_rs::core::router::strategy::types::RoutingStrategy;
+//! # async fn example() -> Result<(), Box<dyn std::error::Error>> {
 //! let lb = LoadBalancer::new(RoutingStrategy::RoundRobin).await?;
-//! lb.add_provider("openai", provider).await?;
-//! let provider = lb.select_provider("gpt-4", &context).await?;
+//! // lb.add_provider("openai", provider).await?;
+//! # Ok(())
+//! # }
 //! ```
 //!
-//! With:
-//! ```ignore
+//! With the new UnifiedRouter:
+//! ```rust
+//! # use litellm_rs::{UnifiedRouter, RouterConfig};
 //! let router = UnifiedRouter::new(RouterConfig::default());
-//! router.add_deployment(deployment);
-//! let result = router.execute("gpt-4", |deployment_id| async {
-//!     // Your operation here
-//! }).await?;
+//! // router.add_deployment(deployment);
+//! // let result = router.execute("gpt-4", |deployment_id| async {
+//! //     // Your operation here
+//! // }).await?;
 //! ```
 
 mod core;

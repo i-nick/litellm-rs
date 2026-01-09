@@ -31,7 +31,6 @@ impl Default for RateLimitConfig {
     }
 }
 
-#[allow(dead_code)]
 impl RateLimitConfig {
     /// Merge rate limit configurations
     pub fn merge(mut self, other: Self) -> Self {

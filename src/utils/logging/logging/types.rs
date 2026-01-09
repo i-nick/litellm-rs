@@ -489,7 +489,7 @@ mod tests {
             request_id: None,
         };
 
-        let is_success = |code: u16| code >= 200 && code < 400;
+        let is_success = |code: u16| (200..400).contains(&code);
 
         assert!(is_success(success_metrics.status_code));
         assert!(!is_success(error_metrics.status_code));
@@ -519,7 +519,7 @@ mod tests {
             request_id: None,
         };
 
-        let is_client_error = |code: u16| code >= 400 && code < 500;
+        let is_client_error = |code: u16| (400..500).contains(&code);
         let is_server_error = |code: u16| code >= 500;
 
         assert!(is_client_error(client_error.status_code));

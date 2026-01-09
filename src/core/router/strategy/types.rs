@@ -434,15 +434,14 @@ mod tests {
         for ratio in ratios {
             let strategy = RoutingStrategy::ABTest { split_ratio: ratio };
             if let RoutingStrategy::ABTest { split_ratio } = strategy {
-                assert!(split_ratio >= 0.0 && split_ratio <= 1.0);
+                assert!((0.0..=1.0).contains(&split_ratio));
             }
         }
     }
 
     #[test]
     fn test_usage_based_provider_selection() {
-        let providers = vec![
-            ("openai", ProviderUsage {
+        let providers = [("openai", ProviderUsage {
                 tpm: 90000,
                 rpm: 900,
                 active_requests: 50,
@@ -462,8 +461,7 @@ mod tests {
                 active_requests: 25,
                 tpm_limit: Some(100000),
                 rpm_limit: Some(1000),
-            }),
-        ];
+            })];
 
         let best = providers.iter()
             .min_by(|a, b| {

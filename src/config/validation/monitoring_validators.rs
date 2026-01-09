@@ -84,7 +84,6 @@ mod tests {
             enabled: true,
             port: 9090,
             path: "/metrics".to_string(),
-            ..Default::default()
         };
         assert!(validate_config(&config).is_ok());
     }
@@ -95,7 +94,6 @@ mod tests {
             enabled: false,
             port: 0,
             path: "/metrics".to_string(),
-            ..Default::default()
         };
         assert!(validate_config(&config).is_ok());
     }
@@ -106,7 +104,6 @@ mod tests {
             enabled: true,
             port: 0,
             path: "/metrics".to_string(),
-            ..Default::default()
         };
         let result = validate_config(&config);
         assert!(result.is_err());
@@ -119,7 +116,6 @@ mod tests {
             enabled: true,
             port: 9090,
             path: "".to_string(),
-            ..Default::default()
         };
         let result = validate_config(&config);
         assert!(result.is_err());
@@ -132,7 +128,6 @@ mod tests {
             enabled: true,
             port: 9090,
             path: "metrics".to_string(),
-            ..Default::default()
         };
         let result = validate_config(&config);
         assert!(result.is_err());
@@ -145,7 +140,6 @@ mod tests {
             enabled: true,
             port: 9090,
             path: "/custom/metrics/path".to_string(),
-            ..Default::default()
         };
         assert!(validate_config(&config).is_ok());
     }
@@ -158,7 +152,6 @@ mod tests {
             enabled: true,
             endpoint: Some("http://localhost:4317".to_string()),
             service_name: "gateway".to_string(),
-            ..Default::default()
         };
         assert!(validate_config(&config).is_ok());
     }
@@ -169,7 +162,6 @@ mod tests {
             enabled: false,
             endpoint: None,
             service_name: "gateway".to_string(),
-            ..Default::default()
         };
         assert!(validate_config(&config).is_ok());
     }
@@ -180,7 +172,6 @@ mod tests {
             enabled: true,
             endpoint: None,
             service_name: "gateway".to_string(),
-            ..Default::default()
         };
         let result = validate_config(&config);
         assert!(result.is_err());
@@ -193,7 +184,6 @@ mod tests {
             enabled: false,
             endpoint: None,
             service_name: "".to_string(),
-            ..Default::default()
         };
         let result = validate_config(&config);
         assert!(result.is_err());

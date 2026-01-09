@@ -379,12 +379,16 @@ mod tests {
 
     #[test]
     fn test_provider_metrics_clone() {
-        let mut metrics = ProviderMetrics::default();
-        metrics.total_requests = 100;
-        metrics.successful_requests = 95;
-        metrics.failed_requests = 5;
-        metrics.total_response_time = Duration::from_millis(5000);
-        metrics.error_counts.insert("timeout".to_string(), 3);
+        let mut error_counts = HashMap::new();
+        error_counts.insert("timeout".to_string(), 3);
+        let metrics = ProviderMetrics {
+            total_requests: 100,
+            successful_requests: 95,
+            failed_requests: 5,
+            total_response_time: Duration::from_millis(5000),
+            error_counts,
+            ..Default::default()
+        };
 
         let cloned = metrics.clone();
         assert_eq!(cloned.total_requests, 100);
@@ -415,12 +419,16 @@ mod tests {
 
     #[test]
     fn test_model_metrics_clone() {
-        let mut metrics = ModelMetrics::default();
-        metrics.total_requests = 50;
-        metrics.successful_requests = 48;
-        metrics.failed_requests = 2;
-        metrics.providers_used.insert("openai".to_string(), 30);
-        metrics.providers_used.insert("anthropic".to_string(), 20);
+        let mut providers_used = HashMap::new();
+        providers_used.insert("openai".to_string(), 30);
+        providers_used.insert("anthropic".to_string(), 20);
+        let metrics = ModelMetrics {
+            total_requests: 50,
+            successful_requests: 48,
+            failed_requests: 2,
+            providers_used,
+            ..Default::default()
+        };
 
         let cloned = metrics.clone();
         assert_eq!(cloned.total_requests, 50);
@@ -451,11 +459,13 @@ mod tests {
 
     #[test]
     fn test_overall_metrics_clone() {
-        let mut metrics = OverallMetrics::default();
-        metrics.total_requests = 1000;
-        metrics.successful_requests = 950;
-        metrics.failed_requests = 50;
-        metrics.requests_per_second = 10.5;
+        let metrics = OverallMetrics {
+            total_requests: 1000,
+            successful_requests: 950,
+            failed_requests: 50,
+            requests_per_second: 10.5,
+            ..Default::default()
+        };
 
         let cloned = metrics.clone();
         assert_eq!(cloned.total_requests, 1000);

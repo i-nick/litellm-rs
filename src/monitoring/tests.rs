@@ -108,7 +108,7 @@ mod tests {
     #[test]
     fn test_alert_severity_clone() {
         let severity = AlertSeverity::Critical;
-        let cloned = severity.clone();
+        let cloned = severity;
         assert_eq!(severity, cloned);
     }
 

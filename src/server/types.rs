@@ -21,7 +21,6 @@ pub struct ServerHealth {
 
 /// Request metrics for monitoring
 #[derive(Debug, Clone)]
-#[allow(dead_code)]
 pub struct RequestMetrics {
     /// Request ID
     pub request_id: String,

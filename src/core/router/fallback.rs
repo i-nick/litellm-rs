@@ -92,10 +92,14 @@ impl FallbackConfig {
     /// Add general fallback models for a model (builder pattern)
     ///
     /// General fallbacks are used when no specific fallback type matches the error.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the internal lock is poisoned (indicates a bug in the calling code).
     pub fn add_general(self, model: &str, fallbacks: Vec<String>) -> Self {
         self.general
             .write()
-            .unwrap()
+            .expect("FallbackConfig general lock poisoned")
             .insert(model.to_string(), fallbacks);
         self
     }
@@ -103,10 +107,14 @@ impl FallbackConfig {
     /// Add context window fallback models for a model (builder pattern)
     ///
     /// Context window fallbacks are used when the input exceeds the model's maximum context length.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the internal lock is poisoned (indicates a bug in the calling code).
     pub fn add_context_window(self, model: &str, fallbacks: Vec<String>) -> Self {
         self.context_window
             .write()
-            .unwrap()
+            .expect("FallbackConfig context_window lock poisoned")
             .insert(model.to_string(), fallbacks);
         self
     }
@@ -114,10 +122,14 @@ impl FallbackConfig {
     /// Add content policy fallback models for a model (builder pattern)
     ///
     /// Content policy fallbacks are used when content is filtered or rejected by safety systems.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the internal lock is poisoned (indicates a bug in the calling code).
     pub fn add_content_policy(self, model: &str, fallbacks: Vec<String>) -> Self {
         self.content_policy
             .write()
-            .unwrap()
+            .expect("FallbackConfig content_policy lock poisoned")
             .insert(model.to_string(), fallbacks);
         self
     }
@@ -125,10 +137,14 @@ impl FallbackConfig {
     /// Add rate limit fallback models for a model (builder pattern)
     ///
     /// Rate limit fallbacks are used when the model's rate limit is exceeded.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the internal lock is poisoned (indicates a bug in the calling code).
     pub fn add_rate_limit(self, model: &str, fallbacks: Vec<String>) -> Self {
         self.rate_limit
             .write()
-            .unwrap()
+            .expect("FallbackConfig rate_limit lock poisoned")
             .insert(model.to_string(), fallbacks);
         self
     }
@@ -137,6 +153,10 @@ impl FallbackConfig {
     ///
     /// Returns a cloned vector of fallback model names. Returns empty vector if no fallbacks
     /// are configured for the given model and type.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the internal lock is poisoned (indicates a bug in the calling code).
     pub fn get_fallbacks_for_type(
         &self,
         model_name: &str,
@@ -150,7 +170,7 @@ impl FallbackConfig {
         };
 
         lock.read()
-            .unwrap()
+            .expect("FallbackConfig lock poisoned")
             .get(model_name)
             .cloned()
             .unwrap_or_default()

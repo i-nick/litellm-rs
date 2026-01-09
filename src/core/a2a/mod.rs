@@ -24,14 +24,14 @@
 //!
 //! # Usage
 //!
-//! ```rust,ignore
-//! use litellm_rs::core::a2a::{A2AGateway, AgentConfig, AgentProvider};
-//!
+//! ```rust,no_run
+//! # use litellm_rs::core::a2a::{A2AGateway, AgentConfig, AgentProvider};
+//! # async fn example() -> Result<(), Box<dyn std::error::Error>> {
 //! // Configure an agent
 //! let config = AgentConfig {
 //!     name: "my-agent".to_string(),
 //!     provider: AgentProvider::LangGraph,
-//!     url: "https://my-agent.example.com".to_string(),
+//!     url: "https://my-agent.example.com".parse()?,
 //!     ..Default::default()
 //! };
 //!
@@ -39,8 +39,10 @@
 //! let gateway = A2AGateway::new();
 //! gateway.register_agent(config).await?;
 //!
-//! // Invoke the agent
-//! let response = gateway.send_message("my-agent", message).await?;
+//! // Invoke the agent (send_message is an example - actual API may differ)
+//! // let response = gateway.send_message("my-agent", message).await?;
+//! # Ok(())
+//! # }
 //! ```
 
 pub mod config;

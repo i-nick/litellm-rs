@@ -14,14 +14,8 @@ use super::{
 };
 
 /// Transformer for Gemini models
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct GeminiTransformer;
-
-impl Default for GeminiTransformer {
-    fn default() -> Self {
-        Self::new()
-    }
-}
 
 impl GeminiTransformer {
     pub fn new() -> Self {
@@ -278,14 +272,8 @@ impl GeminiTransformer {
 }
 
 /// Transformer for partner models (Claude, Llama, etc.)
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct PartnerModelTransformer;
-
-impl Default for PartnerModelTransformer {
-    fn default() -> Self {
-        Self::new()
-    }
-}
 
 impl PartnerModelTransformer {
     pub fn new() -> Self {
@@ -583,7 +571,7 @@ mod tests {
 
     #[test]
     fn test_gemini_transformer_default() {
-        let transformer = GeminiTransformer::default();
+        let transformer = GeminiTransformer;
         assert!(format!("{:?}", transformer).contains("GeminiTransformer"));
     }
 
@@ -836,7 +824,7 @@ mod tests {
 
     #[test]
     fn test_partner_transformer_default() {
-        let transformer = PartnerModelTransformer::default();
+        let transformer = PartnerModelTransformer;
         assert!(format!("{:?}", transformer).contains("PartnerModelTransformer"));
     }
 

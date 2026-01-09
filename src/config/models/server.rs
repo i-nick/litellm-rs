@@ -46,7 +46,6 @@ impl Default for ServerConfig {
     }
 }
 
-#[allow(dead_code)]
 impl ServerConfig {
     /// Merge server configurations
     pub fn merge(mut self, other: Self) -> Self {
@@ -126,7 +125,6 @@ pub struct TlsConfig {
     pub require_client_cert: bool,
 }
 
-#[allow(dead_code)]
 impl TlsConfig {
     /// Validate TLS configuration
     pub fn validate(&self) -> Result<(), String> {

@@ -255,8 +255,7 @@ impl LLMClient {
     ) -> Result<ChatResponse> {
         let user_message = messages
             .iter()
-            .filter(|m| matches!(m.role, Role::User))
-            .next_back()
+            .rfind(|m| matches!(m.role, Role::User))
             .and_then(|m| match &m.content {
                 Some(Content::Text(text)) => Some(text.as_str()),
                 _ => None,

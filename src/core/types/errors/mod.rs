@@ -30,7 +30,7 @@
 //!   - ContentFiltered: Content blocked by safety filters
 //!
 //! ## Usage
-//! ```rust,ignore
+//! ```rust
 //! // All providers use unified ProviderError
 //! use litellm_rs::ProviderError;
 //!

@@ -434,9 +434,9 @@ mod tests {
 
     #[test]
     fn test_env_utils_get_as_float() {
-        EnvUtils::set_env("FLOAT_VAR", "3.14");
+        EnvUtils::set_env("FLOAT_VAR", "1.234");
         let result = EnvUtils::get_env_as_float("FLOAT_VAR", 0.0).unwrap();
-        assert!((result - 3.14).abs() < 0.001);
+        assert!((result - 1.234).abs() < 0.001);
 
         EnvUtils::set_env("INVALID_FLOAT", "not_a_float");
         assert!(EnvUtils::get_env_as_float("INVALID_FLOAT", 0.0).is_err());

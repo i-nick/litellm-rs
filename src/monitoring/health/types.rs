@@ -500,8 +500,8 @@ mod tests {
         // Simulate health check results
         let mut components = HashMap::new();
 
-        let component_names = vec!["database", "cache", "api", "storage", "queue"];
-        let health_states = vec![true, true, false, true, true];
+        let component_names = ["database", "cache", "api", "storage", "queue"];
+        let health_states = [true, true, false, true, true];
 
         for (name, healthy) in component_names.iter().zip(health_states.iter()) {
             components.insert(
@@ -534,8 +534,7 @@ mod tests {
 
     #[test]
     fn test_component_health_by_response_time() {
-        let components = vec![
-            create_test_component_health("fast", true),
+        let components = [create_test_component_health("fast", true),
             ComponentHealth {
                 name: "slow".to_string(),
                 healthy: true,
@@ -553,8 +552,7 @@ mod tests {
                 response_time_ms: 2000,
                 error: None,
                 metadata: HashMap::new(),
-            },
-        ];
+            }];
 
         let avg_response_time: u64 =
             components.iter().map(|c| c.response_time_ms).sum::<u64>() / components.len() as u64;
@@ -564,8 +562,7 @@ mod tests {
 
     #[test]
     fn test_critical_vs_non_critical_components() {
-        let configs = vec![
-            HealthCheckConfig {
+        let configs = [HealthCheckConfig {
                 name: "database".to_string(),
                 interval: Duration::from_secs(10),
                 timeout: Duration::from_secs(2),
@@ -585,8 +582,7 @@ mod tests {
                 timeout: Duration::from_secs(10),
                 retries: 1,
                 critical: false,
-            },
-        ];
+            }];
 
         let critical_count = configs.iter().filter(|c| c.critical).count();
         let non_critical_count = configs.len() - critical_count;
@@ -611,14 +607,12 @@ mod tests {
 
     #[test]
     fn test_uptime_calculation() {
-        let uptimes_seconds = vec![0, 60, 3600, 86400, 604800];
-        let expected_descriptions = vec![
-            "0 seconds",
+        let uptimes_seconds = [0, 60, 3600, 86400, 604800];
+        let expected_descriptions = ["0 seconds",
             "1 minute",
             "1 hour",
             "1 day",
-            "1 week",
-        ];
+            "1 week"];
 
         for (uptime, desc) in uptimes_seconds.iter().zip(expected_descriptions.iter()) {
             let status = HealthStatus {

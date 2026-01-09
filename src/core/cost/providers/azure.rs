@@ -10,7 +10,7 @@ use crate::core::cost::{
 use async_trait::async_trait;
 
 /// Azure Cost Calculator - delegates to generic implementation
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct AzureCostCalculator;
 
 impl AzureCostCalculator {
@@ -74,11 +74,6 @@ impl AzureCostCalculator {
     }
 }
 
-impl Default for AzureCostCalculator {
-    fn default() -> Self {
-        Self::new()
-    }
-}
 
 #[async_trait]
 impl CostCalculator for AzureCostCalculator {
@@ -135,7 +130,7 @@ mod tests {
 
     #[test]
     fn test_azure_cost_calculator_default() {
-        let calc = AzureCostCalculator::default();
+        let calc = AzureCostCalculator;
         assert_eq!(calc.provider_name(), "azure");
     }
 

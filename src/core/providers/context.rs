@@ -169,10 +169,11 @@ pub struct SecurityContext {
 }
 
 /// Content filtering levels
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub enum ContentFilterLevel {
     None,
     Low,
+    #[default]
     Medium,
     High,
     Strict,
@@ -201,8 +202,9 @@ pub struct RoutingContext {
 }
 
 /// Routing strategies
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub enum RoutingStrategy {
+    #[default]
     RoundRobin,
     LeastLatency,
     LeastBusy,
@@ -483,18 +485,6 @@ impl Default for ResponseMetrics {
             first_byte_time_ms: None,
             tokens_per_second: None,
         }
-    }
-}
-
-impl Default for ContentFilterLevel {
-    fn default() -> Self {
-        ContentFilterLevel::Medium
-    }
-}
-
-impl Default for RoutingStrategy {
-    fn default() -> Self {
-        RoutingStrategy::RoundRobin
     }
 }
 
