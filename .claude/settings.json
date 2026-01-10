@@ -1,0 +1,48 @@
+{
+  "skills": {
+    "provider-development": {
+      "enabled": true,
+      "path": ".claude/skills/provider-development"
+    },
+    "provider-architecture": {
+      "enabled": true,
+      "path": ".claude/skills/provider-architecture"
+    },
+    "error-handling": {
+      "enabled": true,
+      "path": ".claude/skills/error-handling"
+    },
+    "routing-architecture": {
+      "enabled": true,
+      "path": ".claude/skills/routing-architecture"
+    },
+    "auth-architecture": {
+      "enabled": true,
+      "path": ".claude/skills/auth-architecture"
+    },
+    "caching-architecture": {
+      "enabled": true,
+      "path": ".claude/skills/caching-architecture"
+    },
+    "streaming-architecture": {
+      "enabled": true,
+      "path": ".claude/skills/streaming-architecture"
+    },
+    "config-architecture": {
+      "enabled": true,
+      "path": ".claude/skills/config-architecture"
+    },
+    "observability-architecture": {
+      "enabled": true,
+      "path": ".claude/skills/observability-architecture"
+    },
+    "mcp-gateway": {
+      "enabled": true,
+      "path": ".claude/skills/mcp-gateway"
+    },
+    "a2a-protocol": {
+      "enabled": true,
+      "path": ".claude/skills/a2a-protocol"
+    }
+  }
+}
