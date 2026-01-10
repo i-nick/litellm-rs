@@ -12,7 +12,7 @@ use tracing::debug;
 use super::config::OciConfig;
 use super::error::{OciError, OciErrorMapper};
 use super::model_info::{get_available_models, get_model_info, supports_tools};
-use crate::core::providers::base::{header, header_owned, GlobalPoolManager, HttpMethod};
+use crate::core::providers::base::{header_owned, GlobalPoolManager, HttpMethod};
 use crate::core::traits::error_mapper::trait_def::ErrorMapper;
 use crate::core::traits::{
     provider::llm_provider::trait_definition::LLMProvider, ProviderConfig as _,
@@ -441,7 +441,7 @@ fn transform_oci_response(response: serde_json::Value) -> Result<ChatResponse, O
         .unwrap_or("")
         .to_string();
 
-    let finish_reason = chat_result
+    let _finish_reason = chat_result
         .get("finishReason")
         .and_then(|v| v.as_str())
         .map(|s| s.to_lowercase())

@@ -13,14 +13,14 @@ use tracing::debug;
 use super::config::WatsonxConfig;
 use super::error::{WatsonxError, WatsonxErrorMapper};
 use super::model_info::{get_available_models, get_model_info, supports_tools};
-use crate::core::providers::base::{header, header_owned, GlobalPoolManager, HttpMethod};
+use crate::core::providers::base::{header_owned, GlobalPoolManager, HttpMethod};
 use crate::core::traits::error_mapper::trait_def::ErrorMapper;
 use crate::core::traits::{
     provider::llm_provider::trait_definition::LLMProvider, ProviderConfig as _,
 };
 use crate::core::types::{
     common::{HealthStatus, ModelInfo, ProviderCapability, RequestContext},
-    requests::{ChatRequest, EmbeddingRequest, MessageRole},
+    requests::{ChatRequest, EmbeddingRequest},
     responses::{ChatChunk, ChatResponse, EmbeddingResponse},
 };
 
@@ -501,7 +501,7 @@ impl LLMProvider for WatsonxProvider {
     async fn chat_completion_stream(
         &self,
         request: ChatRequest,
-        context: RequestContext,
+        _context: RequestContext,
     ) -> Result<Pin<Box<dyn Stream<Item = Result<ChatChunk, Self::Error>> + Send>>, Self::Error>
     {
         debug!("Watsonx streaming request: model={}", request.model);

@@ -13,13 +13,13 @@ use std::pin::Pin;
 use tracing::debug;
 
 use super::chat::CohereChatHandler;
-use super::config::{CohereApiVersion, CohereConfig};
+use super::config::CohereConfig;
 use super::embed::CohereEmbeddingHandler;
 use super::error::CohereError;
 use super::rerank::{CohereRerankHandler, RerankRequest, RerankResponse};
 use super::streaming::CohereStreamParser;
 use crate::core::providers::base_provider::{
-    BaseHttpClient, BaseProviderConfig, CostCalculator, HeaderBuilder, HttpErrorMapper, UrlBuilder,
+    BaseHttpClient, BaseProviderConfig, CostCalculator, HeaderBuilder, HttpErrorMapper,
 };
 use crate::core::traits::{
     error_mapper::trait_def::ErrorMapper, provider::llm_provider::trait_definition::LLMProvider,

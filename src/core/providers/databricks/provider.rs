@@ -102,7 +102,7 @@ impl DatabricksProvider {
     }
 
     /// Build the full URL for a serving endpoint
-    fn build_endpoint_url(&self, model: &str, endpoint_type: &str) -> Result<String, ProviderError> {
+    fn build_endpoint_url(&self, model: &str, _endpoint_type: &str) -> Result<String, ProviderError> {
         let base = self
             .config
             .get_serving_endpoint_base()

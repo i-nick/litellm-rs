@@ -10,6 +10,7 @@ use std::collections::HashMap;
 use std::sync::LazyLock;
 
 /// Together AI model identifier
+#[allow(non_camel_case_types)]
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum TogetherModel {
     // Meta Llama models

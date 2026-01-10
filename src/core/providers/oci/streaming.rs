@@ -6,7 +6,7 @@ use super::error::OciError;
 use crate::core::types::requests::MessageRole;
 use crate::core::types::responses::{ChatChunk, ChatStreamChoice, ChatDelta, FinishReason};
 use bytes::Bytes;
-use futures::{Stream, StreamExt};
+use futures::Stream;
 use std::pin::Pin;
 use std::task::{Context, Poll};
 

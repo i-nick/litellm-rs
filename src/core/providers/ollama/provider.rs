@@ -338,7 +338,7 @@ impl OllamaProvider {
             let calls: Vec<_> = tcs
                 .iter()
                 .enumerate()
-                .map(|(i, tc)| {
+                .map(|(_i, tc)| {
                     let func = tc.get("function").cloned().unwrap_or_else(|| serde_json::json!({}));
                     ToolCall {
                         id: format!("call_{}", uuid::Uuid::new_v4()),

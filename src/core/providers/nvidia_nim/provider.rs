@@ -385,7 +385,6 @@ impl LLMProvider for NvidiaNimProvider {
 // ==================== Streaming Support ====================
 
 use bytes::Bytes;
-use futures::StreamExt;
 
 /// NVIDIA NIM streaming response parser
 pub struct NvidiaNimStream {

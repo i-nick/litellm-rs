@@ -10,7 +10,7 @@ use std::pin::Pin;
 use tracing::{debug, warn};
 
 use crate::core::providers::base_provider::{
-    BaseHttpClient, BaseProviderConfig, HeaderBuilder, HttpErrorMapper, UrlBuilder,
+    BaseHttpClient, BaseProviderConfig, HeaderBuilder, HttpErrorMapper,
 };
 use crate::core::traits::{
     ProviderConfig, error_mapper::trait_def::ErrorMapper,
@@ -22,7 +22,7 @@ use crate::core::types::{
     responses::{ChatChunk, ChatResponse, EmbeddingResponse},
 };
 
-use super::config::{HF_HUB_URL, HF_ROUTER_BASE, HuggingFaceConfig};
+use super::config::{HF_HUB_URL, HuggingFaceConfig};
 use super::embedding::HuggingFaceEmbeddingHandler;
 use super::error::{HuggingFaceError, parse_hf_error_response};
 use super::models::{get_default_models, parse_model_string};
@@ -372,7 +372,7 @@ impl LLMProvider for HuggingFaceProvider {
     async fn chat_completion(
         &self,
         request: ChatRequest,
-        context: RequestContext,
+        _context: RequestContext,
     ) -> Result<ChatResponse, Self::Error> {
         debug!("HuggingFace chat request: model={}", request.model);
 
@@ -431,7 +431,7 @@ impl LLMProvider for HuggingFaceProvider {
     async fn chat_completion_stream(
         &self,
         request: ChatRequest,
-        context: RequestContext,
+        _context: RequestContext,
     ) -> Result<Pin<Box<dyn Stream<Item = Result<ChatChunk, Self::Error>> + Send>>, Self::Error>
     {
         debug!(
