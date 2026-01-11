@@ -13,5 +13,5 @@ pub mod streaming;
 pub use client::NscaleClient;
 pub use config::NscaleConfig;
 pub use error::NscaleErrorMapper;
-pub use models::{get_nscale_registry, NscaleModelRegistry};
+pub use models::{NscaleModelRegistry, get_nscale_registry};
 pub use provider::NscaleProvider;

@@ -181,7 +181,10 @@ mod tests {
         };
 
         let transformed = NebiusClient::transform_chat_request(request);
-        assert_eq!(transformed["model"], "meta-llama/Meta-Llama-3.1-8B-Instruct");
+        assert_eq!(
+            transformed["model"],
+            "meta-llama/Meta-Llama-3.1-8B-Instruct"
+        );
         let temp = transformed["temperature"].as_f64().unwrap();
         assert!((temp - 0.7).abs() < 0.001);
     }

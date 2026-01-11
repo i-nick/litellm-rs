@@ -11,8 +11,10 @@ use tracing::debug;
 
 use super::config::NvidiaNimConfig;
 use super::error::NvidiaNimError;
+use super::model_info::{
+    get_available_models, get_model_info, get_supported_params, supports_tools,
+};
 use crate::ProviderError;
-use super::model_info::{get_available_models, get_model_info, get_supported_params, supports_tools};
 use crate::core::providers::base::{GlobalPoolManager, HttpMethod, header};
 use crate::core::traits::{
     ProviderConfig as _, provider::llm_provider::trait_definition::LLMProvider,
@@ -49,7 +51,10 @@ impl NvidiaNimProvider {
 
         // Create pool manager
         let pool_manager = Arc::new(GlobalPoolManager::new().map_err(|e| {
-            ProviderError::configuration("nvidia_nim", format!("Failed to create pool manager: {}", e))
+            ProviderError::configuration(
+                "nvidia_nim",
+                format!("Failed to create pool manager: {}", e),
+            )
         })?);
 
         // Build model list from static configuration
@@ -130,7 +135,11 @@ impl NvidiaNimProvider {
                 401 => ProviderError::authentication("nvidia_nim", "Invalid API key"),
                 404 => ProviderError::model_not_found("nvidia_nim", "Model not found"),
                 429 => ProviderError::rate_limit_simple("nvidia_nim", "Rate limit exceeded"),
-                _ => ProviderError::api_error("nvidia_nim", status, format!("HTTP {}: {}", status, body_text)),
+                _ => ProviderError::api_error(
+                    "nvidia_nim",
+                    status,
+                    format!("HTTP {}: {}", status, body_text),
+                ),
             });
         }
 
@@ -139,8 +148,12 @@ impl NvidiaNimProvider {
             .await
             .map_err(|e| ProviderError::network("nvidia_nim", e.to_string()))?;
 
-        serde_json::from_slice(&response_bytes)
-            .map_err(|e| ProviderError::response_parsing("nvidia_nim", format!("Failed to parse response: {}", e)))
+        serde_json::from_slice(&response_bytes).map_err(|e| {
+            ProviderError::response_parsing(
+                "nvidia_nim",
+                format!("Failed to parse response: {}", e),
+            )
+        })
     }
 
     /// Map OpenAI parameters to NVIDIA NIM format
@@ -240,8 +253,12 @@ impl LLMProvider for NvidiaNimProvider {
         _model: &str,
         _request_id: &str,
     ) -> Result<ChatResponse, Self::Error> {
-        serde_json::from_slice(raw_response)
-            .map_err(|e| ProviderError::response_parsing("nvidia_nim", format!("Failed to parse response: {}", e)))
+        serde_json::from_slice(raw_response).map_err(|e| {
+            ProviderError::response_parsing(
+                "nvidia_nim",
+                format!("Failed to parse response: {}", e),
+            )
+        })
     }
 
     fn get_error_mapper(&self) -> Self::ErrorMapper {
@@ -264,8 +281,12 @@ impl LLMProvider for NvidiaNimProvider {
             .await?;
 
         // Parse response
-        serde_json::from_value(response)
-            .map_err(|e| ProviderError::response_parsing("nvidia_nim", format!("Failed to parse chat response: {}", e)))
+        serde_json::from_value(response).map_err(|e| {
+            ProviderError::response_parsing(
+                "nvidia_nim",
+                format!("Failed to parse chat response: {}", e),
+            )
+        })
     }
 
     async fn chat_completion_stream(
@@ -322,7 +343,11 @@ impl LLMProvider for NvidiaNimProvider {
                 ),
                 401 => ProviderError::authentication("nvidia_nim", "Invalid API key"),
                 429 => ProviderError::rate_limit_simple("nvidia_nim", "Rate limit exceeded"),
-                _ => ProviderError::api_error("nvidia_nim", status, format!("Stream request failed: {}", status)),
+                _ => ProviderError::api_error(
+                    "nvidia_nim",
+                    status,
+                    format!("Stream request failed: {}", status),
+                ),
             });
         }
 
@@ -346,8 +371,12 @@ impl LLMProvider for NvidiaNimProvider {
         let response = self.execute_request("/embeddings", request_json).await?;
 
         // Parse response
-        serde_json::from_value(response)
-            .map_err(|e| ProviderError::response_parsing("nvidia_nim", format!("Failed to parse embedding response: {}", e)))
+        serde_json::from_value(response).map_err(|e| {
+            ProviderError::response_parsing(
+                "nvidia_nim",
+                format!("Failed to parse embedding response: {}", e),
+            )
+        })
     }
 
     async fn health_check(&self) -> HealthStatus {

@@ -41,7 +41,9 @@ impl XAIProvider {
     /// Create a new xAI provider instance
     pub async fn new(config: XAIConfig) -> Result<Self, XAIError> {
         // Validate configuration
-        config.validate().map_err(|e| XAIError::configuration("xai", e))?;
+        config
+            .validate()
+            .map_err(|e| XAIError::configuration("xai", e))?;
 
         // Create pool manager
         let pool_manager = Arc::new(GlobalPoolManager::new().map_err(|e| {
@@ -122,8 +124,9 @@ impl XAIProvider {
             .await
             .map_err(|e| XAIError::network("xai", e.to_string()))?;
 
-        serde_json::from_slice(&response_bytes)
-            .map_err(|e| XAIError::api_error("xai", 500, format!("Failed to parse response: {}", e)))
+        serde_json::from_slice(&response_bytes).map_err(|e| {
+            XAIError::api_error("xai", 500, format!("Failed to parse response: {}", e))
+        })
     }
 
     /// Add web search parameter to request JSON
@@ -243,15 +246,19 @@ impl LLMProvider for XAIProvider {
         model: &str,
         _request_id: &str,
     ) -> Result<ChatResponse, Self::Error> {
-        let response_json: serde_json::Value = serde_json::from_slice(raw_response)
-            .map_err(|e| XAIError::api_error("xai", 500, format!("Failed to parse response: {}", e)))?;
+        let response_json: serde_json::Value =
+            serde_json::from_slice(raw_response).map_err(|e| {
+                XAIError::api_error("xai", 500, format!("Failed to parse response: {}", e))
+            })?;
 
         // Extract reasoning tokens if present
         let reasoning_tokens = self.extract_reasoning_tokens(&response_json);
 
         // Parse standard response
         let mut chat_response: ChatResponse = serde_json::from_value(response_json.clone())
-            .map_err(|e| XAIError::api_error("xai", 500, format!("Failed to parse chat response: {}", e)))?;
+            .map_err(|e| {
+                XAIError::api_error("xai", 500, format!("Failed to parse chat response: {}", e))
+            })?;
 
         // If we have reasoning tokens, update the usage
         if let Some(reasoning_tokens) = reasoning_tokens {
@@ -315,8 +322,10 @@ impl LLMProvider for XAIProvider {
         let reasoning_tokens = self.extract_reasoning_tokens(&response);
 
         // Parse response
-        let mut chat_response: ChatResponse = serde_json::from_value(response.clone())
-            .map_err(|e| XAIError::api_error("xai", 500, format!("Failed to parse chat response: {}", e)))?;
+        let mut chat_response: ChatResponse =
+            serde_json::from_value(response.clone()).map_err(|e| {
+                XAIError::api_error("xai", 500, format!("Failed to parse chat response: {}", e))
+            })?;
 
         // Handle reasoning tokens in usage
         if let Some(reasoning_tokens) = reasoning_tokens {
@@ -383,18 +392,24 @@ impl LLMProvider for XAIProvider {
             let status = response.status().as_u16();
             let body = response.text().await.ok();
             return Err(match status {
-                400 => {
-                    XAIError::invalid_request("xai", body.unwrap_or_else(|| "Bad request".to_string()))
-                }
+                400 => XAIError::invalid_request(
+                    "xai",
+                    body.unwrap_or_else(|| "Bad request".to_string()),
+                ),
                 401 => XAIError::authentication("xai", "Invalid API key"),
                 429 => XAIError::rate_limit("xai", None),
-                _ => XAIError::api_error("xai", status, format!("Stream request failed: {}", status)),
+                _ => {
+                    XAIError::api_error("xai", status, format!("Stream request failed: {}", status))
+                }
             });
         }
 
         // TODO: Implement proper SSE streaming for xAI
         // For now, return an error as streaming implementation needs more work
-        Err(XAIError::not_supported("xai", "Streaming is not yet fully implemented for xAI provider"))
+        Err(XAIError::not_supported(
+            "xai",
+            "Streaming is not yet fully implemented for xAI provider",
+        ))
     }
 
     async fn embeddings(
@@ -402,7 +417,10 @@ impl LLMProvider for XAIProvider {
         _request: EmbeddingRequest,
         _context: RequestContext,
     ) -> Result<EmbeddingResponse, Self::Error> {
-        Err(XAIError::not_supported("xai", "xAI does not currently support embeddings. Use chat models instead."))
+        Err(XAIError::not_supported(
+            "xai",
+            "xAI does not currently support embeddings. Use chat models instead.",
+        ))
     }
 
     async fn health_check(&self) -> HealthStatus {

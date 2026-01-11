@@ -41,7 +41,9 @@ impl GroqProvider {
     /// Create a new Groq provider instance
     pub async fn new(config: GroqConfig) -> Result<Self, GroqError> {
         // Validate configuration
-        config.validate().map_err(|e| GroqError::configuration("groq", e))?;
+        config
+            .validate()
+            .map_err(|e| GroqError::configuration("groq", e))?;
 
         // Create pool manager
         let pool_manager = Arc::new(GlobalPoolManager::new().map_err(|e| {
@@ -146,8 +148,9 @@ impl GroqProvider {
             .await
             .map_err(|e| GroqError::network("groq", e.to_string()))?;
 
-        serde_json::from_slice(&response_bytes)
-            .map_err(|e| GroqError::api_error("groq", 500, format!("Failed to parse response: {}", e)))
+        serde_json::from_slice(&response_bytes).map_err(|e| {
+            GroqError::api_error("groq", 500, format!("Failed to parse response: {}", e))
+        })
     }
 
     /// Speech-to-text transcription
@@ -199,18 +202,19 @@ impl GroqProvider {
                     body.unwrap_or_else(|| "Invalid audio format or parameters".to_string()),
                 ),
                 401 => GroqError::authentication("groq", "Invalid API key"),
-                413 => {
-                    GroqError::invalid_request("groq", "Audio file too large (max 25MB)")
-                }
+                413 => GroqError::invalid_request("groq", "Audio file too large (max 25MB)"),
                 429 => GroqError::rate_limit("groq", None),
-                _ => GroqError::api_error("groq", status, format!("Transcription failed: {}", status)),
+                _ => GroqError::api_error(
+                    "groq",
+                    status,
+                    format!("Transcription failed: {}", status),
+                ),
             });
         }
 
-        let response_text = response
-            .text()
-            .await
-            .map_err(|e| GroqError::api_error("groq", 500, format!("Failed to read response: {}", e)))?;
+        let response_text = response.text().await.map_err(|e| {
+            GroqError::api_error("groq", 500, format!("Failed to read response: {}", e))
+        })?;
 
         // Try to parse as JSON first
         if let Ok(json_response) =
@@ -317,7 +321,8 @@ impl LLMProvider for GroqProvider {
         self.handle_response_format(&mut request);
 
         // Convert to JSON value
-        serde_json::to_value(&request).map_err(|e| GroqError::invalid_request("groq", e.to_string()))
+        serde_json::to_value(&request)
+            .map_err(|e| GroqError::invalid_request("groq", e.to_string()))
     }
 
     async fn transform_response(
@@ -327,8 +332,9 @@ impl LLMProvider for GroqProvider {
         _request_id: &str,
     ) -> Result<ChatResponse, Self::Error> {
         // Parse response
-        let chat_response: ChatResponse = serde_json::from_slice(raw_response)
-            .map_err(|e| GroqError::api_error("groq", 500, format!("Failed to parse response: {}", e)))?;
+        let chat_response: ChatResponse = serde_json::from_slice(raw_response).map_err(|e| {
+            GroqError::api_error("groq", 500, format!("Failed to parse response: {}", e))
+        })?;
 
         Ok(chat_response)
     }
@@ -357,8 +363,9 @@ impl LLMProvider for GroqProvider {
             .execute_request("/chat/completions", request_json)
             .await?;
 
-        serde_json::from_value(response)
-            .map_err(|e| GroqError::api_error("groq", 500, format!("Failed to parse chat response: {}", e)))
+        serde_json::from_value(response).map_err(|e| {
+            GroqError::api_error("groq", 500, format!("Failed to parse chat response: {}", e))
+        })
     }
 
     async fn chat_completion_stream(
@@ -409,7 +416,11 @@ impl LLMProvider for GroqProvider {
                 ),
                 401 => GroqError::authentication("groq", "Invalid API key"),
                 429 => GroqError::rate_limit("groq", None),
-                _ => GroqError::api_error("groq", status, format!("Stream request failed: {}", status)),
+                _ => GroqError::api_error(
+                    "groq",
+                    status,
+                    format!("Stream request failed: {}", status),
+                ),
             });
         }
 
@@ -453,8 +464,9 @@ impl LLMProvider for GroqProvider {
         input_tokens: u32,
         output_tokens: u32,
     ) -> Result<f64, Self::Error> {
-        let model_info = get_model_info(model)
-            .ok_or_else(|| GroqError::model_not_found("groq", format!("Unknown model: {}", model)))?;
+        let model_info = get_model_info(model).ok_or_else(|| {
+            GroqError::model_not_found("groq", format!("Unknown model: {}", model))
+        })?;
 
         let input_cost = (input_tokens as f64) * (model_info.input_cost_per_million / 1_000_000.0);
         let output_cost =

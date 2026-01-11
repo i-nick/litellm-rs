@@ -45,11 +45,16 @@ impl TogetherProvider {
     /// Create a new Together AI provider instance
     pub async fn new(config: TogetherConfig) -> Result<Self, TogetherError> {
         // Validate configuration
-        config.validate().map_err(|e| ProviderError::configuration("together", e))?;
+        config
+            .validate()
+            .map_err(|e| ProviderError::configuration("together", e))?;
 
         // Create pool manager
         let pool_manager = Arc::new(GlobalPoolManager::new().map_err(|e| {
-            ProviderError::configuration("together", format!("Failed to create pool manager: {}", e))
+            ProviderError::configuration(
+                "together",
+                format!("Failed to create pool manager: {}", e),
+            )
         })?);
 
         // Build model list from static configuration
@@ -167,20 +172,24 @@ impl TogetherProvider {
                 401 => ProviderError::authentication("together", "Invalid API key"),
                 404 => ProviderError::model_not_found("together", "Model not found"),
                 429 => ProviderError::rate_limit("together", None),
-                _ => ProviderError::api_error("together", status.as_u16(), format!("API error {}: {}", status, error_body)),
+                _ => ProviderError::api_error(
+                    "together",
+                    status.as_u16(),
+                    format!("API error {}: {}", status, error_body),
+                ),
             });
         }
 
-        serde_json::from_slice(&response_bytes)
-            .map_err(|e| ProviderError::api_error("together", 500, format!("Failed to parse response: {}", e)))
+        serde_json::from_slice(&response_bytes).map_err(|e| {
+            ProviderError::api_error("together", 500, format!("Failed to parse response: {}", e))
+        })
     }
 
     /// Execute a rerank request
     pub async fn rerank(&self, request: RerankRequest) -> Result<RerankResponse, TogetherError> {
-        let api_key = self
-            .config
-            .get_api_key()
-            .ok_or_else(|| ProviderError::authentication("together", "API key is required".to_string()))?;
+        let api_key = self.config.get_api_key().ok_or_else(|| {
+            ProviderError::authentication("together", "API key is required".to_string())
+        })?;
 
         let url = format!("{}/rerank", self.config.get_api_base());
 
@@ -199,20 +208,27 @@ impl TogetherProvider {
         if !status.is_success() {
             let error_body = response.text().await.unwrap_or_default();
             return Err(match status.as_u16() {
-                400 => ProviderError::invalid_request("together", format!("Bad request: {}", error_body)),
+                400 => ProviderError::invalid_request(
+                    "together",
+                    format!("Bad request: {}", error_body),
+                ),
                 401 => ProviderError::authentication("together", "Invalid API key"),
                 429 => ProviderError::rate_limit("together", None),
-                _ => ProviderError::api_error("together", status.as_u16(), format!("Rerank error {}: {}", status, error_body)),
+                _ => ProviderError::api_error(
+                    "together",
+                    status.as_u16(),
+                    format!("Rerank error {}: {}", status, error_body),
+                ),
             });
         }
 
-        let response_text = response
-            .text()
-            .await
-            .map_err(|e| ProviderError::api_error("together", 500, format!("Failed to read response: {}", e)))?;
+        let response_text = response.text().await.map_err(|e| {
+            ProviderError::api_error("together", 500, format!("Failed to read response: {}", e))
+        })?;
 
-        serde_json::from_str(&response_text)
-            .map_err(|e| ProviderError::api_error("together", 500, format!("Failed to parse response: {}", e)))
+        serde_json::from_str(&response_text).map_err(|e| {
+            ProviderError::api_error("together", 500, format!("Failed to parse response: {}", e))
+        })
     }
 }
 
@@ -309,8 +325,9 @@ impl LLMProvider for TogetherProvider {
         _request_id: &str,
     ) -> Result<ChatResponse, Self::Error> {
         // Parse response
-        let chat_response: ChatResponse = serde_json::from_slice(raw_response)
-            .map_err(|e| ProviderError::api_error("together", 500, format!("Failed to parse response: {}", e)))?;
+        let chat_response: ChatResponse = serde_json::from_slice(raw_response).map_err(|e| {
+            ProviderError::api_error("together", 500, format!("Failed to parse response: {}", e))
+        })?;
 
         Ok(chat_response)
     }
@@ -344,8 +361,13 @@ impl LLMProvider for TogetherProvider {
             .execute_request("/chat/completions", request_json)
             .await?;
 
-        serde_json::from_value(response)
-            .map_err(|e| ProviderError::api_error("together", 500, format!("Failed to parse chat response: {}", e)))
+        serde_json::from_value(response).map_err(|e| {
+            ProviderError::api_error(
+                "together",
+                500,
+                format!("Failed to parse chat response: {}", e),
+            )
+        })
     }
 
     async fn chat_completion_stream(
@@ -373,10 +395,9 @@ impl LLMProvider for TogetherProvider {
         request.stream = true;
 
         // Get API configuration
-        let api_key = self
-            .config
-            .get_api_key()
-            .ok_or_else(|| ProviderError::authentication("together", "API key is required".to_string()))?;
+        let api_key = self.config.get_api_key().ok_or_else(|| {
+            ProviderError::authentication("together", "API key is required".to_string())
+        })?;
 
         // Execute streaming request using reqwest directly for SSE
         let url = format!("{}/chat/completions", self.config.get_api_base());
@@ -395,12 +416,17 @@ impl LLMProvider for TogetherProvider {
             let status = response.status().as_u16();
             let body = response.text().await.ok();
             return Err(match status {
-                400 => {
-                    ProviderError::invalid_request("together", body.unwrap_or_else(|| "Bad request".to_string()))
-                }
+                400 => ProviderError::invalid_request(
+                    "together",
+                    body.unwrap_or_else(|| "Bad request".to_string()),
+                ),
                 401 => ProviderError::authentication("together", "Invalid API key"),
                 429 => ProviderError::rate_limit("together", None),
-                _ => ProviderError::api_error("together", 500, format!("Stream request failed: {}", status)),
+                _ => ProviderError::api_error(
+                    "together",
+                    500,
+                    format!("Stream request failed: {}", status),
+                ),
             });
         }
 
@@ -422,7 +448,11 @@ impl LLMProvider for TogetherProvider {
         let response = self.execute_request("/embeddings", request_json).await?;
 
         serde_json::from_value(response).map_err(|e| {
-            ProviderError::api_error("together", 500, format!("Failed to parse embeddings response: {}", e))
+            ProviderError::api_error(
+                "together",
+                500,
+                format!("Failed to parse embeddings response: {}", e),
+            )
         })
     }
 
@@ -454,8 +484,7 @@ impl LLMProvider for TogetherProvider {
             ProviderError::model_not_found("together", format!("Unknown model: {}", model))
         })?;
 
-        let input_cost =
-            (input_tokens as f64) * (model_info.input_cost_per_million / 1_000_000.0);
+        let input_cost = (input_tokens as f64) * (model_info.input_cost_per_million / 1_000_000.0);
         let output_cost =
             (output_tokens as f64) * (model_info.output_cost_per_million / 1_000_000.0);
         Ok(input_cost + output_cost)

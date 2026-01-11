@@ -211,7 +211,12 @@ impl LLMProvider for VolcengineProvider {
     }
 
     async fn health_check(&self) -> HealthStatus {
-        if self.config.base.get_effective_api_key("volcengine").is_some() {
+        if self
+            .config
+            .base
+            .get_effective_api_key("volcengine")
+            .is_some()
+        {
             HealthStatus::Healthy
         } else {
             HealthStatus::Unhealthy

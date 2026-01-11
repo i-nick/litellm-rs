@@ -116,10 +116,7 @@ mod tests {
     #[test]
     fn test_nvidia_nim_config_get_api_base_default() {
         let config = NvidiaNimConfig::default();
-        assert_eq!(
-            config.get_api_base(),
-            "https://integrate.api.nvidia.com/v1"
-        );
+        assert_eq!(config.get_api_base(), "https://integrate.api.nvidia.com/v1");
     }
 
     #[test]

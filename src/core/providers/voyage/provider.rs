@@ -14,8 +14,8 @@ use super::config::VoyageConfig;
 use super::error::VoyageError;
 use super::model_info::{get_available_models, get_model_info, supports_custom_dimensions};
 use crate::core::providers::base::{GlobalPoolManager, HttpMethod, header};
-use crate::core::traits::provider::llm_provider::trait_definition::LLMProvider;
 use crate::core::traits::ProviderConfig as _;
+use crate::core::traits::provider::llm_provider::trait_definition::LLMProvider;
 use crate::core::types::{
     common::{HealthStatus, ModelInfo, ProviderCapability, RequestContext},
     requests::{ChatRequest, EmbeddingInput, EmbeddingRequest},
@@ -37,7 +37,9 @@ impl VoyageProvider {
     /// Create a new Voyage AI provider instance
     pub async fn new(config: VoyageConfig) -> Result<Self, VoyageError> {
         // Validate configuration
-        config.validate().map_err(|e| VoyageError::configuration("voyage", e))?;
+        config
+            .validate()
+            .map_err(|e| VoyageError::configuration("voyage", e))?;
 
         // Create pool manager
         let pool_manager = Arc::new(GlobalPoolManager::new().map_err(|e| {
@@ -221,11 +223,16 @@ impl VoyageProvider {
 
         if !status.is_success() {
             let body_str = String::from_utf8_lossy(&response_bytes);
-            return Err(VoyageError::api_error("voyage", status.as_u16(), body_str.to_string()));
+            return Err(VoyageError::api_error(
+                "voyage",
+                status.as_u16(),
+                body_str.to_string(),
+            ));
         }
 
-        serde_json::from_slice(&response_bytes)
-            .map_err(|e| VoyageError::api_error("voyage", 500, format!("Failed to parse response: {}", e)))
+        serde_json::from_slice(&response_bytes).map_err(|e| {
+            VoyageError::api_error("voyage", 500, format!("Failed to parse response: {}", e))
+        })
     }
 }
 
@@ -381,8 +388,9 @@ impl LLMProvider for VoyageProvider {
         input_tokens: u32,
         _output_tokens: u32,
     ) -> Result<f64, Self::Error> {
-        let model_info = get_model_info(model)
-            .ok_or_else(|| VoyageError::model_not_found("voyage", format!("Unknown model: {}", model)))?;
+        let model_info = get_model_info(model).ok_or_else(|| {
+            VoyageError::model_not_found("voyage", format!("Unknown model: {}", model))
+        })?;
 
         // Voyage only charges for input tokens (embeddings don't have output)
         let cost = (input_tokens as f64) * (model_info.cost_per_million_tokens / 1_000_000.0);

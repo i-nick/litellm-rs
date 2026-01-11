@@ -22,8 +22,8 @@ use crate::core::providers::base_provider::{
     BaseHttpClient, BaseProviderConfig, CostCalculator, HeaderBuilder, HttpErrorMapper,
 };
 use crate::core::traits::{
-    error_mapper::trait_def::ErrorMapper, provider::llm_provider::trait_definition::LLMProvider,
-    ProviderConfig,
+    ProviderConfig, error_mapper::trait_def::ErrorMapper,
+    provider::llm_provider::trait_definition::LLMProvider,
 };
 use crate::core::types::{
     common::{HealthStatus, ModelInfo, ProviderCapability, RequestContext},
@@ -60,7 +60,10 @@ impl ErrorMapper<CohereError> for CohereErrorMapper {
     }
 
     fn map_timeout_error(&self, timeout_duration: std::time::Duration) -> CohereError {
-        CohereError::timeout("cohere", format!("Request timed out after {:?}", timeout_duration))
+        CohereError::timeout(
+            "cohere",
+            format!("Request timed out after {:?}", timeout_duration),
+        )
     }
 }
 
@@ -584,19 +587,17 @@ impl LLMProvider for CohereProvider {
             .build_reqwest();
 
         match headers {
-            Ok(headers) => {
-                match self.client.inner().get(&url).headers(headers).send().await {
-                    Ok(response) if response.status().is_success() => HealthStatus::Healthy,
-                    Ok(response) => {
-                        debug!("Cohere health check failed: status={}", response.status());
-                        HealthStatus::Unhealthy
-                    }
-                    Err(e) => {
-                        debug!("Cohere health check error: {}", e);
-                        HealthStatus::Unhealthy
-                    }
+            Ok(headers) => match self.client.inner().get(&url).headers(headers).send().await {
+                Ok(response) if response.status().is_success() => HealthStatus::Healthy,
+                Ok(response) => {
+                    debug!("Cohere health check failed: status={}", response.status());
+                    HealthStatus::Unhealthy
                 }
-            }
+                Err(e) => {
+                    debug!("Cohere health check error: {}", e);
+                    HealthStatus::Unhealthy
+                }
+            },
             Err(_) => HealthStatus::Unhealthy,
         }
     }

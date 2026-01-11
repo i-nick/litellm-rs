@@ -11,15 +11,15 @@ use tracing::debug;
 
 use super::config::LlamafileConfig;
 use super::error::{LlamafileError, LlamafileErrorMapper};
-use crate::core::providers::base::{header, GlobalPoolManager, HttpMethod};
+use crate::core::providers::base::{GlobalPoolManager, HttpMethod, header};
 use crate::core::traits::{
-    error_mapper::trait_def::ErrorMapper, provider::llm_provider::trait_definition::LLMProvider,
-    ProviderConfig as _,
+    ProviderConfig as _, error_mapper::trait_def::ErrorMapper,
+    provider::llm_provider::trait_definition::LLMProvider,
 };
 use crate::core::types::{
     common::{HealthStatus, ModelInfo, ProviderCapability, RequestContext},
     requests::{ChatMessage, ChatRequest, MessageContent, MessageRole, ToolCall},
-    responses::{ChatChunk, ChatChoice, ChatResponse, FinishReason, Usage},
+    responses::{ChatChoice, ChatChunk, ChatResponse, FinishReason, Usage},
     tools::FunctionCall,
 };
 
@@ -167,7 +167,8 @@ impl LlamafileProvider {
                                 ..
                             } => {
                                 // Base64 image format
-                                let url = format!("data:{};base64,{}", source.media_type, source.data);
+                                let url =
+                                    format!("data:{};base64,{}", source.media_type, source.data);
                                 let mut img_obj = serde_json::json!({"url": url});
                                 if let Some(d) = detail {
                                     img_obj["detail"] = serde_json::json!(d);
@@ -273,43 +274,39 @@ impl LlamafileProvider {
                 .map(|s| s.to_string());
 
             // Parse tool calls if present
-            let tool_calls =
-                if let Some(tcs) = message.get("tool_calls").and_then(|v| v.as_array()) {
-                    let empty_obj = serde_json::json!({});
-                    let calls: Vec<_> = tcs
-                        .iter()
-                        .map(|tc| {
-                            let func = tc.get("function").unwrap_or(&empty_obj);
-                            ToolCall {
-                                id: tc
-                                    .get("id")
-                                    .and_then(|id| id.as_str())
+            let tool_calls = if let Some(tcs) = message.get("tool_calls").and_then(|v| v.as_array())
+            {
+                let empty_obj = serde_json::json!({});
+                let calls: Vec<_> = tcs
+                    .iter()
+                    .map(|tc| {
+                        let func = tc.get("function").unwrap_or(&empty_obj);
+                        ToolCall {
+                            id: tc
+                                .get("id")
+                                .and_then(|id| id.as_str())
+                                .unwrap_or("")
+                                .to_string(),
+                            tool_type: "function".to_string(),
+                            function: FunctionCall {
+                                name: func
+                                    .get("name")
+                                    .and_then(|n| n.as_str())
                                     .unwrap_or("")
                                     .to_string(),
-                                tool_type: "function".to_string(),
-                                function: FunctionCall {
-                                    name: func
-                                        .get("name")
-                                        .and_then(|n| n.as_str())
-                                        .unwrap_or("")
-                                        .to_string(),
-                                    arguments: func
-                                        .get("arguments")
-                                        .and_then(|a| a.as_str())
-                                        .unwrap_or("")
-                                        .to_string(),
-                                },
-                            }
-                        })
-                        .collect();
-                    if calls.is_empty() {
-                        None
-                    } else {
-                        Some(calls)
-                    }
-                } else {
-                    None
-                };
+                                arguments: func
+                                    .get("arguments")
+                                    .and_then(|a| a.as_str())
+                                    .unwrap_or("")
+                                    .to_string(),
+                            },
+                        }
+                    })
+                    .collect();
+                if calls.is_empty() { None } else { Some(calls) }
+            } else {
+                None
+            };
 
             // Determine finish reason
             let finish_reason_str = choice
@@ -343,22 +340,22 @@ impl LlamafileProvider {
 
         // Build usage info
         let usage = response.get("usage").map(|usage_obj| Usage {
-                prompt_tokens: usage_obj
-                    .get("prompt_tokens")
-                    .and_then(|v| v.as_u64())
-                    .unwrap_or(0) as u32,
-                completion_tokens: usage_obj
-                    .get("completion_tokens")
-                    .and_then(|v| v.as_u64())
-                    .unwrap_or(0) as u32,
-                total_tokens: usage_obj
-                    .get("total_tokens")
-                    .and_then(|v| v.as_u64())
-                    .unwrap_or(0) as u32,
-                prompt_tokens_details: None,
-                completion_tokens_details: None,
-                thinking_usage: None,
-            });
+            prompt_tokens: usage_obj
+                .get("prompt_tokens")
+                .and_then(|v| v.as_u64())
+                .unwrap_or(0) as u32,
+            completion_tokens: usage_obj
+                .get("completion_tokens")
+                .and_then(|v| v.as_u64())
+                .unwrap_or(0) as u32,
+            total_tokens: usage_obj
+                .get("total_tokens")
+                .and_then(|v| v.as_u64())
+                .unwrap_or(0) as u32,
+            prompt_tokens_details: None,
+            completion_tokens_details: None,
+            thinking_usage: None,
+        });
 
         Ok(ChatResponse {
             id: response
@@ -538,7 +535,10 @@ impl LLMProvider for LlamafileProvider {
                                     json.get("choices").and_then(|c| c.as_array())
                                 {
                                     if let Some(choice) = choices.first() {
-                                        let delta = choice.get("delta").cloned().unwrap_or_else(|| serde_json::json!({}));
+                                        let delta = choice
+                                            .get("delta")
+                                            .cloned()
+                                            .unwrap_or_else(|| serde_json::json!({}));
                                         let content = delta
                                             .get("content")
                                             .and_then(|c| c.as_str())
@@ -645,7 +645,11 @@ impl LlamafileProvider {
             .and_then(|d| d.as_array())
             .map(|arr| {
                 arr.iter()
-                    .filter_map(|m| m.get("id").and_then(|id| id.as_str()).map(|s| s.to_string()))
+                    .filter_map(|m| {
+                        m.get("id")
+                            .and_then(|id| id.as_str())
+                            .map(|s| s.to_string())
+                    })
                     .collect()
             })
             .unwrap_or_default();
@@ -668,7 +672,7 @@ impl LlamafileProvider {
                 supports_streaming: true,
                 supports_tools: false, // Llamafile basic support
                 supports_multimodal: false,
-                input_cost_per_1k_tokens: Some(0.0),  // Llamafile is free
+                input_cost_per_1k_tokens: Some(0.0), // Llamafile is free
                 output_cost_per_1k_tokens: Some(0.0), // Llamafile is free
                 currency: "USD".to_string(),
                 capabilities: vec![

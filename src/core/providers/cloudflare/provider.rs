@@ -46,7 +46,10 @@ impl CloudflareProvider {
 
         // Create pool manager
         let pool_manager = Arc::new(GlobalPoolManager::new().map_err(|e| {
-            CloudflareError::configuration("cloudflare", format!("Failed to create pool manager: {}", e))
+            CloudflareError::configuration(
+                "cloudflare",
+                format!("Failed to create pool manager: {}", e),
+            )
         })?);
 
         // Build model list from static configuration
@@ -133,8 +136,13 @@ impl CloudflareProvider {
             .await
             .map_err(|e| CloudflareError::network("cloudflare", e.to_string()))?;
 
-        serde_json::from_slice(&response_bytes)
-            .map_err(|e| CloudflareError::api_error("cloudflare", 500, format!("Failed to parse response: {}", e)))
+        serde_json::from_slice(&response_bytes).map_err(|e| {
+            CloudflareError::api_error(
+                "cloudflare",
+                500,
+                format!("Failed to parse response: {}", e),
+            )
+        })
     }
 
     /// Transform OpenAI-style request to Cloudflare format
@@ -233,8 +241,14 @@ impl LLMProvider for CloudflareProvider {
         model: &str,
         request_id: &str,
     ) -> Result<ChatResponse, Self::Error> {
-        let cloudflare_response: serde_json::Value = serde_json::from_slice(raw_response)
-            .map_err(|e| CloudflareError::api_error("cloudflare", 500, format!("Failed to parse response: {}", e)))?;
+        let cloudflare_response: serde_json::Value =
+            serde_json::from_slice(raw_response).map_err(|e| {
+                CloudflareError::api_error(
+                    "cloudflare",
+                    500,
+                    format!("Failed to parse response: {}", e),
+                )
+            })?;
 
         // Transform Cloudflare response to OpenAI format
         let content = cloudflare_response["result"]["response"]

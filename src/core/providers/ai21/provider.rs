@@ -325,10 +325,7 @@ mod tests {
         let provider = AI21Provider::new(config).unwrap();
 
         let mut params = HashMap::new();
-        params.insert(
-            "max_completion_tokens".to_string(),
-            serde_json::json!(1000),
-        );
+        params.insert("max_completion_tokens".to_string(), serde_json::json!(1000));
         params.insert("temperature".to_string(), serde_json::json!(0.7));
 
         let mapped = provider

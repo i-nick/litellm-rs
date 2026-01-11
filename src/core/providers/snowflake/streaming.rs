@@ -31,9 +31,7 @@ pub struct SnowflakeStream {
 }
 
 impl SnowflakeStream {
-    pub fn new(
-        stream: impl Stream<Item = Result<Bytes, reqwest::Error>> + Send + 'static,
-    ) -> Self {
+    pub fn new(stream: impl Stream<Item = Result<Bytes, reqwest::Error>> + Send + 'static) -> Self {
         Self {
             inner: create_snowflake_stream(stream),
         }
@@ -52,15 +50,13 @@ impl Stream for SnowflakeStream {
 
         match Pin::new(&mut self.inner).poll_next(cx) {
             Poll::Ready(Some(Ok(chunk))) => Poll::Ready(Some(Ok(chunk))),
-            Poll::Ready(Some(Err(e))) => {
-                Poll::Ready(Some(Err(SnowflakeError::streaming_error(
-                    "snowflake",
-                    "chat",
-                    None,
-                    None,
-                    e.to_string(),
-                ))))
-            }
+            Poll::Ready(Some(Err(e))) => Poll::Ready(Some(Err(SnowflakeError::streaming_error(
+                "snowflake",
+                "chat",
+                None,
+                None,
+                e.to_string(),
+            )))),
             Poll::Ready(None) => Poll::Ready(None),
             Poll::Pending => Poll::Pending,
         }
@@ -70,8 +66,7 @@ impl Stream for SnowflakeStream {
 /// Create a fake stream from a complete response
 pub async fn create_fake_stream(
     response: ChatResponse,
-) -> Result<Pin<Box<dyn Stream<Item = Result<ChatChunk, SnowflakeError>> + Send>>, SnowflakeError>
-{
+) -> Result<Pin<Box<dyn Stream<Item = Result<ChatChunk, SnowflakeError>> + Send>>, SnowflakeError> {
     // Convert response to chunks
     let chunks = response_to_chunks(response);
     let stream = futures::stream::iter(chunks.into_iter().map(Ok));

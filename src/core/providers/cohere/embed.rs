@@ -4,7 +4,7 @@
 //! Supports text and image embeddings with various input types.
 
 use serde::{Deserialize, Serialize};
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 
 use super::config::CohereConfig;
 use super::error::CohereError;
@@ -31,7 +31,6 @@ pub enum CohereEmbeddingInputType {
     /// For image embeddings
     Image,
 }
-
 
 impl std::fmt::Display for CohereEmbeddingInputType {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -193,9 +192,7 @@ impl CohereEmbeddingHandler {
     }
 
     /// Extract inputs from EmbeddingInput
-    fn extract_inputs(
-        input: &EmbeddingInput,
-    ) -> Result<ExtractedInputs, CohereError> {
+    fn extract_inputs(input: &EmbeddingInput) -> Result<ExtractedInputs, CohereError> {
         match input {
             EmbeddingInput::Text(text) => Ok((Some(vec![text.clone()]), None)),
             EmbeddingInput::Array(arr) => {
@@ -217,7 +214,10 @@ impl CohereEmbeddingHandler {
     /// Check if a string is a base64 encoded image
     fn is_base64_image(s: &str) -> bool {
         // Simple heuristic: check for data URI or long base64 string
-        s.starts_with("data:image") || (s.len() > 1000 && s.chars().all(|c| c.is_alphanumeric() || c == '+' || c == '/' || c == '='))
+        s.starts_with("data:image")
+            || (s.len() > 1000
+                && s.chars()
+                    .all(|c| c.is_alphanumeric() || c == '+' || c == '/' || c == '='))
     }
 
     /// Transform Cohere response to standard EmbeddingResponse
@@ -226,9 +226,9 @@ impl CohereEmbeddingHandler {
         model: &str,
         input_count: usize,
     ) -> Result<EmbeddingResponse, CohereError> {
-        let embeddings = response_json
-            .get("embeddings")
-            .ok_or_else(|| super::error::cohere_response_parsing("Missing embeddings in response"))?;
+        let embeddings = response_json.get("embeddings").ok_or_else(|| {
+            super::error::cohere_response_parsing("Missing embeddings in response")
+        })?;
 
         // Get the first available embedding type
         let embedding_vectors = Self::extract_embeddings(embeddings)?;
@@ -290,7 +290,9 @@ impl CohereEmbeddingHandler {
                                         .collect()
                                 })
                                 .ok_or_else(|| {
-                                    super::error::cohere_response_parsing("Invalid embedding format")
+                                    super::error::cohere_response_parsing(
+                                        "Invalid embedding format",
+                                    )
                                 })
                         })
                         .collect();
@@ -309,7 +311,8 @@ impl CohereEmbeddingHandler {
 
         if let Some(meta) = response_json.get("meta") {
             if let Some(billed_units) = meta.get("billed_units") {
-                if let Some(input_tokens) = billed_units.get("input_tokens").and_then(|v| v.as_u64())
+                if let Some(input_tokens) =
+                    billed_units.get("input_tokens").and_then(|v| v.as_u64())
                 {
                     prompt_tokens = input_tokens as u32;
                 }
@@ -366,9 +369,18 @@ mod tests {
 
     #[test]
     fn test_input_type_display() {
-        assert_eq!(CohereEmbeddingInputType::SearchDocument.to_string(), "search_document");
-        assert_eq!(CohereEmbeddingInputType::SearchQuery.to_string(), "search_query");
-        assert_eq!(CohereEmbeddingInputType::Classification.to_string(), "classification");
+        assert_eq!(
+            CohereEmbeddingInputType::SearchDocument.to_string(),
+            "search_document"
+        );
+        assert_eq!(
+            CohereEmbeddingInputType::SearchQuery.to_string(),
+            "search_query"
+        );
+        assert_eq!(
+            CohereEmbeddingInputType::Classification.to_string(),
+            "classification"
+        );
     }
 
     #[test]

@@ -36,9 +36,10 @@ impl ErrorMapper<ProviderError> for StabilityErrorMapper {
                 let retry_after = parse_retry_after(response_body);
                 ProviderError::rate_limit("stability", retry_after)
             }
-            500..=599 => {
-                ProviderError::provider_unavailable("stability", format!("Server error: {}", response_body))
-            }
+            500..=599 => ProviderError::provider_unavailable(
+                "stability",
+                format!("Server error: {}", response_body),
+            ),
             _ => ProviderError::api_error("stability", status_code, response_body),
         }
     }

@@ -21,7 +21,7 @@ use crate::core::types::{
     common::{HealthStatus, ModelInfo, ProviderCapability, RequestContext},
     requests::{ChatMessage, ChatRequest, EmbeddingRequest, MessageContent},
     responses::{
-        ChatChunk, ChatChoice, ChatResponse, EmbeddingData, EmbeddingResponse, FinishReason, Usage,
+        ChatChoice, ChatChunk, ChatResponse, EmbeddingData, EmbeddingResponse, FinishReason, Usage,
     },
 };
 
@@ -94,19 +94,20 @@ impl DatabricksProvider {
     /// Get the endpoint name from model
     fn get_endpoint_name(&self, model: &str) -> String {
         // Remove provider prefix if present
-        let model_name = model
-            .strip_prefix("databricks/")
-            .unwrap_or(model);
+        let model_name = model.strip_prefix("databricks/").unwrap_or(model);
 
         model_name.to_string()
     }
 
     /// Build the full URL for a serving endpoint
-    fn build_endpoint_url(&self, model: &str, _endpoint_type: &str) -> Result<String, ProviderError> {
-        let base = self
-            .config
-            .get_serving_endpoint_base()
-            .ok_or_else(|| ProviderError::configuration("databricks", "API base URL is required"))?;
+    fn build_endpoint_url(
+        &self,
+        model: &str,
+        _endpoint_type: &str,
+    ) -> Result<String, ProviderError> {
+        let base = self.config.get_serving_endpoint_base().ok_or_else(|| {
+            ProviderError::configuration("databricks", "API base URL is required")
+        })?;
 
         let endpoint_name = self.get_endpoint_name(model);
 
@@ -217,7 +218,11 @@ impl DatabricksProvider {
     }
 
     /// Parse Databricks chat response
-    fn parse_chat_response(&self, response: &Value, model: &str) -> Result<ChatResponse, ProviderError> {
+    fn parse_chat_response(
+        &self,
+        response: &Value,
+        model: &str,
+    ) -> Result<ChatResponse, ProviderError> {
         let id = response
             .get("id")
             .and_then(|v| v.as_str())
@@ -258,9 +263,9 @@ impl DatabricksProvider {
                         content,
                         thinking: None,
                         name: None,
-                        tool_calls: msg.get("tool_calls").and_then(|tc| {
-                            serde_json::from_value(tc.clone()).ok()
-                        }),
+                        tool_calls: msg
+                            .get("tool_calls")
+                            .and_then(|tc| serde_json::from_value(tc.clone()).ok()),
                         tool_call_id: None,
                         function_call: None,
                     }
@@ -297,14 +302,16 @@ impl DatabricksProvider {
         }
 
         let usage = response.get("usage").map(|u| Usage {
-                prompt_tokens: u.get("prompt_tokens").and_then(|v| v.as_u64()).unwrap_or(0) as u32,
-                completion_tokens: u.get("completion_tokens").and_then(|v| v.as_u64()).unwrap_or(0)
-                    as u32,
-                total_tokens: u.get("total_tokens").and_then(|v| v.as_u64()).unwrap_or(0) as u32,
-                prompt_tokens_details: None,
-                completion_tokens_details: None,
-                thinking_usage: None,
-            });
+            prompt_tokens: u.get("prompt_tokens").and_then(|v| v.as_u64()).unwrap_or(0) as u32,
+            completion_tokens: u
+                .get("completion_tokens")
+                .and_then(|v| v.as_u64())
+                .unwrap_or(0) as u32,
+            total_tokens: u.get("total_tokens").and_then(|v| v.as_u64()).unwrap_or(0) as u32,
+            prompt_tokens_details: None,
+            completion_tokens_details: None,
+            thinking_usage: None,
+        });
 
         Ok(ChatResponse {
             id,
@@ -423,12 +430,10 @@ impl LLMProvider for DatabricksProvider {
         body["stream"] = serde_json::Value::Bool(true);
 
         // Get API key
-        let api_key = self
-            .config
-            .base
-            .api_key
-            .as_ref()
-            .ok_or_else(|| ProviderError::authentication("databricks", "API key is required"))?;
+        let api_key =
+            self.config.base.api_key.as_ref().ok_or_else(|| {
+                ProviderError::authentication("databricks", "API key is required")
+            })?;
 
         let client = reqwest::Client::new();
         let response = client
@@ -447,7 +452,9 @@ impl LLMProvider for DatabricksProvider {
                 .text()
                 .await
                 .unwrap_or_else(|_| "Unknown error".to_string());
-            return Err(self.get_error_mapper().map_http_error(status.as_u16(), &error_text));
+            return Err(self
+                .get_error_mapper()
+                .map_http_error(status.as_u16(), &error_text));
         }
 
         let stream = response.bytes_stream();
@@ -466,12 +473,10 @@ impl LLMProvider for DatabricksProvider {
             "input": request.input,
         });
 
-        let api_key = self
-            .config
-            .base
-            .api_key
-            .as_ref()
-            .ok_or_else(|| ProviderError::authentication("databricks", "API key is required"))?;
+        let api_key =
+            self.config.base.api_key.as_ref().ok_or_else(|| {
+                ProviderError::authentication("databricks", "API key is required")
+            })?;
 
         let client = reqwest::Client::new();
         let response = client
@@ -490,7 +495,9 @@ impl LLMProvider for DatabricksProvider {
                 .text()
                 .await
                 .unwrap_or_else(|_| "Unknown error".to_string());
-            return Err(self.get_error_mapper().map_http_error(status.as_u16(), &error_text));
+            return Err(self
+                .get_error_mapper()
+                .map_http_error(status.as_u16(), &error_text));
         }
 
         let response_body: Value = response
@@ -532,13 +539,13 @@ impl LLMProvider for DatabricksProvider {
         }
 
         let usage = response_body.get("usage").map(|u| Usage {
-                prompt_tokens: u.get("prompt_tokens").and_then(|v| v.as_u64()).unwrap_or(0) as u32,
-                completion_tokens: 0,
-                total_tokens: u.get("total_tokens").and_then(|v| v.as_u64()).unwrap_or(0) as u32,
-                prompt_tokens_details: None,
-                completion_tokens_details: None,
-                thinking_usage: None,
-            });
+            prompt_tokens: u.get("prompt_tokens").and_then(|v| v.as_u64()).unwrap_or(0) as u32,
+            completion_tokens: 0,
+            total_tokens: u.get("total_tokens").and_then(|v| v.as_u64()).unwrap_or(0) as u32,
+            prompt_tokens_details: None,
+            completion_tokens_details: None,
+            thinking_usage: None,
+        });
 
         Ok(EmbeddingResponse {
             object: "list".to_string(),
@@ -580,20 +587,16 @@ mod tests {
 
     #[test]
     fn test_databricks_provider_name() {
-        let config = DatabricksConfig::with_credentials(
-            "dapi-test-key",
-            "https://test.databricks.net",
-        );
+        let config =
+            DatabricksConfig::with_credentials("dapi-test-key", "https://test.databricks.net");
         let provider = DatabricksProvider::new(config).unwrap();
         assert_eq!(provider.name(), "databricks");
     }
 
     #[test]
     fn test_databricks_provider_capabilities() {
-        let config = DatabricksConfig::with_credentials(
-            "dapi-test-key",
-            "https://test.databricks.net",
-        );
+        let config =
+            DatabricksConfig::with_credentials("dapi-test-key", "https://test.databricks.net");
         let provider = DatabricksProvider::new(config).unwrap();
         let caps = provider.capabilities();
         assert!(caps.contains(&ProviderCapability::ChatCompletion));
@@ -602,10 +605,8 @@ mod tests {
 
     #[test]
     fn test_databricks_provider_models() {
-        let config = DatabricksConfig::with_credentials(
-            "dapi-test-key",
-            "https://test.databricks.net",
-        );
+        let config =
+            DatabricksConfig::with_credentials("dapi-test-key", "https://test.databricks.net");
         let provider = DatabricksProvider::new(config).unwrap();
         let models = provider.models();
         assert!(!models.is_empty());
@@ -613,10 +614,8 @@ mod tests {
 
     #[test]
     fn test_get_endpoint_name() {
-        let config = DatabricksConfig::with_credentials(
-            "dapi-test-key",
-            "https://test.databricks.net",
-        );
+        let config =
+            DatabricksConfig::with_credentials("dapi-test-key", "https://test.databricks.net");
         let provider = DatabricksProvider::new(config).unwrap();
 
         assert_eq!(
@@ -628,13 +627,13 @@ mod tests {
 
     #[test]
     fn test_build_endpoint_url() {
-        let config = DatabricksConfig::with_credentials(
-            "dapi-test-key",
-            "https://test.databricks.net",
-        );
+        let config =
+            DatabricksConfig::with_credentials("dapi-test-key", "https://test.databricks.net");
         let provider = DatabricksProvider::new(config).unwrap();
 
-        let url = provider.build_endpoint_url("dbrx-instruct", "chat").unwrap();
+        let url = provider
+            .build_endpoint_url("dbrx-instruct", "chat")
+            .unwrap();
         assert!(url.contains("/serving-endpoints/"));
         assert!(url.contains("dbrx-instruct"));
         assert!(url.ends_with("/invocations"));
@@ -642,10 +641,8 @@ mod tests {
 
     #[test]
     fn test_transform_messages() {
-        let config = DatabricksConfig::with_credentials(
-            "dapi-test-key",
-            "https://test.databricks.net",
-        );
+        let config =
+            DatabricksConfig::with_credentials("dapi-test-key", "https://test.databricks.net");
         let provider = DatabricksProvider::new(config).unwrap();
 
         let messages = vec![ChatMessage {
@@ -666,10 +663,8 @@ mod tests {
 
     #[test]
     fn test_transform_chat_request() {
-        let config = DatabricksConfig::with_credentials(
-            "dapi-test-key",
-            "https://test.databricks.net",
-        );
+        let config =
+            DatabricksConfig::with_credentials("dapi-test-key", "https://test.databricks.net");
         let provider = DatabricksProvider::new(config).unwrap();
 
         let request = ChatRequest {
@@ -696,10 +691,8 @@ mod tests {
 
     #[test]
     fn test_parse_chat_response() {
-        let config = DatabricksConfig::with_credentials(
-            "dapi-test-key",
-            "https://test.databricks.net",
-        );
+        let config =
+            DatabricksConfig::with_credentials("dapi-test-key", "https://test.databricks.net");
         let provider = DatabricksProvider::new(config).unwrap();
 
         let response_json = serde_json::json!({
@@ -720,7 +713,9 @@ mod tests {
             }
         });
 
-        let response = provider.parse_chat_response(&response_json, "dbrx-instruct").unwrap();
+        let response = provider
+            .parse_chat_response(&response_json, "dbrx-instruct")
+            .unwrap();
         assert_eq!(response.id, "chatcmpl-123");
         assert_eq!(response.choices.len(), 1);
         assert_eq!(response.choices[0].finish_reason, Some(FinishReason::Stop));
@@ -729,10 +724,8 @@ mod tests {
 
     #[test]
     fn test_health_check() {
-        let config = DatabricksConfig::with_credentials(
-            "dapi-test-key",
-            "https://test.databricks.net",
-        );
+        let config =
+            DatabricksConfig::with_credentials("dapi-test-key", "https://test.databricks.net");
         let provider = DatabricksProvider::new(config).unwrap();
 
         let rt = tokio::runtime::Runtime::new().unwrap();
@@ -742,10 +735,8 @@ mod tests {
 
     #[test]
     fn test_health_check_unhealthy() {
-        let mut config = DatabricksConfig::with_credentials(
-            "dapi-test-key",
-            "https://test.databricks.net",
-        );
+        let mut config =
+            DatabricksConfig::with_credentials("dapi-test-key", "https://test.databricks.net");
         config.base.api_base = None;
 
         // This will fail validation, so we construct manually for testing

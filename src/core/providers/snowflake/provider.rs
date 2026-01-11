@@ -12,9 +12,9 @@ use tracing::debug;
 use super::config::SnowflakeConfig;
 use super::error::SnowflakeError;
 use super::model_info::get_available_models;
-use crate::core::traits::provider::llm_provider::trait_definition::LLMProvider;
-use crate::core::traits::ProviderConfig as _;
 use crate::core::providers::base::GlobalPoolManager;
+use crate::core::traits::ProviderConfig as _;
+use crate::core::traits::provider::llm_provider::trait_definition::LLMProvider;
 use crate::core::types::common::{HealthStatus, ModelInfo, ProviderCapability, RequestContext};
 use crate::core::types::requests::{ChatRequest, EmbeddingRequest};
 use crate::core::types::responses::{ChatChunk, ChatResponse, EmbeddingResponse};
@@ -43,7 +43,10 @@ impl SnowflakeProvider {
             .map_err(|e| SnowflakeError::configuration("snowflake", e))?;
 
         let pool_manager = Arc::new(GlobalPoolManager::new().map_err(|e| {
-            SnowflakeError::configuration("snowflake", format!("Failed to create pool manager: {}", e))
+            SnowflakeError::configuration(
+                "snowflake",
+                format!("Failed to create pool manager: {}", e),
+            )
         })?);
 
         // Build model list from static configuration
@@ -103,10 +106,7 @@ impl SnowflakeProvider {
         if let Some(base) = &self.config.api_base {
             base.clone()
         } else if let Some(account_id) = &self.config.account_id {
-            format!(
-                "https://{}.snowflakecomputing.com/api/v2",
-                account_id
-            )
+            format!("https://{}.snowflakecomputing.com/api/v2", account_id)
         } else {
             std::env::var("SNOWFLAKE_ACCOUNT_ID")
                 .map(|id| format!("https://{}.snowflakecomputing.com/api/v2", id))
@@ -182,8 +182,9 @@ impl LLMProvider for SnowflakeProvider {
         _model: &str,
         _request_id: &str,
     ) -> Result<ChatResponse, Self::Error> {
-        serde_json::from_slice(raw_response)
-            .map_err(|e| SnowflakeError::api_error("snowflake", 500, format!("Failed to parse response: {}", e)))
+        serde_json::from_slice(raw_response).map_err(|e| {
+            SnowflakeError::api_error("snowflake", 500, format!("Failed to parse response: {}", e))
+        })
     }
 
     fn get_error_mapper(&self) -> Self::ErrorMapper {
@@ -197,15 +198,12 @@ impl LLMProvider for SnowflakeProvider {
     ) -> Result<ChatResponse, Self::Error> {
         debug!("Snowflake chat request: model={}", request.model);
 
-        let api_key = self.get_api_key().ok_or_else(|| {
-            SnowflakeError::authentication("snowflake", "API key is required")
-        })?;
+        let api_key = self
+            .get_api_key()
+            .ok_or_else(|| SnowflakeError::authentication("snowflake", "API key is required"))?;
 
         // Build the URL for Cortex LLM REST API
-        let url = format!(
-            "{}/cortex/inference:complete",
-            self.get_api_base()
-        );
+        let url = format!("{}/cortex/inference:complete", self.get_api_base());
 
         // Build request body
         let body = serde_json::json!({
@@ -236,12 +234,17 @@ impl LLMProvider for SnowflakeProvider {
 
         if !status.is_success() {
             let body_str = String::from_utf8_lossy(&response_bytes);
-            return Err(SnowflakeError::api_error("snowflake", status.as_u16(), body_str.to_string()));
+            return Err(SnowflakeError::api_error(
+                "snowflake",
+                status.as_u16(),
+                body_str.to_string(),
+            ));
         }
 
         // Parse response
-        let json: serde_json::Value = serde_json::from_slice(&response_bytes)
-            .map_err(|e| SnowflakeError::api_error("snowflake", 500, format!("Failed to parse response: {}", e)))?;
+        let json: serde_json::Value = serde_json::from_slice(&response_bytes).map_err(|e| {
+            SnowflakeError::api_error("snowflake", 500, format!("Failed to parse response: {}", e))
+        })?;
 
         // Transform Snowflake response to OpenAI format
         let content = json

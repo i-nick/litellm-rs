@@ -254,12 +254,16 @@ pub fn get_models_by_provider(provider: &str) -> Vec<&'static WatsonxModel> {
 
 /// Check if a model supports chat format
 pub fn supports_chat(model_id: &str) -> bool {
-    get_model_info(model_id).map(|m| m.supports_chat).unwrap_or(true)
+    get_model_info(model_id)
+        .map(|m| m.supports_chat)
+        .unwrap_or(true)
 }
 
 /// Check if a model supports tool calling
 pub fn supports_tools(model_id: &str) -> bool {
-    get_model_info(model_id).map(|m| m.supports_tools).unwrap_or(false)
+    get_model_info(model_id)
+        .map(|m| m.supports_tools)
+        .unwrap_or(false)
 }
 
 /// Model pattern identifiers for template matching

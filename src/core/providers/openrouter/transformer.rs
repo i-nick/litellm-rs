@@ -3,13 +3,13 @@
 //! OpenRouter uses OpenAI-compatible API, but needs to process additional parameters
 
 use super::error::OpenRouterError;
+use crate::ProviderError;
 use crate::core::providers::openai::models as openai_models;
 use crate::core::providers::openai::transformer::OpenAIRequestTransformer;
 use crate::core::types::{
     requests::ChatRequest,
     responses::{ChatChunk, ChatResponse},
 };
-use crate::ProviderError;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -94,7 +94,14 @@ impl OpenRouterResponseTransformer {
     ) -> Result<ChatResponse, OpenRouterError> {
         // Delegate to OpenAI transformer
         crate::core::providers::openai::transformer::OpenAIResponseTransformer::transform(response)
-            .map_err(|e| ProviderError::transformation_error("openrouter", "openai", "openrouter", e.to_string()))
+            .map_err(|e| {
+                ProviderError::transformation_error(
+                    "openrouter",
+                    "openai",
+                    "openrouter",
+                    e.to_string(),
+                )
+            })
     }
 
     /// Transform stream chunk

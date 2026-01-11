@@ -4,14 +4,14 @@
 //! Supports both v1 (legacy) and v2 (OpenAI-compatible) APIs.
 
 use serde::{Deserialize, Serialize};
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 use std::collections::HashMap;
 
 use super::config::{CohereApiVersion, CohereConfig};
 use super::error::CohereError;
+use crate::core::types::ChatMessage as ResponseMessage;
 use crate::core::types::requests::{ChatRequest, MessageContent, MessageRole};
 use crate::core::types::responses::{ChatChoice, ChatResponse, FinishReason, Usage};
-use crate::core::types::ChatMessage as ResponseMessage;
 use crate::core::types::tools::ToolCall;
 
 /// Cohere v2 chat request (OpenAI-compatible)
@@ -249,11 +249,7 @@ impl CohereChatHandler {
                         let required = params
                             .get("required")
                             .and_then(|r| r.as_array())
-                            .map(|arr| {
-                                arr.iter()
-                                    .filter_map(|v| v.as_str())
-                                    .collect::<Vec<_>>()
-                            })
+                            .map(|arr| arr.iter().filter_map(|v| v.as_str()).collect::<Vec<_>>())
                             .unwrap_or_default();
 
                         for (param_name, param_def) in properties {
@@ -440,13 +436,19 @@ impl CohereChatHandler {
         let tool_calls: Vec<ToolCall> = tool_calls_arr
             .iter()
             .map(|tc| {
-                let id = tc.get("id").and_then(|v| v.as_str()).unwrap_or("").to_string();
-                let name = tc.get("function")
+                let id = tc
+                    .get("id")
+                    .and_then(|v| v.as_str())
+                    .unwrap_or("")
+                    .to_string();
+                let name = tc
+                    .get("function")
                     .and_then(|f| f.get("name"))
                     .and_then(|n| n.as_str())
                     .unwrap_or("")
                     .to_string();
-                let arguments = tc.get("function")
+                let arguments = tc
+                    .get("function")
                     .and_then(|f| f.get("arguments"))
                     .map(|a| {
                         if a.is_string() {
@@ -460,10 +462,7 @@ impl CohereChatHandler {
                 ToolCall {
                     id,
                     tool_type: "function".to_string(),
-                    function: crate::core::types::tools::FunctionCall {
-                        name,
-                        arguments,
-                    },
+                    function: crate::core::types::tools::FunctionCall { name, arguments },
                 }
             })
             .collect();
@@ -494,9 +493,7 @@ impl CohereChatHandler {
     }
 
     /// Map OpenAI parameters to Cohere format
-    pub fn map_openai_params(
-        params: HashMap<String, Value>,
-    ) -> HashMap<String, Value> {
+    pub fn map_openai_params(params: HashMap<String, Value>) -> HashMap<String, Value> {
         let mut mapped = HashMap::new();
 
         for (key, value) in params {
@@ -651,6 +648,10 @@ mod tests {
 
         assert_eq!(tools_array.len(), 1);
         assert_eq!(tools_array[0]["name"], "get_weather");
-        assert!(tools_array[0]["parameter_definitions"]["location"]["required"].as_bool().unwrap());
+        assert!(
+            tools_array[0]["parameter_definitions"]["location"]["required"]
+                .as_bool()
+                .unwrap()
+        );
     }
 }

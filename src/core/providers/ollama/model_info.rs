@@ -110,7 +110,9 @@ impl OllamaModelInfo {
         }
 
         // Infer parameter size
-        for size in ["1b", "3b", "7b", "8b", "13b", "14b", "32b", "33b", "34b", "70b", "72b", "180b"] {
+        for size in [
+            "1b", "3b", "7b", "8b", "13b", "14b", "32b", "33b", "34b", "70b", "72b", "180b",
+        ] {
             if name_lower.contains(size) {
                 self.parameter_size = Some(size.to_uppercase());
                 break;

@@ -178,25 +178,29 @@ impl VectorStoreHandler {
     /// Validate vector store configuration
     fn validate_config(&self, config: &VectorStoreConfig) -> Result<(), ProviderError> {
         if config.store_id.is_empty() {
-            return Err(ProviderError::invalid_request("vertex_ai",
+            return Err(ProviderError::invalid_request(
+                "vertex_ai",
                 "Store ID cannot be empty",
             ));
         }
 
         if config.display_name.is_empty() {
-            return Err(ProviderError::invalid_request("vertex_ai",
+            return Err(ProviderError::invalid_request(
+                "vertex_ai",
                 "Display name cannot be empty",
             ));
         }
 
         if config.dimensions == 0 {
-            return Err(ProviderError::invalid_request("vertex_ai",
+            return Err(ProviderError::invalid_request(
+                "vertex_ai",
                 "Dimensions must be greater than 0",
             ));
         }
 
         if config.dimensions > 2048 {
-            return Err(ProviderError::invalid_request("vertex_ai",
+            return Err(ProviderError::invalid_request(
+                "vertex_ai",
                 "Dimensions cannot exceed 2048",
             ));
         }
@@ -207,20 +211,23 @@ impl VectorStoreHandler {
     /// Validate documents for vector store
     fn validate_documents(&self, documents: &[VectorDocument]) -> Result<(), ProviderError> {
         if documents.is_empty() {
-            return Err(ProviderError::invalid_request("vertex_ai",
+            return Err(ProviderError::invalid_request(
+                "vertex_ai",
                 "No documents provided",
             ));
         }
 
         for doc in documents {
             if doc.id.is_empty() {
-                return Err(ProviderError::invalid_request("vertex_ai",
+                return Err(ProviderError::invalid_request(
+                    "vertex_ai",
                     "Document ID cannot be empty",
                 ));
             }
 
             if doc.content.is_empty() {
-                return Err(ProviderError::invalid_request("vertex_ai",
+                return Err(ProviderError::invalid_request(
+                    "vertex_ai",
                     "Document content cannot be empty",
                 ));
             }
@@ -232,14 +239,16 @@ impl VectorStoreHandler {
     /// Validate search request
     fn validate_search_request(&self, request: &VectorSearchRequest) -> Result<(), ProviderError> {
         if request.query.is_empty() {
-            return Err(ProviderError::invalid_request("vertex_ai",
+            return Err(ProviderError::invalid_request(
+                "vertex_ai",
                 "Search query cannot be empty",
             ));
         }
 
         if let Some(k) = request.k {
             if k == 0 || k > 1000 {
-                return Err(ProviderError::invalid_request("vertex_ai",
+                return Err(ProviderError::invalid_request(
+                    "vertex_ai",
                     "k must be between 1 and 1000",
                 ));
             }

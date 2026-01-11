@@ -6,8 +6,7 @@ use crate::core::traits::ProviderConfig;
 use serde::{Deserialize, Serialize};
 
 /// Snowflake authentication type
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[derive(Default)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Default)]
 pub enum AuthType {
     /// JWT key pair authentication
     #[default]
@@ -15,7 +14,6 @@ pub enum AuthType {
     /// Programmatic Access Token (PAT)
     ProgrammaticAccessToken,
 }
-
 
 /// Snowflake provider configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -60,23 +58,20 @@ impl ProviderConfig for SnowflakeConfig {
     fn validate(&self) -> Result<(), String> {
         // Check for API key (JWT or PAT)
         if self.api_key.is_none() && std::env::var("SNOWFLAKE_JWT").is_err() {
-            return Err(
-                "Snowflake JWT/PAT not provided. \
+            return Err("Snowflake JWT/PAT not provided. \
                 Set SNOWFLAKE_JWT environment variable or pass api_key in configuration."
-                    .to_string(),
-            );
+                .to_string());
         }
 
         // Check for account ID or API base
-        let has_account = self.account_id.is_some() || std::env::var("SNOWFLAKE_ACCOUNT_ID").is_ok();
+        let has_account =
+            self.account_id.is_some() || std::env::var("SNOWFLAKE_ACCOUNT_ID").is_ok();
         let has_api_base = self.api_base.is_some();
 
         if !has_account && !has_api_base {
-            return Err(
-                "Snowflake account_id or api_base not provided. \
+            return Err("Snowflake account_id or api_base not provided. \
                 Set SNOWFLAKE_ACCOUNT_ID environment variable or pass in configuration."
-                    .to_string(),
-            );
+                .to_string());
         }
 
         // Validate timeout
@@ -199,7 +194,10 @@ mod tests {
             ..Default::default()
         };
         let base = config.get_api_base().unwrap();
-        assert_eq!(base, "https://xy12345.us-east-1.snowflakecomputing.com/api/v2");
+        assert_eq!(
+            base,
+            "https://xy12345.us-east-1.snowflakecomputing.com/api/v2"
+        );
     }
 
     #[test]

@@ -9,9 +9,9 @@ use tracing::debug;
 
 use super::config::XinferenceConfig;
 use super::error::{XinferenceError, XinferenceErrorMapper};
-use crate::core::providers::unified_provider::ProviderError;
 use super::model_info::{get_available_models, get_model_info};
-use crate::core::providers::base::{GlobalPoolManager, HttpMethod, HeaderPair, header};
+use crate::core::providers::base::{GlobalPoolManager, HeaderPair, HttpMethod, header};
+use crate::core::providers::unified_provider::ProviderError;
 use crate::core::traits::{
     ProviderConfig as _, provider::llm_provider::trait_definition::LLMProvider,
 };
@@ -43,7 +43,10 @@ impl XinferenceProvider {
             .map_err(|e| ProviderError::configuration("xinference", e))?;
 
         let pool_manager = Arc::new(GlobalPoolManager::new().map_err(|e| {
-            ProviderError::configuration("xinference", format!("Failed to create pool manager: {}", e))
+            ProviderError::configuration(
+                "xinference",
+                format!("Failed to create pool manager: {}", e),
+            )
         })?);
 
         let models = get_available_models()
@@ -124,8 +127,13 @@ impl XinferenceProvider {
             .await
             .map_err(|e| ProviderError::network("xinference", e.to_string()))?;
 
-        serde_json::from_slice(&response_bytes)
-            .map_err(|e| ProviderError::api_error("xinference", 500, format!("Failed to parse response: {}", e)))
+        serde_json::from_slice(&response_bytes).map_err(|e| {
+            ProviderError::api_error(
+                "xinference",
+                500,
+                format!("Failed to parse response: {}", e),
+            )
+        })
     }
 }
 
@@ -185,8 +193,13 @@ impl LLMProvider for XinferenceProvider {
         _model: &str,
         _request_id: &str,
     ) -> Result<ChatResponse, Self::Error> {
-        serde_json::from_slice(raw_response)
-            .map_err(|e| ProviderError::api_error("xinference", 500, format!("Failed to parse response: {}", e)))
+        serde_json::from_slice(raw_response).map_err(|e| {
+            ProviderError::api_error(
+                "xinference",
+                500,
+                format!("Failed to parse response: {}", e),
+            )
+        })
     }
 
     fn get_error_mapper(&self) -> Self::ErrorMapper {
@@ -207,8 +220,13 @@ impl LLMProvider for XinferenceProvider {
             .execute_request("/chat/completions", request_json)
             .await?;
 
-        serde_json::from_value(response)
-            .map_err(|e| ProviderError::api_error("xinference", 500, format!("Failed to parse response: {}", e)))
+        serde_json::from_value(response).map_err(|e| {
+            ProviderError::api_error(
+                "xinference",
+                500,
+                format!("Failed to parse response: {}", e),
+            )
+        })
     }
 
     async fn chat_completion_stream(
@@ -239,10 +257,11 @@ impl LLMProvider for XinferenceProvider {
         if !response.status().is_success() {
             let status = response.status().as_u16();
             let body = response.text().await.ok();
-            return Err(ProviderError::api_error("xinference", status, format!(
-                "Stream request failed: {} - {:?}",
-                status, body
-            )));
+            return Err(ProviderError::api_error(
+                "xinference",
+                status,
+                format!("Stream request failed: {} - {:?}", status, body),
+            ));
         }
 
         let stream = crate::core::providers::openai::streaming::create_openai_stream(
@@ -269,8 +288,13 @@ impl LLMProvider for XinferenceProvider {
 
         let response = self.execute_request("/embeddings", request_json).await?;
 
-        serde_json::from_value(response)
-            .map_err(|e| ProviderError::api_error("xinference", 500, format!("Failed to parse response: {}", e)))
+        serde_json::from_value(response).map_err(|e| {
+            ProviderError::api_error(
+                "xinference",
+                500,
+                format!("Failed to parse response: {}", e),
+            )
+        })
     }
 
     async fn health_check(&self) -> HealthStatus {

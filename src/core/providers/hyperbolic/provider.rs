@@ -12,9 +12,9 @@ use tracing::debug;
 use super::config::HyperbolicConfig;
 use super::error::HyperbolicError;
 use super::model_info::{get_available_models, get_model_info};
-use crate::core::providers::base::{header, GlobalPoolManager, HttpMethod};
+use crate::core::providers::base::{GlobalPoolManager, HttpMethod, header};
 use crate::core::traits::{
-    provider::llm_provider::trait_definition::LLMProvider, ProviderConfig as _,
+    ProviderConfig as _, provider::llm_provider::trait_definition::LLMProvider,
 };
 use crate::core::types::{
     common::{HealthStatus, ModelInfo, ProviderCapability, RequestContext},
@@ -47,7 +47,10 @@ impl HyperbolicProvider {
 
         // Create pool manager
         let pool_manager = Arc::new(GlobalPoolManager::new().map_err(|e| {
-            HyperbolicError::configuration("hyperbolic", format!("Failed to create pool manager: {}", e))
+            HyperbolicError::configuration(
+                "hyperbolic",
+                format!("Failed to create pool manager: {}", e),
+            )
         })?);
 
         // Build model list from static configuration
@@ -124,8 +127,13 @@ impl HyperbolicProvider {
             .await
             .map_err(|e| HyperbolicError::network("hyperbolic", e.to_string()))?;
 
-        serde_json::from_slice(&response_bytes)
-            .map_err(|e| HyperbolicError::api_error("hyperbolic", 500, format!("Failed to parse response: {}", e)))
+        serde_json::from_slice(&response_bytes).map_err(|e| {
+            HyperbolicError::api_error(
+                "hyperbolic",
+                500,
+                format!("Failed to parse response: {}", e),
+            )
+        })
     }
 }
 
@@ -194,8 +202,13 @@ impl LLMProvider for HyperbolicProvider {
         _request_id: &str,
     ) -> Result<ChatResponse, Self::Error> {
         // Parse response
-        let chat_response: ChatResponse = serde_json::from_slice(raw_response)
-            .map_err(|e| HyperbolicError::api_error("hyperbolic", 500, format!("Failed to parse response: {}", e)))?;
+        let chat_response: ChatResponse = serde_json::from_slice(raw_response).map_err(|e| {
+            HyperbolicError::api_error(
+                "hyperbolic",
+                500,
+                format!("Failed to parse response: {}", e),
+            )
+        })?;
 
         Ok(chat_response)
     }
@@ -219,8 +232,13 @@ impl LLMProvider for HyperbolicProvider {
             .execute_request("/chat/completions", request_json)
             .await?;
 
-        serde_json::from_value(response)
-            .map_err(|e| HyperbolicError::api_error("hyperbolic", 500, format!("Failed to parse chat response: {}", e)))
+        serde_json::from_value(response).map_err(|e| {
+            HyperbolicError::api_error(
+                "hyperbolic",
+                500,
+                format!("Failed to parse chat response: {}", e),
+            )
+        })
     }
 
     async fn chat_completion_stream(
@@ -230,7 +248,10 @@ impl LLMProvider for HyperbolicProvider {
     ) -> Result<Pin<Box<dyn Stream<Item = Result<ChatChunk, Self::Error>> + Send>>, Self::Error>
     {
         // Streaming would require SSE handling similar to Groq
-        Err(HyperbolicError::not_supported("hyperbolic", "Streaming is not yet implemented for Hyperbolic provider"))
+        Err(HyperbolicError::not_supported(
+            "hyperbolic",
+            "Streaming is not yet implemented for Hyperbolic provider",
+        ))
     }
 
     async fn embeddings(
@@ -238,7 +259,10 @@ impl LLMProvider for HyperbolicProvider {
         _request: EmbeddingRequest,
         _context: RequestContext,
     ) -> Result<EmbeddingResponse, Self::Error> {
-        Err(HyperbolicError::not_supported("hyperbolic", "Hyperbolic does not support embeddings through this endpoint."))
+        Err(HyperbolicError::not_supported(
+            "hyperbolic",
+            "Hyperbolic does not support embeddings through this endpoint.",
+        ))
     }
 
     async fn health_check(&self) -> HealthStatus {
@@ -269,8 +293,7 @@ impl LLMProvider for HyperbolicProvider {
             HyperbolicError::model_not_found("hyperbolic", format!("Unknown model: {}", model))
         })?;
 
-        let input_cost =
-            (input_tokens as f64) * (model_info.input_cost_per_million / 1_000_000.0);
+        let input_cost = (input_tokens as f64) * (model_info.input_cost_per_million / 1_000_000.0);
         let output_cost =
             (output_tokens as f64) * (model_info.output_cost_per_million / 1_000_000.0);
         Ok(input_cost + output_cost)

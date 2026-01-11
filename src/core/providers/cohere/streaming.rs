@@ -9,7 +9,7 @@ use serde_json::Value;
 use super::config::CohereApiVersion;
 use super::error::CohereError;
 use crate::core::types::requests::MessageRole;
-use crate::core::types::responses::{ChatChunk, ChatStreamChoice, ChatDelta, FinishReason, Usage};
+use crate::core::types::responses::{ChatChunk, ChatDelta, ChatStreamChoice, FinishReason, Usage};
 
 /// Cohere v1 streaming event types
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -140,7 +140,10 @@ impl CohereStreamParser {
     }
 
     /// Parse v1 streaming chunk
-    fn parse_v1_chunk(&mut self, chunk: CohereStreamChunk) -> Result<Option<ChatChunk>, CohereError> {
+    fn parse_v1_chunk(
+        &mut self,
+        chunk: CohereStreamChunk,
+    ) -> Result<Option<ChatChunk>, CohereError> {
         let event_type = chunk
             .event_type
             .as_deref()
@@ -173,7 +176,10 @@ impl CohereStreamParser {
     }
 
     /// Parse v2 streaming chunk
-    fn parse_v2_chunk(&mut self, chunk: CohereStreamChunk) -> Result<Option<ChatChunk>, CohereError> {
+    fn parse_v2_chunk(
+        &mut self,
+        chunk: CohereStreamChunk,
+    ) -> Result<Option<ChatChunk>, CohereError> {
         // v2 uses 'type' or 'event' field
         let event_str = chunk
             .event_type
@@ -194,7 +200,9 @@ impl CohereStreamParser {
                     .and_then(|c| {
                         if let Some(text) = c.get("text").and_then(|t| t.as_str()) {
                             Some(text.to_string())
-                        } else { c.as_str().map(|text| text.to_string()) }
+                        } else {
+                            c.as_str().map(|text| text.to_string())
+                        }
                     })
                     .unwrap_or_default();
 
@@ -379,7 +387,8 @@ mod tests {
     fn test_parse_v2_content_delta() {
         let mut parser = CohereStreamParser::new(CohereApiVersion::V2, "command-r-plus");
 
-        let data = r#"{"type": "content-delta", "delta": {"message": {"content": {"text": "World!"}}}}"#;
+        let data =
+            r#"{"type": "content-delta", "delta": {"message": {"content": {"text": "World!"}}}}"#;
         let result = parser.parse_chunk(data).unwrap();
 
         assert!(result.is_some());

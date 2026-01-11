@@ -6,8 +6,8 @@ use bytes::Bytes;
 use futures::{Stream, StreamExt};
 
 use crate::core::providers::unified_provider::ProviderError;
-use crate::core::types::responses::{ChatChunk, ChatDelta, ChatStreamChoice, FinishReason};
 use crate::core::types::requests::MessageRole;
+use crate::core::types::responses::{ChatChunk, ChatDelta, ChatStreamChoice, FinishReason};
 
 /// Parse a single SSE line into a ChatChunk
 fn parse_sse_line(line: &str) -> Option<Result<ChatChunk, ProviderError>> {
@@ -88,11 +88,7 @@ fn parse_databricks_chunk(json: &serde_json::Value) -> Result<ChatChunk, Provide
                                 text.push_str(t);
                             }
                         }
-                        if text.is_empty() {
-                            None
-                        } else {
-                            Some(text)
-                        }
+                        if text.is_empty() { None } else { Some(text) }
                     }
                     _ => None,
                 };
@@ -230,10 +226,7 @@ mod tests {
         let line = r#"data: {"id":"test","created":0,"model":"test","choices":[{"index":0,"delta":{},"finish_reason":"stop"}]}"#;
         let result = parse_sse_line(line).unwrap().unwrap();
 
-        assert_eq!(
-            result.choices[0].finish_reason,
-            Some(FinishReason::Stop)
-        );
+        assert_eq!(result.choices[0].finish_reason, Some(FinishReason::Stop));
     }
 
     #[test]

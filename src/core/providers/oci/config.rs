@@ -171,9 +171,9 @@ impl OciConfig {
 
     /// Build the chat completions URL
     pub fn build_chat_url(&self) -> String {
-        let base = self
-            .get_api_base()
-            .unwrap_or_else(|| "https://inference.generativeai.us-chicago-1.oci.oraclecloud.com".to_string());
+        let base = self.get_api_base().unwrap_or_else(|| {
+            "https://inference.generativeai.us-chicago-1.oci.oraclecloud.com".to_string()
+        });
         format!("{}/20231130/actions/chat", base.trim_end_matches('/'))
     }
 
@@ -208,7 +208,9 @@ mod tests {
     #[test]
     fn test_oci_config_build_chat_url() {
         let config = OciConfig {
-            api_base: Some("https://inference.generativeai.us-chicago-1.oci.oraclecloud.com".to_string()),
+            api_base: Some(
+                "https://inference.generativeai.us-chicago-1.oci.oraclecloud.com".to_string(),
+            ),
             ..Default::default()
         };
         let url = config.build_chat_url();

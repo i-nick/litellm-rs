@@ -484,8 +484,7 @@ pub fn supported_audio_formats() -> &'static [&'static str] {
 }
 
 /// Available STT models
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-#[derive(Default)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum STTModel {
     /// Nova 2 - General purpose (default)
     #[default]
@@ -556,7 +555,6 @@ impl STTModel {
         }
     }
 }
-
 
 #[cfg(test)]
 mod tests {

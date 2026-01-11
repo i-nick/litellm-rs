@@ -187,10 +187,8 @@ mod tests {
 
     #[test]
     fn test_get_serving_endpoint_base() {
-        let config = DatabricksConfig::with_credentials(
-            "test-key",
-            "https://adb-123.azuredatabricks.net",
-        );
+        let config =
+            DatabricksConfig::with_credentials("test-key", "https://adb-123.azuredatabricks.net");
         let endpoint = config.get_serving_endpoint_base();
         assert_eq!(
             endpoint,
@@ -237,10 +235,7 @@ mod tests {
 
     #[test]
     fn test_provider_config_trait() {
-        let config = DatabricksConfig::with_credentials(
-            "test-key",
-            "https://test.databricks.net",
-        );
+        let config = DatabricksConfig::with_credentials("test-key", "https://test.databricks.net");
         assert_eq!(config.api_key(), Some("test-key"));
         assert_eq!(config.api_base(), Some("https://test.databricks.net"));
         assert_eq!(config.timeout(), std::time::Duration::from_secs(60));

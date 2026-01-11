@@ -996,8 +996,14 @@ mod tests {
         assert_eq!(round_robin("gpt-4", &candidates, &counters).unwrap(), "d2");
 
         // claude model has its own counter
-        assert_eq!(round_robin("claude-3", &candidates, &counters).unwrap(), "d1");
-        assert_eq!(round_robin("claude-3", &candidates, &counters).unwrap(), "d2");
+        assert_eq!(
+            round_robin("claude-3", &candidates, &counters).unwrap(),
+            "d1"
+        );
+        assert_eq!(
+            round_robin("claude-3", &candidates, &counters).unwrap(),
+            "d2"
+        );
 
         // gpt-4 continues from where it left off
         assert_eq!(round_robin("gpt-4", &candidates, &counters).unwrap(), "d1");

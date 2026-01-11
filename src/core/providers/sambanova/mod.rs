@@ -322,8 +322,16 @@ impl LLMProvider for SambanovaProvider {
                     mapped.insert("max_tokens".to_string(), value);
                 }
                 // Direct pass-through for standard parameters
-                "temperature" | "top_p" | "top_k" | "max_tokens" | "stream" | "stop"
-                | "stream_options" | "tools" | "tool_choice" | "response_format"
+                "temperature"
+                | "top_p"
+                | "top_k"
+                | "max_tokens"
+                | "stream"
+                | "stop"
+                | "stream_options"
+                | "tools"
+                | "tool_choice"
+                | "response_format"
                 | "parallel_tool_calls" => {
                     mapped.insert(key, value);
                 }
@@ -550,7 +558,10 @@ impl LLMProvider for SambanovaProvider {
                 {
                     Ok(response) if response.status().is_success() => HealthStatus::Healthy,
                     Ok(response) => {
-                        debug!("Sambanova health check failed: status={}", response.status());
+                        debug!(
+                            "Sambanova health check failed: status={}",
+                            response.status()
+                        );
                         HealthStatus::Unhealthy
                     }
                     Err(e) => {
@@ -723,7 +734,11 @@ mod tests {
         assert!(!models.is_empty());
         assert!(models.iter().any(|m| m.id == "Meta-Llama-3.1-8B-Instruct"));
         assert!(models.iter().any(|m| m.id == "Meta-Llama-3.1-70B-Instruct"));
-        assert!(models.iter().any(|m| m.id == "Meta-Llama-3.1-405B-Instruct"));
+        assert!(
+            models
+                .iter()
+                .any(|m| m.id == "Meta-Llama-3.1-405B-Instruct")
+        );
     }
 
     #[tokio::test]

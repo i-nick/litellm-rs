@@ -167,10 +167,7 @@ impl BatchHandler {
     }
 
     /// Get batch job status
-    pub async fn get_batch_job(
-        &self,
-        _job_id: &str,
-    ) -> Result<BatchJob, ProviderError> {
+    pub async fn get_batch_job(&self, _job_id: &str) -> Result<BatchJob, ProviderError> {
         // TODO: Implement actual job retrieval
         Err(ProviderError::not_supported(
             "vertex_ai",
@@ -190,19 +187,13 @@ impl BatchHandler {
     }
 
     /// Cancel a batch job
-    pub async fn cancel_batch_job(
-        &self,
-        _job_id: &str,
-    ) -> Result<(), ProviderError> {
+    pub async fn cancel_batch_job(&self, _job_id: &str) -> Result<(), ProviderError> {
         // TODO: Implement actual job cancellation
         Ok(())
     }
 
     /// Delete a batch job
-    pub async fn delete_batch_job(
-        &self,
-        _job_id: &str,
-    ) -> Result<(), ProviderError> {
+    pub async fn delete_batch_job(&self, _job_id: &str) -> Result<(), ProviderError> {
         // TODO: Implement actual job deletion
         Ok(())
     }
@@ -230,9 +221,7 @@ pub fn transform_batch_request(
 }
 
 /// Transform single request to Gemini batch format
-fn transform_gemini_batch_instance(
-    request: ChatRequest,
-) -> Result<Value, ProviderError> {
+fn transform_gemini_batch_instance(request: ChatRequest) -> Result<Value, ProviderError> {
     use crate::core::providers::vertex_ai::parse_vertex_model;
     use crate::core::providers::vertex_ai::transformers::GeminiTransformer;
 
@@ -243,9 +232,7 @@ fn transform_gemini_batch_instance(
 }
 
 /// Transform single request to default batch format
-fn transform_default_batch_instance(
-    request: ChatRequest,
-) -> Result<Value, ProviderError> {
+fn transform_default_batch_instance(request: ChatRequest) -> Result<Value, ProviderError> {
     Ok(serde_json::json!({
         "messages": request.messages.iter().map(|msg| {
             serde_json::json!({
@@ -267,10 +254,7 @@ pub fn parse_batch_response(
     model: &str,
 ) -> Result<Vec<ChatResponse>, ProviderError> {
     let predictions = response["predictions"].as_array().ok_or_else(|| {
-        ProviderError::response_parsing(
-            "vertex_ai",
-            "Missing predictions in batch response",
-        )
+        ProviderError::response_parsing("vertex_ai", "Missing predictions in batch response")
     })?;
 
     let mut responses = Vec::new();

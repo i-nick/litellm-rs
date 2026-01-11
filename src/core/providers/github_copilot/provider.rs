@@ -214,10 +214,16 @@ impl GitHubCopilotProvider {
         for (key, value) in default_headers {
             headers.insert(
                 reqwest::header::HeaderName::from_bytes(key.as_bytes()).map_err(|e| {
-                    ProviderError::configuration("github_copilot", format!("Invalid header name: {}", e))
+                    ProviderError::configuration(
+                        "github_copilot",
+                        format!("Invalid header name: {}", e),
+                    )
                 })?,
                 value.parse().map_err(|e| {
-                    ProviderError::configuration("github_copilot", format!("Invalid header value: {}", e))
+                    ProviderError::configuration(
+                        "github_copilot",
+                        format!("Invalid header value: {}", e),
+                    )
                 })?,
             );
         }
@@ -348,7 +354,11 @@ impl LLMProvider for GitHubCopilotProvider {
         _request_id: &str,
     ) -> Result<ChatResponse, Self::Error> {
         let chat_response: ChatResponse = serde_json::from_slice(raw_response).map_err(|e| {
-            ProviderError::api_error("github_copilot", 500, format!("Failed to parse response: {}", e))
+            ProviderError::api_error(
+                "github_copilot",
+                500,
+                format!("Failed to parse response: {}", e),
+            )
         })?;
 
         Ok(chat_response)
@@ -405,13 +415,20 @@ impl LLMProvider for GitHubCopilotProvider {
                 404 => ProviderError::model_not_found("github_copilot", body_str.to_string()),
                 429 => ProviderError::rate_limit("github_copilot", None),
                 400 => ProviderError::invalid_request("github_copilot", body_str.to_string()),
-                500..=599 => ProviderError::provider_unavailable("github_copilot", body_str.to_string()),
+                500..=599 => {
+                    ProviderError::provider_unavailable("github_copilot", body_str.to_string())
+                }
                 _ => ProviderError::api_error("github_copilot", status_code, body_str.to_string()),
             });
         }
 
-        serde_json::from_slice(&body)
-            .map_err(|e| ProviderError::api_error("github_copilot", 500, format!("Failed to parse response: {}", e)))
+        serde_json::from_slice(&body).map_err(|e| {
+            ProviderError::api_error(
+                "github_copilot",
+                500,
+                format!("Failed to parse response: {}", e),
+            )
+        })
     }
 
     async fn chat_completion_stream(
@@ -460,7 +477,9 @@ impl LLMProvider for GitHubCopilotProvider {
                 404 => ProviderError::model_not_found("github_copilot", body_str.clone()),
                 429 => ProviderError::rate_limit("github_copilot", None),
                 400 => ProviderError::invalid_request("github_copilot", body_str.clone()),
-                500..=599 => ProviderError::provider_unavailable("github_copilot", body_str.clone()),
+                500..=599 => {
+                    ProviderError::provider_unavailable("github_copilot", body_str.clone())
+                }
                 _ => ProviderError::api_error("github_copilot", status, body_str),
             });
         }
@@ -518,13 +537,20 @@ impl LLMProvider for GitHubCopilotProvider {
                 404 => ProviderError::model_not_found("github_copilot", body_str.to_string()),
                 429 => ProviderError::rate_limit("github_copilot", None),
                 400 => ProviderError::invalid_request("github_copilot", body_str.to_string()),
-                500..=599 => ProviderError::provider_unavailable("github_copilot", body_str.to_string()),
+                500..=599 => {
+                    ProviderError::provider_unavailable("github_copilot", body_str.to_string())
+                }
                 _ => ProviderError::api_error("github_copilot", status_code, body_str.to_string()),
             });
         }
 
-        serde_json::from_slice(&body)
-            .map_err(|e| ProviderError::api_error("github_copilot", 500, format!("Failed to parse response: {}", e)))
+        serde_json::from_slice(&body).map_err(|e| {
+            ProviderError::api_error(
+                "github_copilot",
+                500,
+                format!("Failed to parse response: {}", e),
+            )
+        })
     }
 
     async fn health_check(&self) -> HealthStatus {

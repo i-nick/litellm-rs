@@ -201,7 +201,8 @@ impl GeminiTransformer {
             .ok_or_else(|| ProviderError::response_parsing("vertex_ai", "Missing candidates"))?;
 
         if candidates.is_empty() {
-            return Err(ProviderError::response_parsing("vertex_ai",
+            return Err(ProviderError::response_parsing(
+                "vertex_ai",
                 "No candidates in response",
             ));
         }
@@ -455,7 +456,8 @@ impl PartnerModelTransformer {
             .ok_or_else(|| ProviderError::response_parsing("vertex_ai", "Missing predictions"))?;
 
         if predictions.is_empty() {
-            return Err(ProviderError::response_parsing("vertex_ai",
+            return Err(ProviderError::response_parsing(
+                "vertex_ai",
                 "No predictions in response",
             ));
         }

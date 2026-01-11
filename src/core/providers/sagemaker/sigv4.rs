@@ -102,10 +102,7 @@ impl SagemakerSigV4Signer {
         // Create string to sign
         let algorithm = "AWS4-HMAC-SHA256";
         let service = "sagemaker";
-        let credential_scope = format!(
-            "{}/{}/{}/aws4_request",
-            date_stamp, self.region, service
-        );
+        let credential_scope = format!("{}/{}/{}/aws4_request", date_stamp, self.region, service);
         let canonical_request_hash = hex::encode(Sha256::digest(canonical_request.as_bytes()));
 
         let string_to_sign = format!(

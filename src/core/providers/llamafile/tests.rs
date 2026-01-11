@@ -1,8 +1,8 @@
 //! Unit tests for Llamafile provider
 
 use super::*;
-use crate::core::traits::provider::llm_provider::trait_definition::LLMProvider;
 use crate::core::traits::ProviderConfig;
+use crate::core::traits::provider::llm_provider::trait_definition::LLMProvider;
 use crate::core::types::common::ProviderCapability;
 use crate::core::types::requests::{ChatMessage, ChatRequest, MessageContent, MessageRole};
 
@@ -24,7 +24,10 @@ fn test_llamafile_config_creation() {
     };
 
     assert_eq!(config.api_key, Some("test-key".to_string()));
-    assert_eq!(config.api_base, Some("http://localhost:8080/v1".to_string()));
+    assert_eq!(
+        config.api_base,
+        Some("http://localhost:8080/v1".to_string())
+    );
     assert_eq!(config.timeout, 60);
     assert_eq!(config.max_retries, 2);
     assert!(config.debug);
@@ -80,7 +83,10 @@ fn test_llamafile_error_conversion() {
     let llamafile_error = LlamafileError::AuthenticationError("invalid key".to_string());
     let provider_error: ProviderError = llamafile_error.into();
 
-    assert!(matches!(provider_error, ProviderError::Authentication { .. }));
+    assert!(matches!(
+        provider_error,
+        ProviderError::Authentication { .. }
+    ));
 }
 
 #[test]
@@ -195,10 +201,7 @@ async fn test_llamafile_provider_default_local() {
     assert!(provider.is_ok());
 
     let provider = provider.unwrap();
-    assert_eq!(
-        provider.config.get_api_base(),
-        "http://127.0.0.1:8080/v1"
-    );
+    assert_eq!(provider.config.get_api_base(), "http://127.0.0.1:8080/v1");
 }
 
 #[tokio::test]

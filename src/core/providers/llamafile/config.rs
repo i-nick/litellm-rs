@@ -100,10 +100,7 @@ impl LlamafileConfig {
 
     /// Get completions endpoint (legacy)
     pub fn get_completions_endpoint(&self) -> String {
-        format!(
-            "{}/completions",
-            self.get_api_base().trim_end_matches('/')
-        )
+        format!("{}/completions", self.get_api_base().trim_end_matches('/'))
     }
 
     /// Get models endpoint

@@ -13,10 +13,10 @@ use tracing::debug;
 use super::config::WatsonxConfig;
 use super::error::{WatsonxError, WatsonxErrorMapper};
 use super::model_info::{get_available_models, get_model_info, supports_tools};
-use crate::core::providers::base::{header_owned, GlobalPoolManager, HttpMethod};
+use crate::core::providers::base::{GlobalPoolManager, HttpMethod, header_owned};
 use crate::core::traits::error_mapper::trait_def::ErrorMapper;
 use crate::core::traits::{
-    provider::llm_provider::trait_definition::LLMProvider, ProviderConfig as _,
+    ProviderConfig as _, provider::llm_provider::trait_definition::LLMProvider,
 };
 use crate::core::types::{
     common::{HealthStatus, ModelInfo, ProviderCapability, RequestContext},
@@ -75,7 +75,9 @@ impl WatsonxProvider {
     /// Create a new Watsonx provider instance
     pub async fn new(config: WatsonxConfig) -> Result<Self, WatsonxError> {
         // Validate configuration
-        config.validate().map_err(WatsonxError::ConfigurationError)?;
+        config
+            .validate()
+            .map_err(WatsonxError::ConfigurationError)?;
 
         // Create pool manager
         let pool_manager = Arc::new(GlobalPoolManager::new().map_err(|e| {
@@ -102,9 +104,7 @@ impl WatsonxProvider {
                     max_output_length: Some(info.max_output_tokens as u32),
                     supports_streaming: true,
                     supports_tools: info.supports_tools,
-                    supports_multimodal: info
-                        .model_id
-                        .contains("vision"),
+                    supports_multimodal: info.model_id.contains("vision"),
                     input_cost_per_1k_tokens: Some(info.input_cost_per_million / 1000.0),
                     output_cost_per_1k_tokens: Some(info.output_cost_per_million / 1000.0),
                     currency: "USD".to_string(),
@@ -211,8 +211,8 @@ impl WatsonxProvider {
             .unwrap_or(3600);
 
         // Cache the token with some buffer before expiry
-        let expires_at =
-            std::time::Instant::now() + std::time::Duration::from_secs(expires_in.saturating_sub(60));
+        let expires_at = std::time::Instant::now()
+            + std::time::Duration::from_secs(expires_in.saturating_sub(60));
 
         {
             let mut cache = self.token_cache.write().await;
@@ -258,7 +258,8 @@ impl WatsonxProvider {
             endpoints::CHAT.to_string()
         };
 
-        self.config.build_url(&endpoint, stream)
+        self.config
+            .build_url(&endpoint, stream)
             .map_err(WatsonxError::ConfigurationError)
     }
 
@@ -566,8 +567,7 @@ impl LLMProvider for WatsonxProvider {
         let model_info = get_model_info(model)
             .ok_or_else(|| WatsonxError::ModelNotFoundError(format!("Unknown model: {}", model)))?;
 
-        let input_cost =
-            (input_tokens as f64) * (model_info.input_cost_per_million / 1_000_000.0);
+        let input_cost = (input_tokens as f64) * (model_info.input_cost_per_million / 1_000_000.0);
         let output_cost =
             (output_tokens as f64) * (model_info.output_cost_per_million / 1_000_000.0);
         Ok(input_cost + output_cost)

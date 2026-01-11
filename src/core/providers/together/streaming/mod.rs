@@ -32,9 +32,7 @@ pub struct TogetherStream {
 }
 
 impl TogetherStream {
-    pub fn new(
-        stream: impl Stream<Item = Result<Bytes, reqwest::Error>> + Send + 'static,
-    ) -> Self {
+    pub fn new(stream: impl Stream<Item = Result<Bytes, reqwest::Error>> + Send + 'static) -> Self {
         Self {
             inner: create_together_stream(stream),
         }
@@ -53,9 +51,11 @@ impl Stream for TogetherStream {
 
         match Pin::new(&mut self.inner).poll_next(cx) {
             Poll::Ready(Some(Ok(chunk))) => Poll::Ready(Some(Ok(chunk))),
-            Poll::Ready(Some(Err(e))) => {
-                Poll::Ready(Some(Err(ProviderError::api_error("together", 500, format!("Streaming error: {}", e)))))
-            }
+            Poll::Ready(Some(Err(e))) => Poll::Ready(Some(Err(ProviderError::api_error(
+                "together",
+                500,
+                format!("Streaming error: {}", e),
+            )))),
             Poll::Ready(None) => Poll::Ready(None),
             Poll::Pending => Poll::Pending,
         }

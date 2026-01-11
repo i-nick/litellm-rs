@@ -4,11 +4,9 @@
 //! Ollama uses a different format than OpenAI's SSE, so we need a custom parser.
 
 use super::error::OllamaError;
-use crate::core::types::requests::MessageRole;
 use crate::ProviderError;
-use crate::core::types::responses::{
-    ChatChunk, ChatDelta, ChatResponse, ChatStreamChoice, Usage,
-};
+use crate::core::types::requests::MessageRole;
+use crate::core::types::responses::{ChatChunk, ChatDelta, ChatResponse, ChatStreamChoice, Usage};
 use bytes::Bytes;
 use futures::Stream;
 use std::pin::Pin;
@@ -122,10 +120,9 @@ where
             return Ok(None);
         }
 
-        let chunk: OllamaStreamChunk =
-            serde_json::from_str(line).map_err(|e| {
-                ProviderError::streaming_error("ollama", "chat", None, None, e.to_string())
-            })?;
+        let chunk: OllamaStreamChunk = serde_json::from_str(line).map_err(|e| {
+            ProviderError::streaming_error("ollama", "chat", None, None, e.to_string())
+        })?;
 
         // Check for error
         if let Some(error) = chunk.error {
@@ -158,29 +155,29 @@ where
             delta.content = message.content.clone();
 
             // Set thinking content (for reasoning models)
-            delta.thinking = message.thinking.as_ref().map(|t| {
-                crate::core::types::thinking::ThinkingDelta {
-                    content: Some(t.clone()),
-                    is_start: None,
-                    is_complete: None,
-                }
-            });
+            delta.thinking =
+                message
+                    .thinking
+                    .as_ref()
+                    .map(|t| crate::core::types::thinking::ThinkingDelta {
+                        content: Some(t.clone()),
+                        is_start: None,
+                        is_complete: None,
+                    });
 
             // Convert tool calls if present
             if let Some(tool_calls) = &message.tool_calls {
                 let converted: Vec<_> = tool_calls
                     .iter()
                     .enumerate()
-                    .map(|(i, tc)| {
-                        crate::core::types::responses::ToolCallDelta {
-                            index: i as u32,
-                            id: tc.id.clone(),
-                            tool_type: Some("function".to_string()),
-                            function: Some(crate::core::types::responses::FunctionCallDelta {
-                                name: Some(tc.function.name.clone()),
-                                arguments: Some(tc.function.arguments.to_string()),
-                            }),
-                        }
+                    .map(|(i, tc)| crate::core::types::responses::ToolCallDelta {
+                        index: i as u32,
+                        id: tc.id.clone(),
+                        tool_type: Some("function".to_string()),
+                        function: Some(crate::core::types::responses::FunctionCallDelta {
+                            name: Some(tc.function.name.clone()),
+                            arguments: Some(tc.function.arguments.to_string()),
+                        }),
                     })
                     .collect();
 
@@ -210,8 +207,7 @@ where
             Some(Usage {
                 prompt_tokens: chunk.prompt_eval_count.unwrap_or(0),
                 completion_tokens: chunk.eval_count.unwrap_or(0),
-                total_tokens: chunk.prompt_eval_count.unwrap_or(0)
-                    + chunk.eval_count.unwrap_or(0),
+                total_tokens: chunk.prompt_eval_count.unwrap_or(0) + chunk.eval_count.unwrap_or(0),
                 prompt_tokens_details: None,
                 completion_tokens_details: None,
                 thinking_usage: None,
@@ -257,7 +253,11 @@ where
                 match self.parse_line(&line) {
                     Ok(Some(chunk)) => {
                         // Check if this is the final chunk
-                        if chunk.choices.first().is_some_and(|c| c.finish_reason.is_some()) {
+                        if chunk
+                            .choices
+                            .first()
+                            .is_some_and(|c| c.finish_reason.is_some())
+                        {
                             self.finished = true;
                         }
                         return Poll::Ready(Some(Ok(chunk)));
@@ -275,9 +275,13 @@ where
                     // Continue loop to check for complete lines
                 }
                 Poll::Ready(Some(Err(e))) => {
-                    return Poll::Ready(Some(Err(
-                        ProviderError::streaming_error("ollama", "chat", None, None, e.to_string())
-                    )))
+                    return Poll::Ready(Some(Err(ProviderError::streaming_error(
+                        "ollama",
+                        "chat",
+                        None,
+                        None,
+                        e.to_string(),
+                    ))));
                 }
                 Poll::Ready(None) => {
                     // Stream ended, process any remaining data
@@ -489,7 +493,10 @@ mod tests {
 
         let chunk: OllamaStreamChunk = serde_json::from_str(json).unwrap();
         let message = chunk.message.unwrap();
-        assert_eq!(message.thinking, Some("Let me think about this...".to_string()));
+        assert_eq!(
+            message.thinking,
+            Some("Let me think about this...".to_string())
+        );
     }
 
     #[test]

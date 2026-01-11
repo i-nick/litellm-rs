@@ -4,7 +4,7 @@
 //! Used to reorder documents by relevance to a query.
 
 use serde::{Deserialize, Serialize};
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 
 use super::error::CohereError;
 
@@ -148,11 +148,15 @@ impl CohereRerankHandler {
     /// Validate rerank request
     fn validate_request(request: &RerankRequest) -> Result<(), CohereError> {
         if request.query.trim().is_empty() {
-            return Err(super::error::cohere_invalid_request("Query cannot be empty"));
+            return Err(super::error::cohere_invalid_request(
+                "Query cannot be empty",
+            ));
         }
 
         if request.model.is_empty() {
-            return Err(super::error::cohere_invalid_request("Model cannot be empty"));
+            return Err(super::error::cohere_invalid_request(
+                "Model cannot be empty",
+            ));
         }
 
         if request.documents.is_empty() {
@@ -403,8 +407,14 @@ mod tests {
 
     #[test]
     fn test_get_default_top_n() {
-        assert_eq!(CohereRerankHandler::get_default_top_n("rerank-english-v3.0", 50), 10);
-        assert_eq!(CohereRerankHandler::get_default_top_n("rerank-english-v3.0", 5), 5);
+        assert_eq!(
+            CohereRerankHandler::get_default_top_n("rerank-english-v3.0", 50),
+            10
+        );
+        assert_eq!(
+            CohereRerankHandler::get_default_top_n("rerank-english-v3.0", 5),
+            5
+        );
     }
 
     #[test]

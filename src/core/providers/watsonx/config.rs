@@ -83,12 +83,10 @@ impl ProviderConfig for WatsonxConfig {
         let has_zen_key = self.zen_api_key.is_some() || std::env::var("WATSONX_ZENAPIKEY").is_ok();
 
         if !has_api_key && !has_token && !has_zen_key {
-            return Err(
-                "Watsonx API key, token, or Zen API key not provided. \
+            return Err("Watsonx API key, token, or Zen API key not provided. \
                 Set WATSONX_API_KEY, WATSONX_TOKEN, or WATSONX_ZENAPIKEY environment variable \
                 or pass in configuration."
-                    .to_string(),
-            );
+                .to_string());
         }
 
         // Check for project ID
@@ -96,12 +94,10 @@ impl ProviderConfig for WatsonxConfig {
         let has_space = self.space_id.is_some() || std::env::var("WATSONX_SPACE_ID").is_ok();
 
         if !has_project && !has_space {
-            return Err(
-                "Watsonx project_id or space_id not provided. \
+            return Err("Watsonx project_id or space_id not provided. \
                 Set WATSONX_PROJECT_ID or WATSONX_SPACE_ID environment variable \
                 or pass in configuration."
-                    .to_string(),
-            );
+                .to_string());
         }
 
         // Validate timeout
@@ -292,10 +288,7 @@ mod tests {
         };
 
         assert_eq!(config.api_key(), Some("test-key"));
-        assert_eq!(
-            config.api_base(),
-            Some("https://us-south.ml.cloud.ibm.com")
-        );
+        assert_eq!(config.api_base(), Some("https://us-south.ml.cloud.ibm.com"));
         assert_eq!(config.timeout(), std::time::Duration::from_secs(120));
         assert_eq!(config.max_retries(), 5);
     }

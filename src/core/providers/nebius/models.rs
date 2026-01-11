@@ -59,7 +59,7 @@ impl NebiusModelRegistry {
                 "Llama 3.1 8B Instruct",
                 128_000,
                 Some(4_096),
-                0.00006,  // Competitive pricing
+                0.00006, // Competitive pricing
                 0.00006,
             ),
             (
@@ -264,7 +264,9 @@ mod tests {
     #[test]
     fn test_llama_model() {
         let registry = get_nebius_registry();
-        let model = registry.get_model("meta-llama/Meta-Llama-3.1-8B-Instruct").unwrap();
+        let model = registry
+            .get_model("meta-llama/Meta-Llama-3.1-8B-Instruct")
+            .unwrap();
 
         assert_eq!(model.max_context_length, 128_000);
         assert!(model.supports_streaming);

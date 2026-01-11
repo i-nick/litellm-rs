@@ -130,9 +130,9 @@ impl CerebrasModelRegistry {
                 "Llama 3.1 70B",
                 128_000,
                 Some(8_192),
-                0.0006,  // $0.60/1M input tokens
-                0.0006,  // $0.60/1M output tokens
-                true,    // supports tools
+                0.0006, // $0.60/1M input tokens
+                0.0006, // $0.60/1M output tokens
+                true,   // supports tools
             ),
             // Llama 3.1 8B - smaller, faster model
             (
@@ -140,9 +140,9 @@ impl CerebrasModelRegistry {
                 "Llama 3.1 8B",
                 128_000,
                 Some(8_192),
-                0.0001,  // $0.10/1M input tokens
-                0.0001,  // $0.10/1M output tokens
-                true,    // supports tools
+                0.0001, // $0.10/1M input tokens
+                0.0001, // $0.10/1M output tokens
+                true,   // supports tools
             ),
             // Llama 3.3 70B - latest version
             (
@@ -156,7 +156,9 @@ impl CerebrasModelRegistry {
             ),
         ];
 
-        for (id, name, context_len, output_len, input_cost, output_cost, supports_tools) in default_models {
+        for (id, name, context_len, output_len, input_cost, output_cost, supports_tools) in
+            default_models
+        {
             let model_info = ModelInfo {
                 id: id.to_string(),
                 name: name.to_string(),

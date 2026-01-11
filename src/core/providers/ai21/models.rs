@@ -136,10 +136,10 @@ impl AI21ModelRegistry {
                 "Jamba 1.5 Large",
                 256_000,
                 Some(4_096),
-                0.002,   // $2/1M input tokens
-                0.008,   // $8/1M output tokens
-                true,    // supports tools
-                false,   // no multimodal
+                0.002, // $2/1M input tokens
+                0.008, // $8/1M output tokens
+                true,  // supports tools
+                false, // no multimodal
             ),
             // Jamba 1.5 Mini - faster, cost-effective
             (
@@ -147,10 +147,10 @@ impl AI21ModelRegistry {
                 "Jamba 1.5 Mini",
                 256_000,
                 Some(4_096),
-                0.0002,  // $0.2/1M input tokens
-                0.0004,  // $0.4/1M output tokens
-                true,    // supports tools
-                false,   // no multimodal
+                0.0002, // $0.2/1M input tokens
+                0.0004, // $0.4/1M output tokens
+                true,   // supports tools
+                false,  // no multimodal
             ),
             // Jamba Instruct (older model)
             (
@@ -165,7 +165,17 @@ impl AI21ModelRegistry {
             ),
         ];
 
-        for (id, name, context_len, output_len, input_cost, output_cost, supports_tools, supports_multimodal) in default_models {
+        for (
+            id,
+            name,
+            context_len,
+            output_len,
+            input_cost,
+            output_cost,
+            supports_tools,
+            supports_multimodal,
+        ) in default_models
+        {
             let model_info = ModelInfo {
                 id: id.to_string(),
                 name: name.to_string(),

@@ -234,7 +234,14 @@ pub fn get_supported_params(model: &str) -> &'static [&'static str] {
         || model.starts_with("google/gemma-2")
         || model == "gemma-2-9b-it"
     {
-        return &["stream", "temperature", "top_p", "max_tokens", "stop", "seed"];
+        return &[
+            "stream",
+            "temperature",
+            "top_p",
+            "max_tokens",
+            "stop",
+            "seed",
+        ];
     }
 
     // NVIDIA Nemotron Instruct

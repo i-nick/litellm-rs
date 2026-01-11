@@ -146,8 +146,7 @@ mod tests {
         assert!(rate_error.retry_delay().is_some());
 
         // Service unavailable should be retryable
-        let service_error =
-            error::NovitaError::ServiceUnavailableError("Service down".to_string());
+        let service_error = error::NovitaError::ServiceUnavailableError("Service down".to_string());
         assert!(service_error.is_retryable());
         assert!(service_error.retry_delay().is_some());
 

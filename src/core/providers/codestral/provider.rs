@@ -10,9 +10,9 @@ use tracing::debug;
 
 use super::config::CodestralConfig;
 use super::error::CodestralError;
-use crate::ProviderError;
 use super::model_info::{get_available_models, get_model_info};
-use crate::core::providers::base::{GlobalPoolManager, HttpMethod, HeaderPair, header};
+use crate::ProviderError;
+use crate::core::providers::base::{GlobalPoolManager, HeaderPair, HttpMethod, header};
 use crate::core::traits::{
     ProviderConfig as _, provider::llm_provider::trait_definition::LLMProvider,
 };
@@ -73,7 +73,10 @@ impl CodestralProvider {
             .map_err(|e| ProviderError::configuration("codestral", e))?;
 
         let pool_manager = Arc::new(GlobalPoolManager::new().map_err(|e| {
-            ProviderError::configuration("codestral", format!("Failed to create pool manager: {}", e))
+            ProviderError::configuration(
+                "codestral",
+                format!("Failed to create pool manager: {}", e),
+            )
         })?);
 
         let models = get_available_models()
@@ -144,8 +147,9 @@ impl CodestralProvider {
             .await
             .map_err(|e| ProviderError::network("codestral", e.to_string()))?;
 
-        serde_json::from_slice(&response_bytes)
-            .map_err(|e| ProviderError::api_error("codestral", 500, format!("Failed to parse response: {}", e)))
+        serde_json::from_slice(&response_bytes).map_err(|e| {
+            ProviderError::api_error("codestral", 500, format!("Failed to parse response: {}", e))
+        })
     }
 
     /// Fill-in-the-middle completion (code infilling)
@@ -155,10 +159,17 @@ impl CodestralProvider {
         let request_json = serde_json::to_value(&request)
             .map_err(|e| ProviderError::invalid_request("codestral", e.to_string()))?;
 
-        let response = self.execute_request("/fim/completions", request_json).await?;
+        let response = self
+            .execute_request("/fim/completions", request_json)
+            .await?;
 
-        serde_json::from_value(response)
-            .map_err(|e| ProviderError::api_error("codestral", 500, format!("Failed to parse FIM response: {}", e)))
+        serde_json::from_value(response).map_err(|e| {
+            ProviderError::api_error(
+                "codestral",
+                500,
+                format!("Failed to parse FIM response: {}", e),
+            )
+        })
     }
 }
 
@@ -214,8 +225,9 @@ impl LLMProvider for CodestralProvider {
         _model: &str,
         _request_id: &str,
     ) -> Result<ChatResponse, Self::Error> {
-        serde_json::from_slice(raw_response)
-            .map_err(|e| ProviderError::api_error("codestral", 500, format!("Failed to parse response: {}", e)))
+        serde_json::from_slice(raw_response).map_err(|e| {
+            ProviderError::api_error("codestral", 500, format!("Failed to parse response: {}", e))
+        })
     }
 
     fn get_error_mapper(&self) -> Self::ErrorMapper {
@@ -236,8 +248,9 @@ impl LLMProvider for CodestralProvider {
             .execute_request("/chat/completions", request_json)
             .await?;
 
-        serde_json::from_value(response)
-            .map_err(|e| ProviderError::api_error("codestral", 500, format!("Failed to parse response: {}", e)))
+        serde_json::from_value(response).map_err(|e| {
+            ProviderError::api_error("codestral", 500, format!("Failed to parse response: {}", e))
+        })
     }
 
     async fn chat_completion_stream(
@@ -293,7 +306,11 @@ impl LLMProvider for CodestralProvider {
                             *buffer = chunks;
                             Some(Ok(buffer.clone()))
                         }
-                        Err(e) => Some(Err(ProviderError::api_error("codestral", 500, e.to_string()))),
+                        Err(e) => Some(Err(ProviderError::api_error(
+                            "codestral",
+                            500,
+                            e.to_string(),
+                        ))),
                     },
                     Err(e) => Some(Err(ProviderError::network("codestral", e.to_string()))),
                 })
@@ -345,7 +362,8 @@ impl LLMProvider for CodestralProvider {
             .ok_or_else(|| ProviderError::model_not_found("codestral", model))?;
 
         let input_cost = (input_tokens as f64) * (model_info.input_cost_per_million / 1_000_000.0);
-        let output_cost = (output_tokens as f64) * (model_info.output_cost_per_million / 1_000_000.0);
+        let output_cost =
+            (output_tokens as f64) * (model_info.output_cost_per_million / 1_000_000.0);
         Ok(input_cost + output_cost)
     }
 }

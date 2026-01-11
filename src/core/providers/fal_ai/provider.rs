@@ -133,11 +133,13 @@ impl FalAIProvider {
                             .map(String::from),
                         revised_prompt: None,
                     })
-                } else { img.as_str().map(|url| ImageData {
+                } else {
+                    img.as_str().map(|url| ImageData {
                         url: Some(url.to_string()),
                         b64_json: None,
                         revised_prompt: None,
-                    }) }
+                    })
+                }
             })
             .collect();
 

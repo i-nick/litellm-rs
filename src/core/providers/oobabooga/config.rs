@@ -88,7 +88,10 @@ impl OobaboogaConfig {
                 "{}/v1/chat/completions",
                 base.trim_end_matches('/')
             )),
-            None => Err("OOBABOOGA_API_BASE not set. Set one via api_base config or environment variable.".to_string()),
+            None => Err(
+                "OOBABOOGA_API_BASE not set. Set one via api_base config or environment variable."
+                    .to_string(),
+            ),
         }
     }
 
@@ -96,7 +99,10 @@ impl OobaboogaConfig {
     pub fn get_embeddings_endpoint(&self) -> Result<String, String> {
         match self.get_api_base() {
             Some(base) => Ok(format!("{}/v1/embeddings", base.trim_end_matches('/'))),
-            None => Err("OOBABOOGA_API_BASE not set. Set one via api_base config or environment variable.".to_string()),
+            None => Err(
+                "OOBABOOGA_API_BASE not set. Set one via api_base config or environment variable."
+                    .to_string(),
+            ),
         }
     }
 
@@ -104,7 +110,10 @@ impl OobaboogaConfig {
     pub fn get_models_endpoint(&self) -> Result<String, String> {
         match self.get_api_base() {
             Some(base) => Ok(format!("{}/v1/models", base.trim_end_matches('/'))),
-            None => Err("OOBABOOGA_API_BASE not set. Set one via api_base config or environment variable.".to_string()),
+            None => Err(
+                "OOBABOOGA_API_BASE not set. Set one via api_base config or environment variable."
+                    .to_string(),
+            ),
         }
     }
 
@@ -255,8 +264,16 @@ mod tests {
         let headers = config.build_auth_headers();
 
         // Should have accept and content-type
-        assert!(headers.iter().any(|(k, v)| k == "accept" && v == "application/json"));
-        assert!(headers.iter().any(|(k, v)| k == "content-type" && v == "application/json"));
+        assert!(
+            headers
+                .iter()
+                .any(|(k, v)| k == "accept" && v == "application/json")
+        );
+        assert!(
+            headers
+                .iter()
+                .any(|(k, v)| k == "content-type" && v == "application/json")
+        );
 
         // Should NOT have Authorization if no API key set (and env var not set)
         // Can't guarantee env state
@@ -271,7 +288,11 @@ mod tests {
         let headers = config.build_auth_headers();
 
         // Should have Token auth header
-        assert!(headers.iter().any(|(k, v)| k == "Authorization" && v == "Token my-token"));
+        assert!(
+            headers
+                .iter()
+                .any(|(k, v)| k == "Authorization" && v == "Token my-token")
+        );
     }
 
     #[test]

@@ -20,7 +20,6 @@ pub enum RetrievalMethod {
     None,
 }
 
-
 /// Knowledge base filter for Gradient AI
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct KBFilter {

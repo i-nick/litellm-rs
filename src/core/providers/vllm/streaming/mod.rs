@@ -49,9 +49,11 @@ impl Stream for VLLMStream {
 
         match Pin::new(&mut self.inner).poll_next(cx) {
             Poll::Ready(Some(Ok(chunk))) => Poll::Ready(Some(Ok(chunk))),
-            Poll::Ready(Some(Err(e))) => {
-                Poll::Ready(Some(Err(VLLMError::api_error("vllm", 500, format!("Streaming error: {}", e)))))
-            }
+            Poll::Ready(Some(Err(e))) => Poll::Ready(Some(Err(VLLMError::api_error(
+                "vllm",
+                500,
+                format!("Streaming error: {}", e),
+            )))),
             Poll::Ready(None) => Poll::Ready(None),
             Poll::Pending => Poll::Pending,
         }

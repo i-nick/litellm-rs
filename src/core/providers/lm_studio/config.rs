@@ -89,7 +89,10 @@ impl LMStudioConfig {
     /// Get chat completions endpoint
     pub fn get_chat_endpoint(&self) -> Result<String, String> {
         match self.get_api_base() {
-            Some(base) => Ok(format!("{}/v1/chat/completions", base.trim_end_matches('/'))),
+            Some(base) => Ok(format!(
+                "{}/v1/chat/completions",
+                base.trim_end_matches('/')
+            )),
             None => Err("LM_STUDIO_API_BASE not set".to_string()),
         }
     }

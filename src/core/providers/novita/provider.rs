@@ -12,9 +12,9 @@ use tracing::debug;
 use super::config::NovitaConfig;
 use super::error::{NovitaError, NovitaErrorMapper};
 use super::model_info::{get_available_models, get_model_info};
-use crate::core::providers::base::{header, GlobalPoolManager, HttpMethod};
+use crate::core::providers::base::{GlobalPoolManager, HttpMethod, header};
 use crate::core::traits::{
-    provider::llm_provider::trait_definition::LLMProvider, ProviderConfig as _,
+    ProviderConfig as _, provider::llm_provider::trait_definition::LLMProvider,
 };
 use crate::core::types::errors::ProviderErrorTrait;
 use crate::core::types::{
@@ -185,8 +185,7 @@ impl LLMProvider for NovitaProvider {
         _context: RequestContext,
     ) -> Result<serde_json::Value, Self::Error> {
         // Convert to JSON value
-        serde_json::to_value(&request)
-            .map_err(|e| NovitaError::InvalidRequestError(e.to_string()))
+        serde_json::to_value(&request).map_err(|e| NovitaError::InvalidRequestError(e.to_string()))
     }
 
     async fn transform_response(
@@ -275,8 +274,7 @@ impl LLMProvider for NovitaProvider {
         let model_info = get_model_info(model)
             .ok_or_else(|| NovitaError::ModelNotFoundError(format!("Unknown model: {}", model)))?;
 
-        let input_cost =
-            (input_tokens as f64) * (model_info.input_cost_per_million / 1_000_000.0);
+        let input_cost = (input_tokens as f64) * (model_info.input_cost_per_million / 1_000_000.0);
         let output_cost =
             (output_tokens as f64) * (model_info.output_cost_per_million / 1_000_000.0);
         Ok(input_cost + output_cost)

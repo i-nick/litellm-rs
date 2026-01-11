@@ -11,18 +11,17 @@ use tracing::debug;
 
 use super::config::OobaboogaConfig;
 use super::error::OobaboogaError;
-use crate::core::traits::error_mapper::types::GenericErrorMapper;
 use crate::ProviderError;
-use crate::core::providers::base::{header_owned, GlobalPoolManager, HttpMethod};
+use crate::core::providers::base::{GlobalPoolManager, HttpMethod, header_owned};
+use crate::core::traits::error_mapper::types::GenericErrorMapper;
 use crate::core::traits::{
-    provider::llm_provider::trait_definition::LLMProvider,
-    ProviderConfig as _,
+    ProviderConfig as _, provider::llm_provider::trait_definition::LLMProvider,
 };
 use crate::core::types::{
     common::{HealthStatus, ModelInfo, ProviderCapability, RequestContext},
     requests::{ChatMessage, ChatRequest, EmbeddingRequest, MessageContent, MessageRole, ToolCall},
     responses::{
-        ChatChunk, ChatChoice, ChatResponse, EmbeddingData, EmbeddingResponse, FinishReason, Usage,
+        ChatChoice, ChatChunk, ChatResponse, EmbeddingData, EmbeddingResponse, FinishReason, Usage,
     },
     tools::FunctionCall,
 };
@@ -52,7 +51,10 @@ impl OobaboogaProvider {
 
         // Create pool manager
         let pool_manager = Arc::new(GlobalPoolManager::new().map_err(|e| {
-            ProviderError::configuration("oobabooga", format!("Failed to create pool manager: {}", e))
+            ProviderError::configuration(
+                "oobabooga",
+                format!("Failed to create pool manager: {}", e),
+            )
         })?);
 
         // Initialize with empty models
@@ -96,7 +98,8 @@ impl OobaboogaProvider {
                 if error_msg.contains("Connection refused") || error_msg.contains("connect error") {
                     ProviderError::network(
                         "oobabooga",
-                        "Failed to connect to text-generation-webui server. Is it running?".to_string()
+                        "Failed to connect to text-generation-webui server. Is it running?"
+                            .to_string(),
                     )
                 } else if error_msg.contains("timed out") || error_msg.contains("timeout") {
                     ProviderError::Timeout {
@@ -113,8 +116,9 @@ impl OobaboogaProvider {
             .await
             .map_err(|e| ProviderError::network("oobabooga", e.to_string()))?;
 
-        serde_json::from_slice(&response_bytes)
-            .map_err(|e| ProviderError::api_error("oobabooga", 500, format!("Failed to parse response: {}", e)))
+        serde_json::from_slice(&response_bytes).map_err(|e| {
+            ProviderError::api_error("oobabooga", 500, format!("Failed to parse response: {}", e))
+        })
     }
 
     /// Build OpenAI-compatible chat request from ChatRequest
@@ -157,7 +161,8 @@ impl OobaboogaProvider {
                                 ..
                             } => {
                                 // Convert base64 image to URL format
-                                let url = format!("data:{};base64,{}", source.media_type, source.data);
+                                let url =
+                                    format!("data:{};base64,{}", source.media_type, source.data);
                                 let mut img_obj = serde_json::json!({"url": url});
                                 if let Some(d) = detail {
                                     img_obj["detail"] = serde_json::json!(d);
@@ -258,20 +263,30 @@ impl OobaboogaProvider {
         // Check for error in response
         if let Some(error) = response.get("error") {
             let error_msg = error.as_str().unwrap_or("Unknown error");
-            return Err(ProviderError::api_error("oobabooga", 500, error_msg.to_string()));
+            return Err(ProviderError::api_error(
+                "oobabooga",
+                500,
+                error_msg.to_string(),
+            ));
         }
 
         let choices = response
             .get("choices")
             .and_then(|c| c.as_array())
-            .ok_or_else(|| ProviderError::api_error("oobabooga", 500, "Missing choices in response".to_string()))?;
+            .ok_or_else(|| {
+                ProviderError::api_error(
+                    "oobabooga",
+                    500,
+                    "Missing choices in response".to_string(),
+                )
+            })?;
 
         let mut chat_choices = Vec::new();
 
         for (i, choice) in choices.iter().enumerate() {
-            let message = choice
-                .get("message")
-                .ok_or_else(|| ProviderError::api_error("oobabooga", 500, "Missing message in choice".to_string()))?;
+            let message = choice.get("message").ok_or_else(|| {
+                ProviderError::api_error("oobabooga", 500, "Missing message in choice".to_string())
+            })?;
 
             let content = message
                 .get("content")
@@ -279,42 +294,41 @@ impl OobaboogaProvider {
                 .map(|s| s.to_string());
 
             // Parse tool calls if present
-            let tool_calls =
-                if let Some(tcs) = message.get("tool_calls").and_then(|v| v.as_array()) {
-                    let calls: Vec<_> = tcs
-                        .iter()
-                        .map(|tc| {
-                            let func = tc.get("function").cloned().unwrap_or_else(|| serde_json::json!({}));
-                            ToolCall {
-                                id: tc
-                                    .get("id")
-                                    .and_then(|id| id.as_str())
+            let tool_calls = if let Some(tcs) = message.get("tool_calls").and_then(|v| v.as_array())
+            {
+                let calls: Vec<_> = tcs
+                    .iter()
+                    .map(|tc| {
+                        let func = tc
+                            .get("function")
+                            .cloned()
+                            .unwrap_or_else(|| serde_json::json!({}));
+                        ToolCall {
+                            id: tc
+                                .get("id")
+                                .and_then(|id| id.as_str())
+                                .unwrap_or("")
+                                .to_string(),
+                            tool_type: "function".to_string(),
+                            function: FunctionCall {
+                                name: func
+                                    .get("name")
+                                    .and_then(|n| n.as_str())
                                     .unwrap_or("")
                                     .to_string(),
-                                tool_type: "function".to_string(),
-                                function: FunctionCall {
-                                    name: func
-                                        .get("name")
-                                        .and_then(|n| n.as_str())
-                                        .unwrap_or("")
-                                        .to_string(),
-                                    arguments: func
-                                        .get("arguments")
-                                        .and_then(|a| a.as_str())
-                                        .unwrap_or("")
-                                        .to_string(),
-                                },
-                            }
-                        })
-                        .collect();
-                    if calls.is_empty() {
-                        None
-                    } else {
-                        Some(calls)
-                    }
-                } else {
-                    None
-                };
+                                arguments: func
+                                    .get("arguments")
+                                    .and_then(|a| a.as_str())
+                                    .unwrap_or("")
+                                    .to_string(),
+                            },
+                        }
+                    })
+                    .collect();
+                if calls.is_empty() { None } else { Some(calls) }
+            } else {
+                None
+            };
 
             // Determine finish reason
             let finish_reason_str = choice
@@ -348,22 +362,22 @@ impl OobaboogaProvider {
 
         // Build usage info
         let usage = response.get("usage").map(|usage_obj| Usage {
-                prompt_tokens: usage_obj
-                    .get("prompt_tokens")
-                    .and_then(|v| v.as_u64())
-                    .unwrap_or(0) as u32,
-                completion_tokens: usage_obj
-                    .get("completion_tokens")
-                    .and_then(|v| v.as_u64())
-                    .unwrap_or(0) as u32,
-                total_tokens: usage_obj
-                    .get("total_tokens")
-                    .and_then(|v| v.as_u64())
-                    .unwrap_or(0) as u32,
-                prompt_tokens_details: None,
-                completion_tokens_details: None,
-                thinking_usage: None,
-            });
+            prompt_tokens: usage_obj
+                .get("prompt_tokens")
+                .and_then(|v| v.as_u64())
+                .unwrap_or(0) as u32,
+            completion_tokens: usage_obj
+                .get("completion_tokens")
+                .and_then(|v| v.as_u64())
+                .unwrap_or(0) as u32,
+            total_tokens: usage_obj
+                .get("total_tokens")
+                .and_then(|v| v.as_u64())
+                .unwrap_or(0) as u32,
+            prompt_tokens_details: None,
+            completion_tokens_details: None,
+            thinking_usage: None,
+        });
 
         Ok(ChatResponse {
             id: response
@@ -449,8 +463,9 @@ impl LLMProvider for OobaboogaProvider {
         model: &str,
         _request_id: &str,
     ) -> Result<ChatResponse, Self::Error> {
-        let response: serde_json::Value = serde_json::from_slice(raw_response)
-            .map_err(|e| ProviderError::api_error("oobabooga", 500, format!("Failed to parse response: {}", e)))?;
+        let response: serde_json::Value = serde_json::from_slice(raw_response).map_err(|e| {
+            ProviderError::api_error("oobabooga", 500, format!("Failed to parse response: {}", e))
+        })?;
 
         self.parse_chat_response(response, model)
     }
@@ -508,7 +523,7 @@ impl LLMProvider for OobaboogaProvider {
             if error_msg.contains("Connection refused") || error_msg.contains("connect error") {
                 ProviderError::network(
                     "oobabooga",
-                    "Failed to connect to text-generation-webui server. Is it running?".to_string()
+                    "Failed to connect to text-generation-webui server. Is it running?".to_string(),
                 )
             } else if error_msg.contains("timed out") || error_msg.contains("timeout") {
                 ProviderError::Timeout {
@@ -546,7 +561,10 @@ impl LLMProvider for OobaboogaProvider {
                                     json.get("choices").and_then(|c| c.as_array())
                                 {
                                     if let Some(choice) = choices.first() {
-                                        let delta = choice.get("delta").cloned().unwrap_or_else(|| serde_json::json!({}));
+                                        let delta = choice
+                                            .get("delta")
+                                            .cloned()
+                                            .unwrap_or_else(|| serde_json::json!({}));
                                         let content = delta
                                             .get("content")
                                             .and_then(|c| c.as_str())
@@ -603,9 +621,13 @@ impl LLMProvider for OobaboogaProvider {
                     }
                     None
                 }
-                Err(e) => Some(Err(
-                    ProviderError::streaming_error("oobabooga", "chat", None, None, e.to_string())
-                )),
+                Err(e) => Some(Err(ProviderError::streaming_error(
+                    "oobabooga",
+                    "chat",
+                    None,
+                    None,
+                    e.to_string(),
+                ))),
             }
         });
 
@@ -645,7 +667,11 @@ impl LLMProvider for OobaboogaProvider {
         // Check for error in response
         if let Some(error) = response.get("error") {
             let error_msg = error.as_str().unwrap_or("Unknown error");
-            return Err(ProviderError::api_error("oobabooga", 500, error_msg.to_string()));
+            return Err(ProviderError::api_error(
+                "oobabooga",
+                500,
+                error_msg.to_string(),
+            ));
         }
 
         // Parse OpenAI-compatible embeddings response
@@ -653,7 +679,11 @@ impl LLMProvider for OobaboogaProvider {
             .get("data")
             .and_then(|d| d.as_array())
             .ok_or_else(|| {
-                ProviderError::api_error("oobabooga", 500, "Missing data in embeddings response".to_string())
+                ProviderError::api_error(
+                    "oobabooga",
+                    500,
+                    "Missing data in embeddings response".to_string(),
+                )
             })?;
 
         let data: Vec<EmbeddingData> = data_arr
@@ -747,7 +777,11 @@ impl OobaboogaProvider {
             .and_then(|d| d.as_array())
             .map(|arr| {
                 arr.iter()
-                    .filter_map(|m| m.get("id").and_then(|id| id.as_str()).map(|s| s.to_string()))
+                    .filter_map(|m| {
+                        m.get("id")
+                            .and_then(|id| id.as_str())
+                            .map(|s| s.to_string())
+                    })
                     .collect()
             })
             .unwrap_or_default();
@@ -770,7 +804,7 @@ impl OobaboogaProvider {
                 supports_streaming: true,
                 supports_tools: false,
                 supports_multimodal: false,
-                input_cost_per_1k_tokens: Some(0.0),  // Oobabooga is free
+                input_cost_per_1k_tokens: Some(0.0), // Oobabooga is free
                 output_cost_per_1k_tokens: Some(0.0), // Oobabooga is free
                 currency: "USD".to_string(),
                 capabilities: vec![

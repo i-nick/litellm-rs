@@ -13,5 +13,5 @@ pub mod streaming;
 pub use client::VolcengineClient;
 pub use config::VolcengineConfig;
 pub use error::VolcengineErrorMapper;
-pub use models::{get_volcengine_registry, VolcengineModelRegistry};
+pub use models::{VolcengineModelRegistry, get_volcengine_registry};
 pub use provider::VolcengineProvider;

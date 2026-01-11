@@ -4,7 +4,7 @@
 
 use super::error::OciError;
 use crate::core::types::requests::MessageRole;
-use crate::core::types::responses::{ChatChunk, ChatStreamChoice, ChatDelta, FinishReason};
+use crate::core::types::responses::{ChatChunk, ChatDelta, ChatStreamChoice, FinishReason};
 use bytes::Bytes;
 use futures::Stream;
 use std::pin::Pin;
@@ -64,12 +64,15 @@ where
             .unwrap_or("unknown")
             .to_string();
 
-        let created = json.get("created").and_then(|v| v.as_i64()).unwrap_or_else(|| {
-            std::time::SystemTime::now()
-                .duration_since(std::time::UNIX_EPOCH)
-                .unwrap()
-                .as_secs() as i64
-        });
+        let created = json
+            .get("created")
+            .and_then(|v| v.as_i64())
+            .unwrap_or_else(|| {
+                std::time::SystemTime::now()
+                    .duration_since(std::time::UNIX_EPOCH)
+                    .unwrap()
+                    .as_secs() as i64
+            });
 
         // Parse choices
         let choices = if let Some(choices_arr) = json.get("choices").and_then(|v| v.as_array()) {
@@ -86,17 +89,18 @@ where
                         .get("role")
                         .and_then(|v| v.as_str())
                         .map(|s| s.to_string());
-                    let finish_reason = choice
-                        .get("finish_reason")
-                        .and_then(|v| v.as_str())
-                        .map(|s| match s {
-                            "stop" => FinishReason::Stop,
-                            "length" => FinishReason::Length,
-                            "tool_calls" => FinishReason::ToolCalls,
-                            "content_filter" => FinishReason::ContentFilter,
-                            "function_call" => FinishReason::FunctionCall,
-                            _ => FinishReason::Stop,
-                        });
+                    let finish_reason =
+                        choice
+                            .get("finish_reason")
+                            .and_then(|v| v.as_str())
+                            .map(|s| match s {
+                                "stop" => FinishReason::Stop,
+                                "length" => FinishReason::Length,
+                                "tool_calls" => FinishReason::ToolCalls,
+                                "content_filter" => FinishReason::ContentFilter,
+                                "function_call" => FinishReason::FunctionCall,
+                                _ => FinishReason::Stop,
+                            });
 
                     // Parse tool_calls if present
                     let tool_calls = delta
@@ -212,8 +216,8 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use futures::stream;
     use futures::StreamExt;
+    use futures::stream;
 
     #[tokio::test]
     async fn test_oci_stream_basic() {

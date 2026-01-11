@@ -51,7 +51,10 @@ impl FireworksProvider {
 
         // Create pool manager
         let pool_manager = Arc::new(GlobalPoolManager::new().map_err(|e| {
-            ProviderError::configuration("fireworks", format!("Failed to create pool manager: {}", e))
+            ProviderError::configuration(
+                "fireworks",
+                format!("Failed to create pool manager: {}", e),
+            )
         })?);
 
         // Build model list from static configuration
@@ -135,12 +138,11 @@ impl FireworksProvider {
 
         // Transform json_schema format to json_object
         if let Some(ref mut format) = request.response_format {
-            if format.format_type == "json_schema"
-                && format.json_schema.is_some() {
-                    // Fireworks uses json_object with a schema field
-                    format.format_type = "json_object".to_string();
-                    // Keep the schema in json_schema field
-                }
+            if format.format_type == "json_schema" && format.json_schema.is_some() {
+                // Fireworks uses json_object with a schema field
+                format.format_type = "json_object".to_string();
+                // Keep the schema in json_schema field
+            }
         }
     }
 
@@ -196,8 +198,9 @@ impl FireworksProvider {
             });
         }
 
-        serde_json::from_slice(&response_bytes)
-            .map_err(|e| ProviderError::api_error("fireworks", 500, format!("Failed to parse response: {}", e)))
+        serde_json::from_slice(&response_bytes).map_err(|e| {
+            ProviderError::api_error("fireworks", 500, format!("Failed to parse response: {}", e))
+        })
     }
 }
 
@@ -365,8 +368,14 @@ impl LLMProvider for FireworksProvider {
         _model: &str,
         _request_id: &str,
     ) -> Result<ChatResponse, Self::Error> {
-        let mut chat_response: ChatResponse = serde_json::from_slice(raw_response)
-            .map_err(|e| ProviderError::api_error("fireworks", 500, format!("Failed to parse response: {}", e)))?;
+        let mut chat_response: ChatResponse =
+            serde_json::from_slice(raw_response).map_err(|e| {
+                ProviderError::api_error(
+                    "fireworks",
+                    500,
+                    format!("Failed to parse response: {}", e),
+                )
+            })?;
 
         // Prefix model with provider name
         chat_response.model = format!("fireworks_ai/{}", chat_response.model);
@@ -402,8 +411,9 @@ impl LLMProvider for FireworksProvider {
             .execute_request("/chat/completions", request_json)
             .await?;
 
-        let mut chat_response: ChatResponse = serde_json::from_value(response)
-            .map_err(|e| ProviderError::api_error("fireworks", 500, format!("Failed to parse response: {}", e)))?;
+        let mut chat_response: ChatResponse = serde_json::from_value(response).map_err(|e| {
+            ProviderError::api_error("fireworks", 500, format!("Failed to parse response: {}", e))
+        })?;
 
         // Prefix model with provider name
         chat_response.model = format!("fireworks_ai/{}", chat_response.model);
@@ -430,9 +440,10 @@ impl LLMProvider for FireworksProvider {
         request.stream = true;
 
         // Get API configuration
-        let api_key = self.config.get_api_key().ok_or_else(|| {
-            ProviderError::authentication("fireworks", "API key is required")
-        })?;
+        let api_key = self
+            .config
+            .get_api_key()
+            .ok_or_else(|| ProviderError::authentication("fireworks", "API key is required"))?;
 
         // Execute streaming request
         let url = format!("{}/chat/completions", self.config.get_api_base());
@@ -542,4 +553,3 @@ impl LLMProvider for FireworksProvider {
         Ok(input_cost + output_cost)
     }
 }
-

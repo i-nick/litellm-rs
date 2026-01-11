@@ -183,8 +183,7 @@ pub fn supported_audio_formats() -> &'static [&'static str] {
 pub const MAX_FILE_SIZE: usize = 100 * 1024 * 1024;
 
 /// Available STT models
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-#[derive(Default)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum STTModel {
     /// Scribe v1 - Main transcription model
     #[default]
@@ -207,7 +206,6 @@ impl STTModel {
         }
     }
 }
-
 
 /// Build the complete STT URL
 pub fn build_stt_url(base_url: &str) -> String {

@@ -206,8 +206,7 @@ impl StabilityModelRegistry {
     /// Check if model is supported
     pub fn supports_model(&self, model: &str) -> bool {
         let model_name = model.strip_prefix("stability/").unwrap_or(model);
-        self.endpoint_map.contains_key(model_name)
-            || self.models.iter().any(|m| m.id == model)
+        self.endpoint_map.contains_key(model_name) || self.models.iter().any(|m| m.id == model)
     }
 }
 
@@ -218,7 +217,8 @@ impl Default for StabilityModelRegistry {
 }
 
 /// Global model registry instance
-pub static STABILITY_REGISTRY: Lazy<StabilityModelRegistry> = Lazy::new(StabilityModelRegistry::new);
+pub static STABILITY_REGISTRY: Lazy<StabilityModelRegistry> =
+    Lazy::new(StabilityModelRegistry::new);
 
 /// Get the global Stability model registry
 pub fn get_stability_registry() -> &'static StabilityModelRegistry {

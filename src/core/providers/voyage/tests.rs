@@ -7,7 +7,9 @@ mod provider_tests {
     use super::*;
     use crate::core::traits::provider::llm_provider::trait_definition::LLMProvider;
     use crate::core::types::common::{ProviderCapability, RequestContext};
-    use crate::core::types::requests::{ChatMessage, ChatRequest, EmbeddingInput, EmbeddingRequest, MessageContent, MessageRole};
+    use crate::core::types::requests::{
+        ChatMessage, ChatRequest, EmbeddingInput, EmbeddingRequest, MessageContent, MessageRole,
+    };
 
     async fn create_test_provider() -> VoyageProvider {
         let config = VoyageConfig {
@@ -163,7 +165,10 @@ mod provider_tests {
         assert!(result.is_err());
         // VoyageError is now a type alias to ProviderError
         if let Err(err) = result {
-            assert!(matches!(err, crate::core::providers::unified_provider::ProviderError::NotSupported { .. }));
+            assert!(matches!(
+                err,
+                crate::core::providers::unified_provider::ProviderError::NotSupported { .. }
+            ));
         }
     }
 

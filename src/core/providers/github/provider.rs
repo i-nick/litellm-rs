@@ -16,8 +16,7 @@ use super::model_info::{get_available_models, get_model_info};
 use crate::core::providers::base::{GlobalPoolManager, HttpMethod, header};
 use crate::core::providers::unified_provider::ProviderError;
 use crate::core::traits::{
-    ProviderConfig as _,
-    provider::llm_provider::trait_definition::LLMProvider,
+    ProviderConfig as _, provider::llm_provider::trait_definition::LLMProvider,
 };
 use crate::core::types::{
     common::{HealthStatus, ModelInfo, ProviderCapability, RequestContext},
@@ -44,7 +43,9 @@ impl GitHubProvider {
     /// Create a new GitHub provider instance
     pub async fn new(config: GitHubConfig) -> Result<Self, GitHubError> {
         // Validate configuration
-        config.validate().map_err(|e| ProviderError::configuration("github", e))?;
+        config
+            .validate()
+            .map_err(|e| ProviderError::configuration("github", e))?;
 
         // Create pool manager
         let pool_manager = Arc::new(GlobalPoolManager::new().map_err(|e| {
@@ -139,8 +140,9 @@ impl GitHubProvider {
             });
         }
 
-        serde_json::from_slice(&response_bytes)
-            .map_err(|e| ProviderError::api_error("github", 500, format!("Failed to parse response: {}", e)))
+        serde_json::from_slice(&response_bytes).map_err(|e| {
+            ProviderError::api_error("github", 500, format!("Failed to parse response: {}", e))
+        })
     }
 }
 
@@ -199,7 +201,8 @@ impl LLMProvider for GitHubProvider {
         _context: RequestContext,
     ) -> Result<serde_json::Value, Self::Error> {
         // Convert to JSON value - GitHub Models is OpenAI-compatible
-        serde_json::to_value(&request).map_err(|e| ProviderError::invalid_request("github", e.to_string()))
+        serde_json::to_value(&request)
+            .map_err(|e| ProviderError::invalid_request("github", e.to_string()))
     }
 
     async fn transform_response(
@@ -209,8 +212,9 @@ impl LLMProvider for GitHubProvider {
         _request_id: &str,
     ) -> Result<ChatResponse, Self::Error> {
         // Parse response - GitHub Models uses OpenAI format
-        let chat_response: ChatResponse = serde_json::from_slice(raw_response)
-            .map_err(|e| ProviderError::api_error("github", 500, format!("Failed to parse response: {}", e)))?;
+        let chat_response: ChatResponse = serde_json::from_slice(raw_response).map_err(|e| {
+            ProviderError::api_error("github", 500, format!("Failed to parse response: {}", e))
+        })?;
 
         Ok(chat_response)
     }
@@ -234,8 +238,13 @@ impl LLMProvider for GitHubProvider {
             .execute_request("/chat/completions", request_json)
             .await?;
 
-        serde_json::from_value(response)
-            .map_err(|e| ProviderError::api_error("github", 500, format!("Failed to parse chat response: {}", e)))
+        serde_json::from_value(response).map_err(|e| {
+            ProviderError::api_error(
+                "github",
+                500,
+                format!("Failed to parse chat response: {}", e),
+            )
+        })
     }
 
     async fn chat_completion_stream(
@@ -323,8 +332,9 @@ impl LLMProvider for GitHubProvider {
         input_tokens: u32,
         output_tokens: u32,
     ) -> Result<f64, Self::Error> {
-        let model_info = get_model_info(model)
-            .ok_or_else(|| ProviderError::model_not_found("github", format!("Unknown model: {}", model)))?;
+        let model_info = get_model_info(model).ok_or_else(|| {
+            ProviderError::model_not_found("github", format!("Unknown model: {}", model))
+        })?;
 
         let input_cost = (input_tokens as f64) * (model_info.input_cost_per_million / 1_000_000.0);
         let output_cost =

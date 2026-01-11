@@ -11,16 +11,15 @@ use tracing::debug;
 
 use super::config::LMStudioConfig;
 use super::error::LMStudioError;
-use crate::core::providers::base::{header, GlobalPoolManager, HttpMethod};
+use crate::core::providers::base::{GlobalPoolManager, HttpMethod, header};
 use crate::core::traits::{
-    provider::llm_provider::trait_definition::LLMProvider,
-    ProviderConfig as _,
+    ProviderConfig as _, provider::llm_provider::trait_definition::LLMProvider,
 };
 use crate::core::types::{
     common::{HealthStatus, ModelInfo, ProviderCapability, RequestContext},
     requests::{ChatMessage, ChatRequest, EmbeddingRequest, MessageContent, MessageRole, ToolCall},
     responses::{
-        ChatChunk, ChatChoice, ChatResponse, EmbeddingData, EmbeddingResponse, FinishReason, Usage,
+        ChatChoice, ChatChunk, ChatResponse, EmbeddingData, EmbeddingResponse, FinishReason, Usage,
     },
     tools::FunctionCall,
 };
@@ -51,7 +50,10 @@ impl LMStudioProvider {
 
         // Create pool manager
         let pool_manager = Arc::new(GlobalPoolManager::new().map_err(|e| {
-            LMStudioError::configuration("lm_studio", format!("Failed to create pool manager: {}", e))
+            LMStudioError::configuration(
+                "lm_studio",
+                format!("Failed to create pool manager: {}", e),
+            )
         })?);
 
         // Initialize with empty models (will be populated on first list_models call)
@@ -112,8 +114,9 @@ impl LMStudioProvider {
             .await
             .map_err(|e| LMStudioError::network("lm_studio", e.to_string()))?;
 
-        serde_json::from_slice(&response_bytes)
-            .map_err(|e| LMStudioError::api_error("lm_studio", 500, format!("Failed to parse response: {}", e)))
+        serde_json::from_slice(&response_bytes).map_err(|e| {
+            LMStudioError::api_error("lm_studio", 500, format!("Failed to parse response: {}", e))
+        })
     }
 
     /// Build OpenAI-compatible chat request from ChatRequest
@@ -167,7 +170,8 @@ impl LMStudioProvider {
                                 ..
                             } => {
                                 // Base64 image format
-                                let url = format!("data:{};base64,{}", source.media_type, source.data);
+                                let url =
+                                    format!("data:{};base64,{}", source.media_type, source.data);
                                 let mut img_obj = serde_json::json!({"url": url});
                                 if let Some(d) = detail {
                                     img_obj["detail"] = serde_json::json!(d);
@@ -290,9 +294,12 @@ impl LMStudioProvider {
         response: serde_json::Value,
         model: &str,
     ) -> Result<ChatResponse, LMStudioError> {
-        let choices = response.get("choices").and_then(|c| c.as_array()).ok_or_else(|| {
-            LMStudioError::api_error("lm_studio", 500, "Missing choices in response")
-        })?;
+        let choices = response
+            .get("choices")
+            .and_then(|c| c.as_array())
+            .ok_or_else(|| {
+                LMStudioError::api_error("lm_studio", 500, "Missing choices in response")
+            })?;
 
         let mut chat_choices = Vec::new();
 
@@ -307,42 +314,41 @@ impl LMStudioProvider {
                 .map(|s| s.to_string());
 
             // Parse tool calls if present
-            let tool_calls =
-                if let Some(tcs) = message.get("tool_calls").and_then(|v| v.as_array()) {
-                    let calls: Vec<_> = tcs
-                        .iter()
-                        .map(|tc| {
-                            let func = tc.get("function").cloned().unwrap_or_else(|| serde_json::json!({}));
-                            ToolCall {
-                                id: tc
-                                    .get("id")
-                                    .and_then(|id| id.as_str())
+            let tool_calls = if let Some(tcs) = message.get("tool_calls").and_then(|v| v.as_array())
+            {
+                let calls: Vec<_> = tcs
+                    .iter()
+                    .map(|tc| {
+                        let func = tc
+                            .get("function")
+                            .cloned()
+                            .unwrap_or_else(|| serde_json::json!({}));
+                        ToolCall {
+                            id: tc
+                                .get("id")
+                                .and_then(|id| id.as_str())
+                                .unwrap_or("")
+                                .to_string(),
+                            tool_type: "function".to_string(),
+                            function: FunctionCall {
+                                name: func
+                                    .get("name")
+                                    .and_then(|n| n.as_str())
                                     .unwrap_or("")
                                     .to_string(),
-                                tool_type: "function".to_string(),
-                                function: FunctionCall {
-                                    name: func
-                                        .get("name")
-                                        .and_then(|n| n.as_str())
-                                        .unwrap_or("")
-                                        .to_string(),
-                                    arguments: func
-                                        .get("arguments")
-                                        .and_then(|a| a.as_str())
-                                        .unwrap_or("")
-                                        .to_string(),
-                                },
-                            }
-                        })
-                        .collect();
-                    if calls.is_empty() {
-                        None
-                    } else {
-                        Some(calls)
-                    }
-                } else {
-                    None
-                };
+                                arguments: func
+                                    .get("arguments")
+                                    .and_then(|a| a.as_str())
+                                    .unwrap_or("")
+                                    .to_string(),
+                            },
+                        }
+                    })
+                    .collect();
+                if calls.is_empty() { None } else { Some(calls) }
+            } else {
+                None
+            };
 
             // Determine finish reason
             let finish_reason_str = choice
@@ -376,22 +382,22 @@ impl LMStudioProvider {
 
         // Build usage info
         let usage = response.get("usage").map(|usage_obj| Usage {
-                prompt_tokens: usage_obj
-                    .get("prompt_tokens")
-                    .and_then(|v| v.as_u64())
-                    .unwrap_or(0) as u32,
-                completion_tokens: usage_obj
-                    .get("completion_tokens")
-                    .and_then(|v| v.as_u64())
-                    .unwrap_or(0) as u32,
-                total_tokens: usage_obj
-                    .get("total_tokens")
-                    .and_then(|v| v.as_u64())
-                    .unwrap_or(0) as u32,
-                prompt_tokens_details: None,
-                completion_tokens_details: None,
-                thinking_usage: None,
-            });
+            prompt_tokens: usage_obj
+                .get("prompt_tokens")
+                .and_then(|v| v.as_u64())
+                .unwrap_or(0) as u32,
+            completion_tokens: usage_obj
+                .get("completion_tokens")
+                .and_then(|v| v.as_u64())
+                .unwrap_or(0) as u32,
+            total_tokens: usage_obj
+                .get("total_tokens")
+                .and_then(|v| v.as_u64())
+                .unwrap_or(0) as u32,
+            prompt_tokens_details: None,
+            completion_tokens_details: None,
+            thinking_usage: None,
+        });
 
         Ok(ChatResponse {
             id: response
@@ -480,8 +486,9 @@ impl LLMProvider for LMStudioProvider {
         model: &str,
         _request_id: &str,
     ) -> Result<ChatResponse, Self::Error> {
-        let response: serde_json::Value = serde_json::from_slice(raw_response)
-            .map_err(|e| LMStudioError::api_error("lm_studio", 500, format!("Failed to parse response: {}", e)))?;
+        let response: serde_json::Value = serde_json::from_slice(raw_response).map_err(|e| {
+            LMStudioError::api_error("lm_studio", 500, format!("Failed to parse response: {}", e))
+        })?;
 
         self.parse_chat_response(response, model)
     }
@@ -560,11 +567,16 @@ impl LLMProvider for LMStudioProvider {
             let body = response.text().await.ok().unwrap_or_default();
             return Err(match status {
                 400 => LMStudioError::invalid_request("lm_studio", body),
-                401 | 403 => LMStudioError::authentication("lm_studio", "Invalid API key or authentication failed"),
+                401 | 403 => LMStudioError::authentication(
+                    "lm_studio",
+                    "Invalid API key or authentication failed",
+                ),
                 404 => LMStudioError::model_not_found("lm_studio", body),
                 429 => LMStudioError::rate_limit("lm_studio", None),
                 500 => LMStudioError::api_error("lm_studio", 500, "Internal server error"),
-                502 | 503 => LMStudioError::provider_unavailable("lm_studio", "Service unavailable"),
+                502 | 503 => {
+                    LMStudioError::provider_unavailable("lm_studio", "Service unavailable")
+                }
                 504 => LMStudioError::timeout("lm_studio", "Gateway timeout"),
                 _ => LMStudioError::api_error("lm_studio", status, body),
             });
@@ -584,14 +596,15 @@ impl LLMProvider for LMStudioProvider {
                             if data == "[DONE]" {
                                 return None;
                             }
-                            if let Ok(json) =
-                                serde_json::from_str::<serde_json::Value>(data)
-                            {
+                            if let Ok(json) = serde_json::from_str::<serde_json::Value>(data) {
                                 if let Some(choices) =
                                     json.get("choices").and_then(|c| c.as_array())
                                 {
                                     if let Some(choice) = choices.first() {
-                                        let delta = choice.get("delta").cloned().unwrap_or_else(|| serde_json::json!({}));
+                                        let delta = choice
+                                            .get("delta")
+                                            .cloned()
+                                            .unwrap_or_else(|| serde_json::json!({}));
                                         let content = delta
                                             .get("content")
                                             .and_then(|c| c.as_str())
@@ -648,7 +661,13 @@ impl LLMProvider for LMStudioProvider {
                     }
                     None
                 }
-                Err(e) => Some(Err(LMStudioError::streaming_error("lm_studio", "chat", None, None, e.to_string()))),
+                Err(e) => Some(Err(LMStudioError::streaming_error(
+                    "lm_studio",
+                    "chat",
+                    None,
+                    None,
+                    e.to_string(),
+                ))),
             }
         });
 
@@ -687,9 +706,12 @@ impl LLMProvider for LMStudioProvider {
             .await?;
 
         // Parse OpenAI-compatible embeddings response
-        let data_arr = response.get("data").and_then(|d| d.as_array()).ok_or_else(|| {
-            LMStudioError::api_error("lm_studio", 500, "Missing data in embeddings response")
-        })?;
+        let data_arr = response
+            .get("data")
+            .and_then(|d| d.as_array())
+            .ok_or_else(|| {
+                LMStudioError::api_error("lm_studio", 500, "Missing data in embeddings response")
+            })?;
 
         let data: Vec<EmbeddingData> = data_arr
             .iter()
@@ -786,7 +808,11 @@ impl LMStudioProvider {
             .and_then(|d| d.as_array())
             .map(|arr| {
                 arr.iter()
-                    .filter_map(|m| m.get("id").and_then(|id| id.as_str()).map(|s| s.to_string()))
+                    .filter_map(|m| {
+                        m.get("id")
+                            .and_then(|id| id.as_str())
+                            .map(|s| s.to_string())
+                    })
                     .collect()
             })
             .unwrap_or_default();
@@ -809,7 +835,7 @@ impl LMStudioProvider {
                 supports_streaming: true,
                 supports_tools: true,
                 supports_multimodal: false,
-                input_cost_per_1k_tokens: Some(0.0),  // LM Studio is free
+                input_cost_per_1k_tokens: Some(0.0), // LM Studio is free
                 output_cost_per_1k_tokens: Some(0.0), // LM Studio is free
                 currency: "USD".to_string(),
                 capabilities: vec![

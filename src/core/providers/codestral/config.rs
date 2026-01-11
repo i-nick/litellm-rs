@@ -40,9 +40,7 @@ impl Default for CodestralConfig {
 impl ProviderConfig for CodestralConfig {
     fn validate(&self) -> Result<(), String> {
         if self.api_key.is_none() && std::env::var("CODESTRAL_API_KEY").is_err() {
-            return Err(
-                "Codestral API key not provided and CODESTRAL_API_KEY not set".to_string(),
-            );
+            return Err("Codestral API key not provided and CODESTRAL_API_KEY not set".to_string());
         }
         if self.timeout == 0 {
             return Err("Timeout must be greater than 0".to_string());

@@ -13,5 +13,5 @@ pub mod streaming;
 pub use client::NebiusClient;
 pub use config::NebiusConfig;
 pub use error::NebiusErrorMapper;
-pub use models::{get_nebius_registry, NebiusModelRegistry};
+pub use models::{NebiusModelRegistry, get_nebius_registry};
 pub use provider::NebiusProvider;

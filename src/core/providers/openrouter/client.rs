@@ -7,23 +7,22 @@ use std::pin::Pin;
 use std::time::Duration;
 use tracing::{debug, error, warn};
 
+use crate::ProviderError;
 use crate::core::traits::{
-    ProviderConfig,
+    ProviderConfig, error_mapper::types::GenericErrorMapper,
     provider::llm_provider::trait_definition::LLMProvider,
-    error_mapper::types::GenericErrorMapper,
 };
 use crate::core::types::{
     common::{HealthStatus, ModelInfo, ProviderCapability, RequestContext},
     requests::{ChatRequest, EmbeddingRequest, ImageGenerationRequest},
     responses::{ChatChunk, ChatResponse, EmbeddingResponse, ImageGenerationResponse},
 };
-use crate::ProviderError;
 
 use super::config::OpenRouterConfig;
 use super::error::OpenRouterError;
 use super::models::get_openrouter_registry;
 use super::transformer::{
-    create_openrouter_headers, OpenRouterRequestTransformer, OpenRouterResponseTransformer,
+    OpenRouterRequestTransformer, OpenRouterResponseTransformer, create_openrouter_headers,
 };
 
 use std::collections::HashMap;
@@ -45,7 +44,9 @@ impl OpenRouterProvider {
     /// Create
     pub async fn new(config: OpenRouterConfig) -> Result<Self, OpenRouterError> {
         // Configuration
-        config.validate().map_err(|e| ProviderError::configuration("openrouter", e))?;
+        config
+            .validate()
+            .map_err(|e| ProviderError::configuration("openrouter", e))?;
 
         // Get
         let api_key = if config.api_key.is_empty() {
@@ -69,7 +70,10 @@ impl OpenRouterProvider {
         for (key, value) in &headers {
             let header_name =
                 reqwest::header::HeaderName::from_bytes(key.as_bytes()).map_err(|e| {
-                    ProviderError::configuration("openrouter", format!("Invalid header key '{}': {}", key, e))
+                    ProviderError::configuration(
+                        "openrouter",
+                        format!("Invalid header key '{}': {}", key, e),
+                    )
                 })?;
 
             // Ensure header value has no illegal characters
@@ -83,10 +87,10 @@ impl OpenRouterProvider {
                         error = %e,
                         "Failed to parse HTTP header value"
                     );
-                    ProviderError::configuration("openrouter", format!(
-                        "Invalid header value for '{}': {}",
-                        key, e
-                    ))
+                    ProviderError::configuration(
+                        "openrouter",
+                        format!("Invalid header value for '{}': {}", key, e),
+                    )
                 })?;
             header_map.insert(header_name, header_value);
         }
@@ -163,7 +167,10 @@ impl OpenRouterProvider {
                         message: format!("Request to {} timed out", url),
                     }
                 } else if e.is_connect() {
-                    ProviderError::network("openrouter", format!("Connection failed to {}: {}", url, e))
+                    ProviderError::network(
+                        "openrouter",
+                        format!("Connection failed to {}: {}", url, e),
+                    )
                 } else {
                     ProviderError::network("openrouter", format!("Request failed: {}", e))
                 }
@@ -178,10 +185,9 @@ impl OpenRouterProvider {
             ));
         }
 
-        let response_text = response
-            .text()
-            .await
-            .map_err(|e| ProviderError::network("openrouter", format!("Failed to read response: {}", e)))?;
+        let response_text = response.text().await.map_err(|e| {
+            ProviderError::network("openrouter", format!("Failed to read response: {}", e))
+        })?;
 
         debug!(
             provider = "openrouter",
@@ -189,8 +195,13 @@ impl OpenRouterProvider {
             "Raw HTTP response received"
         );
 
-        serde_json::from_str(&response_text)
-            .map_err(|e| ProviderError::api_error("openrouter", 500, format!("Failed to parse response: {}", e)))
+        serde_json::from_str(&response_text).map_err(|e| {
+            ProviderError::api_error(
+                "openrouter",
+                500,
+                format!("Failed to parse response: {}", e),
+            )
+        })
     }
 }
 
@@ -386,8 +397,13 @@ impl LLMProvider for OpenRouterProvider {
         )?;
 
         // Serialize to JSON value
-        serde_json::to_value(openai_request)
-            .map_err(|e| ProviderError::api_error("openrouter", 500, format!("Failed to serialize request: {}", e)))
+        serde_json::to_value(openai_request).map_err(|e| {
+            ProviderError::api_error(
+                "openrouter",
+                500,
+                format!("Failed to serialize request: {}", e),
+            )
+        })
     }
 
     async fn transform_response(
@@ -397,12 +413,17 @@ impl LLMProvider for OpenRouterProvider {
         _request_id: &str,
     ) -> Result<ChatResponse, Self::Error> {
         // Response
-        let response_text = std::str::from_utf8(raw_response)
-            .map_err(|e| ProviderError::api_error("openrouter", 500, format!("Invalid UTF-8 response: {}", e)))?;
+        let response_text = std::str::from_utf8(raw_response).map_err(|e| {
+            ProviderError::api_error("openrouter", 500, format!("Invalid UTF-8 response: {}", e))
+        })?;
 
         let openai_response: crate::core::providers::openai::models::OpenAIChatResponse =
             serde_json::from_str(response_text).map_err(|e| {
-                ProviderError::api_error("openrouter", 500, format!("Failed to parse response: {}", e))
+                ProviderError::api_error(
+                    "openrouter",
+                    500,
+                    format!("Failed to parse response: {}", e),
+                )
             })?;
 
         // Response

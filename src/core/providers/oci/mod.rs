@@ -21,5 +21,5 @@ mod streaming;
 // Re-export main types for external use
 pub use config::OciConfig;
 pub use error::{OciError, OciErrorMapper};
-pub use model_info::{get_available_models, get_model_info, OciModel};
+pub use model_info::{OciModel, get_available_models, get_model_info};
 pub use provider::OciProvider;

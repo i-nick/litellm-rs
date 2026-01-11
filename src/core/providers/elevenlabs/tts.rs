@@ -127,8 +127,7 @@ pub struct TextToSpeechResponse {
 }
 
 /// Available TTS models
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-#[derive(Default)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum TTSModel {
     /// Monolingual English model (v1)
     MonolingualV1,
@@ -167,7 +166,6 @@ impl TTSModel {
         }
     }
 }
-
 
 /// Resolve voice ID from various input formats
 pub fn resolve_voice_id(voice: &str) -> Result<String, ElevenLabsError> {

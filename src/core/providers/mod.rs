@@ -49,6 +49,7 @@ pub mod oci;
 pub mod ollama;
 pub mod oobabooga;
 pub mod openai;
+pub mod openai_like;
 pub mod openrouter;
 pub mod perplexity;
 pub mod replicate;
@@ -57,11 +58,13 @@ pub mod sambanova;
 pub mod snowflake;
 pub mod stability;
 pub mod together;
+pub mod triton;
 pub mod v0;
 pub mod vertex_ai;
 pub mod vllm;
 pub mod volcengine;
 pub mod voyage;
+pub mod wandb;
 pub mod watsonx;
 pub mod xai;
 pub mod xinference;
@@ -551,8 +554,7 @@ impl Provider {
                 Ok(Box::pin(mapped))
             }
             Provider::Groq(p) => {
-                let stream = LLMProvider::chat_completion_stream(p, request, context)
-                    .await?;
+                let stream = LLMProvider::chat_completion_stream(p, request, context).await?;
                 let mapped = stream.map(|result| result);
                 Ok(Box::pin(mapped))
             }

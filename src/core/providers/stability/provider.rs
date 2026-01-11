@@ -10,15 +10,16 @@ use std::collections::HashMap;
 use std::pin::Pin;
 use std::sync::Arc;
 
-use crate::core::providers::base::{
-    GlobalPoolManager, HeaderPair, get_pricing_db, header,
-};
+use crate::core::providers::base::{GlobalPoolManager, HeaderPair, get_pricing_db, header};
 use crate::core::providers::unified_provider::ProviderError;
-use crate::core::traits::{ProviderConfig, provider::llm_provider::trait_definition::LLMProvider, error_mapper::trait_def::ErrorMapper};
+use crate::core::traits::{
+    ProviderConfig, error_mapper::trait_def::ErrorMapper,
+    provider::llm_provider::trait_definition::LLMProvider,
+};
 use crate::core::types::{
     common::{HealthStatus, ModelInfo, ProviderCapability, RequestContext},
     requests::{ChatRequest, ImageGenerationRequest},
-    responses::{ChatChunk, ChatResponse, ImageGenerationResponse, ImageData},
+    responses::{ChatChunk, ChatResponse, ImageData, ImageGenerationResponse},
 };
 
 use super::{StabilityConfig, StabilityErrorMapper, get_stability_registry};
@@ -179,7 +180,11 @@ impl StabilityProvider {
         let model_name = model.unwrap_or("sd3");
         format!(
             "{}{}",
-            self.config.base.api_base.as_deref().unwrap_or("https://api.stability.ai"),
+            self.config
+                .base
+                .api_base
+                .as_deref()
+                .unwrap_or("https://api.stability.ai"),
             registry.get_endpoint(model_name)
         )
     }
@@ -220,7 +225,10 @@ impl LLMProvider for StabilityProvider {
                 "size" => {
                     if let Some(size_str) = value.as_str() {
                         if let Some(ratio) = registry.size_to_aspect_ratio(size_str) {
-                            mapped.insert("aspect_ratio".to_string(), Value::String(ratio.to_string()));
+                            mapped.insert(
+                                "aspect_ratio".to_string(),
+                                Value::String(ratio.to_string()),
+                            );
                         }
                     }
                 }
@@ -312,7 +320,12 @@ impl LLMProvider for StabilityProvider {
         let client = reqwest::Client::new();
         let mut form = reqwest::multipart::Form::new()
             .text("prompt", stability_request.prompt.clone())
-            .text("output_format", stability_request.output_format.unwrap_or_else(|| "png".to_string()));
+            .text(
+                "output_format",
+                stability_request
+                    .output_format
+                    .unwrap_or_else(|| "png".to_string()),
+            );
 
         if let Some(aspect_ratio) = &stability_request.aspect_ratio {
             form = form.text("aspect_ratio", aspect_ratio.clone());

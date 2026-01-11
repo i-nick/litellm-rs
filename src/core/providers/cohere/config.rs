@@ -118,7 +118,10 @@ impl CohereConfig {
     /// Create default headers for Cohere API requests
     pub fn create_headers(&self) -> std::collections::HashMap<String, String> {
         let mut headers = std::collections::HashMap::new();
-        headers.insert("Authorization".to_string(), format!("Bearer {}", self.api_key));
+        headers.insert(
+            "Authorization".to_string(),
+            format!("Bearer {}", self.api_key),
+        );
         headers.insert("Content-Type".to_string(), "application/json".to_string());
         headers.insert("Accept".to_string(), "application/json".to_string());
         headers.insert("Request-Source".to_string(), "litellm-rs".to_string());

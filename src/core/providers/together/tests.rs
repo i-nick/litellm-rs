@@ -90,8 +90,8 @@ mod tests {
             let provider = TogetherProvider::with_api_key("test-key").await.unwrap();
 
             // Test model with function calling support
-            let params = provider
-                .get_supported_openai_params("meta-llama/Llama-3.3-70B-Instruct-Turbo");
+            let params =
+                provider.get_supported_openai_params("meta-llama/Llama-3.3-70B-Instruct-Turbo");
             assert!(params.contains(&"temperature"));
             assert!(params.contains(&"max_tokens"));
             assert!(params.contains(&"tools"));
@@ -331,8 +331,14 @@ mod tests {
     fn test_pricing_category() {
         use super::super::model_info::get_pricing_category;
 
-        assert_eq!(get_pricing_category("model-3b"), Some("together-ai-up-to-4b"));
-        assert_eq!(get_pricing_category("model-7b"), Some("together-ai-4.1b-8b"));
+        assert_eq!(
+            get_pricing_category("model-3b"),
+            Some("together-ai-up-to-4b")
+        );
+        assert_eq!(
+            get_pricing_category("model-7b"),
+            Some("together-ai-4.1b-8b")
+        );
         assert_eq!(
             get_pricing_category("model-70b"),
             Some("together-ai-41.1b-80b")

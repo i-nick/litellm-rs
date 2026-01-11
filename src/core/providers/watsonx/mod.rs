@@ -26,5 +26,5 @@ mod tests;
 // Re-export main types for external use
 pub use config::WatsonxConfig;
 pub use error::{WatsonxError, WatsonxErrorMapper};
-pub use model_info::{get_available_models, get_model_info, WatsonxModel};
+pub use model_info::{WatsonxModel, get_available_models, get_model_info};
 pub use provider::WatsonxProvider;

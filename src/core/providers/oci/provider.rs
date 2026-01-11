@@ -12,10 +12,10 @@ use tracing::debug;
 use super::config::OciConfig;
 use super::error::{OciError, OciErrorMapper};
 use super::model_info::{get_available_models, get_model_info, supports_tools};
-use crate::core::providers::base::{header_owned, GlobalPoolManager, HttpMethod};
+use crate::core::providers::base::{GlobalPoolManager, HttpMethod, header_owned};
 use crate::core::traits::error_mapper::trait_def::ErrorMapper;
 use crate::core::traits::{
-    provider::llm_provider::trait_definition::LLMProvider, ProviderConfig as _,
+    ProviderConfig as _, provider::llm_provider::trait_definition::LLMProvider,
 };
 use crate::core::types::{
     common::{HealthStatus, ModelInfo, ProviderCapability, RequestContext},
@@ -122,7 +122,10 @@ impl OciProvider {
         })?;
 
         Ok(vec![
-            ("Authorization".to_string(), format!("Bearer {}", auth_token)),
+            (
+                "Authorization".to_string(),
+                format!("Bearer {}", auth_token),
+            ),
             ("Content-Type".to_string(), "application/json".to_string()),
             ("Accept".to_string(), "application/json".to_string()),
         ])

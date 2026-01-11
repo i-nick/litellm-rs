@@ -26,5 +26,5 @@ mod streaming;
 // Re-export main types for external use
 pub use config::OllamaConfig;
 pub use error::OllamaError;
-pub use model_info::{get_model_info, OllamaModelInfo};
+pub use model_info::{OllamaModelInfo, get_model_info};
 pub use provider::OllamaProvider;

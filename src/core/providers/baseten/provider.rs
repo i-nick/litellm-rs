@@ -142,8 +142,9 @@ impl BasetenProvider {
             .await
             .map_err(|e| BasetenError::network("baseten", e.to_string()))?;
 
-        serde_json::from_slice(&response_bytes)
-            .map_err(|e| BasetenError::api_error("baseten", 500, format!("Failed to parse response: {}", e)))
+        serde_json::from_slice(&response_bytes).map_err(|e| {
+            BasetenError::api_error("baseten", 500, format!("Failed to parse response: {}", e))
+        })
     }
 }
 
@@ -186,7 +187,8 @@ impl LLMProvider for BasetenProvider {
         request: ChatRequest,
         _context: RequestContext,
     ) -> Result<serde_json::Value, Self::Error> {
-        serde_json::to_value(&request).map_err(|e| BasetenError::invalid_request("baseten", e.to_string()))
+        serde_json::to_value(&request)
+            .map_err(|e| BasetenError::invalid_request("baseten", e.to_string()))
     }
 
     async fn transform_response(
@@ -195,8 +197,9 @@ impl LLMProvider for BasetenProvider {
         _model: &str,
         _request_id: &str,
     ) -> Result<ChatResponse, Self::Error> {
-        serde_json::from_slice(raw_response)
-            .map_err(|e| BasetenError::api_error("baseten", 500, format!("Failed to parse response: {}", e)))
+        serde_json::from_slice(raw_response).map_err(|e| {
+            BasetenError::api_error("baseten", 500, format!("Failed to parse response: {}", e))
+        })
     }
 
     fn get_error_mapper(&self) -> Self::ErrorMapper {
@@ -218,8 +221,13 @@ impl LLMProvider for BasetenProvider {
 
         let response = self.execute_request(&url, request_json).await?;
 
-        serde_json::from_value(response)
-            .map_err(|e| BasetenError::api_error("baseten", 500, format!("Failed to parse chat response: {}", e)))
+        serde_json::from_value(response).map_err(|e| {
+            BasetenError::api_error(
+                "baseten",
+                500,
+                format!("Failed to parse chat response: {}", e),
+            )
+        })
     }
 
     async fn chat_completion_stream(
@@ -260,7 +268,11 @@ impl LLMProvider for BasetenProvider {
                 ),
                 401 => BasetenError::authentication("baseten", "Invalid API key"),
                 429 => BasetenError::rate_limit("baseten", None),
-                _ => BasetenError::api_error("baseten", status, format!("Stream request failed: {}", status)),
+                _ => BasetenError::api_error(
+                    "baseten",
+                    status,
+                    format!("Stream request failed: {}", status),
+                ),
             });
         }
 
@@ -289,7 +301,7 @@ impl LLMProvider for BasetenProvider {
         Err(BasetenError::not_supported(
             "baseten",
             "Baseten embeddings require a specific embedding model deployment. \
-             Please specify the model ID of your embedding deployment."
+             Please specify the model ID of your embedding deployment.",
         ))
     }
 

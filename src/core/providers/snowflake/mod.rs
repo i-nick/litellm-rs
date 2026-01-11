@@ -21,5 +21,5 @@ mod streaming;
 // Re-export main types for external use
 pub use config::SnowflakeConfig;
 pub use error::SnowflakeError;
-pub use model_info::{get_available_models, get_model_info, SnowflakeModel};
+pub use model_info::{SnowflakeModel, get_available_models, get_model_info};
 pub use provider::SnowflakeProvider;

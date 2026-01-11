@@ -10,7 +10,8 @@ use std::pin::Pin;
 use std::sync::Arc;
 
 use crate::core::providers::base::{
-    GlobalPoolManager, HeaderPair, HttpMethod, get_pricing_db, header, header_owned, streaming_client,
+    GlobalPoolManager, HeaderPair, HttpMethod, get_pricing_db, header, header_owned,
+    streaming_client,
 };
 use crate::core::providers::unified_provider::ProviderError;
 use crate::core::traits::{ProviderConfig, provider::llm_provider::trait_definition::LLMProvider};

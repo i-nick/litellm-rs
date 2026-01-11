@@ -424,11 +424,11 @@ impl JinaProvider {
                                         text: d.as_str()?.to_string(),
                                     })
                                 } else if d.is_object() {
-                                    d.get("text")
-                                        .and_then(|t| t.as_str())
-                                        .map(|text| RerankDocument {
+                                    d.get("text").and_then(|t| t.as_str()).map(|text| {
+                                        RerankDocument {
                                             text: text.to_string(),
-                                        })
+                                        }
+                                    })
                                 } else {
                                     None
                                 }
@@ -746,7 +746,11 @@ mod tests {
 
         let provider = provider.unwrap();
         assert_eq!(LLMProvider::name(&provider), "jina");
-        assert!(provider.capabilities().contains(&ProviderCapability::Embeddings));
+        assert!(
+            provider
+                .capabilities()
+                .contains(&ProviderCapability::Embeddings)
+        );
     }
 
     #[tokio::test]
@@ -847,12 +851,12 @@ mod tests {
 
         assert!(!models.is_empty());
         assert!(models.iter().any(|m| m.id == "jina-embeddings-v3"));
-        assert!(models
-            .iter()
-            .any(|m| m.id == "jina-embeddings-v2-base-en"));
-        assert!(models
-            .iter()
-            .any(|m| m.id == "jina-reranker-v2-base-multilingual"));
+        assert!(models.iter().any(|m| m.id == "jina-embeddings-v2-base-en"));
+        assert!(
+            models
+                .iter()
+                .any(|m| m.id == "jina-reranker-v2-base-multilingual")
+        );
     }
 
     #[tokio::test]
@@ -892,11 +896,15 @@ mod tests {
     #[test]
     fn test_is_base64_encoded() {
         // Data URL format
-        assert!(JinaProvider::is_base64_encoded("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=="));
+        assert!(JinaProvider::is_base64_encoded(
+            "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=="
+        ));
 
         // Regular text should not be detected as base64
         assert!(!JinaProvider::is_base64_encoded("Hello, world!"));
-        assert!(!JinaProvider::is_base64_encoded("This is a normal text string"));
+        assert!(!JinaProvider::is_base64_encoded(
+            "This is a normal text string"
+        ));
     }
 
     // ==================== Supported Params Tests ====================
@@ -985,9 +993,7 @@ mod tests {
     async fn test_calculate_cost_known_model() {
         let provider = JinaProvider::new(create_test_config()).await.unwrap();
 
-        let cost = provider
-            .calculate_cost("jina-embeddings-v3", 1000, 0)
-            .await;
+        let cost = provider.calculate_cost("jina-embeddings-v3", 1000, 0).await;
         assert!(cost.is_ok());
 
         let cost_value = cost.unwrap();

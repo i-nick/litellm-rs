@@ -62,7 +62,10 @@ impl ClarifaiProvider {
 
         // Create pool manager
         let pool_manager = Arc::new(GlobalPoolManager::new().map_err(|e| {
-            ClarifaiError::configuration("clarifai", format!("Failed to create pool manager: {}", e))
+            ClarifaiError::configuration(
+                "clarifai",
+                format!("Failed to create pool manager: {}", e),
+            )
         })?);
 
         // Build default model list - Clarifai hosts various models
@@ -140,8 +143,9 @@ impl ClarifaiProvider {
             .await
             .map_err(|e| ClarifaiError::network("clarifai", e.to_string()))?;
 
-        serde_json::from_slice(&response_bytes)
-            .map_err(|e| ClarifaiError::api_error("clarifai", 500, format!("Failed to parse response: {}", e)))
+        serde_json::from_slice(&response_bytes).map_err(|e| {
+            ClarifaiError::api_error("clarifai", 500, format!("Failed to parse response: {}", e))
+        })
     }
 }
 
@@ -194,8 +198,9 @@ impl LLMProvider for ClarifaiProvider {
         model: &str,
         _request_id: &str,
     ) -> Result<ChatResponse, Self::Error> {
-        let mut response: ChatResponse = serde_json::from_slice(raw_response)
-            .map_err(|e| ClarifaiError::api_error("clarifai", 500, format!("Failed to parse response: {}", e)))?;
+        let mut response: ChatResponse = serde_json::from_slice(raw_response).map_err(|e| {
+            ClarifaiError::api_error("clarifai", 500, format!("Failed to parse response: {}", e))
+        })?;
 
         // Prefix the model with clarifai/ in the response
         if !response.model.starts_with("clarifai/") {
@@ -229,7 +234,11 @@ impl LLMProvider for ClarifaiProvider {
             .await?;
 
         let mut chat_response: ChatResponse = serde_json::from_value(response).map_err(|e| {
-            ClarifaiError::api_error("clarifai", 500, format!("Failed to parse chat response: {}", e))
+            ClarifaiError::api_error(
+                "clarifai",
+                500,
+                format!("Failed to parse chat response: {}", e),
+            )
         })?;
 
         // Prefix model name with clarifai/
@@ -280,7 +289,11 @@ impl LLMProvider for ClarifaiProvider {
                 ),
                 401 => ClarifaiError::authentication("clarifai", "Invalid API key"),
                 429 => ClarifaiError::rate_limit("clarifai", None),
-                _ => ClarifaiError::api_error("clarifai", status, format!("Stream request failed: {}", status)),
+                _ => ClarifaiError::api_error(
+                    "clarifai",
+                    status,
+                    format!("Stream request failed: {}", status),
+                ),
             });
         }
 
@@ -309,7 +322,7 @@ impl LLMProvider for ClarifaiProvider {
         Err(ClarifaiError::not_supported(
             "clarifai",
             "Clarifai embeddings require a specific embedding model. \
-             Please specify the model in user.app.model format."
+             Please specify the model in user.app.model format.",
         ))
     }
 

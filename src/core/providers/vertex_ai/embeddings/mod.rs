@@ -194,10 +194,7 @@ impl EmbeddingHandler {
     }
 
     /// Transform embedding request to Vertex AI format
-    pub fn transform_request(
-        &self,
-        request: &EmbeddingRequest,
-    ) -> Result<Value, ProviderError> {
+    pub fn transform_request(&self, request: &EmbeddingRequest) -> Result<Value, ProviderError> {
         // Convert EmbeddingInput to Vec<String>
         let input_strings = match &request.input {
             EmbeddingInput::Text(text) => vec![text.clone()],
@@ -253,10 +250,7 @@ impl EmbeddingHandler {
     }
 
     /// Create multimodal embedding instances
-    fn create_multimodal_instances(
-        &self,
-        inputs: &[String],
-    ) -> Result<Vec<Value>, ProviderError> {
+    fn create_multimodal_instances(&self, inputs: &[String]) -> Result<Vec<Value>, ProviderError> {
         let instances = inputs
             .iter()
             .map(|content| {
@@ -344,10 +338,7 @@ impl EmbeddingHandler {
     }
 
     /// Transform Vertex AI response to standard format
-    pub fn transform_response(
-        &self,
-        response: Value,
-    ) -> Result<EmbeddingResponse, ProviderError> {
+    pub fn transform_response(&self, response: Value) -> Result<EmbeddingResponse, ProviderError> {
         let predictions = response["predictions"].as_array().ok_or_else(|| {
             ProviderError::response_parsing(
                 "vertex_ai",
@@ -372,12 +363,10 @@ impl EmbeddingHandler {
                         .filter_map(|v| v.as_f64().map(|f| f as f32))
                         .collect()
                 } else {
-                    return Err(
-                        ProviderError::response_parsing(
-                            "vertex_ai",
-                            "Missing embedding values",
-                        ),
-                    );
+                    return Err(ProviderError::response_parsing(
+                        "vertex_ai",
+                        "Missing embedding values",
+                    ));
                 };
 
             embeddings.push(values);
@@ -422,15 +411,13 @@ impl BatchEmbeddingHandler {
         _task_type: Option<String>,
     ) -> Result<Vec<Vec<f32>>, ProviderError> {
         if !self.model.supports_batch() {
-            return Err(
-                ProviderError::not_supported(
-                    "vertex_ai",
-                    format!(
-                        "Model {} does not support batch processing",
-                        self.model.model_id()
-                    ),
+            return Err(ProviderError::not_supported(
+                "vertex_ai",
+                format!(
+                    "Model {} does not support batch processing",
+                    self.model.model_id()
                 ),
-            );
+            ));
         }
 
         let mut all_embeddings = Vec::new();

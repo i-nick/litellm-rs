@@ -263,7 +263,10 @@ mod tests {
         assert!(!models.is_empty());
 
         // Check that we have Claude models
-        let claude_models: Vec<_> = models.iter().filter(|m| m.provider == "anthropic").collect();
+        let claude_models: Vec<_> = models
+            .iter()
+            .filter(|m| m.provider == "anthropic")
+            .collect();
         assert!(!claude_models.is_empty());
 
         // Check that we have Llama models

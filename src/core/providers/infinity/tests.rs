@@ -146,7 +146,10 @@ mod tests {
         };
 
         let result = provider
-            .chat_completion(request, crate::core::types::common::RequestContext::default())
+            .chat_completion(
+                request,
+                crate::core::types::common::RequestContext::default(),
+            )
             .await;
         assert!(result.is_err());
     }

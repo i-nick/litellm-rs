@@ -228,7 +228,10 @@ mod tests {
 
         let result = AI21Client::transform_chat_response(error_response);
         assert!(result.is_err());
-        assert!(matches!(result.unwrap_err(), ProviderError::RateLimit { .. }));
+        assert!(matches!(
+            result.unwrap_err(),
+            ProviderError::RateLimit { .. }
+        ));
     }
 
     #[test]

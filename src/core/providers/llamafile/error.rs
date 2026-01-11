@@ -351,8 +351,7 @@ mod tests {
 
     #[test]
     fn test_llamafile_error_to_provider_error() {
-        let err: ProviderError =
-            LlamafileError::AuthenticationError("bad key".to_string()).into();
+        let err: ProviderError = LlamafileError::AuthenticationError("bad key".to_string()).into();
         assert!(matches!(err, ProviderError::Authentication { .. }));
 
         let err: ProviderError = LlamafileError::ModelNotFoundError("gpt-4".to_string()).into();
@@ -368,8 +367,11 @@ mod tests {
         let err: ProviderError = LlamafileError::TimeoutError("30s".to_string()).into();
         assert!(matches!(err, ProviderError::Timeout { .. }));
 
-        let err: ProviderError =
-            LlamafileError::ContextLengthExceeded { max: 4096, actual: 5000 }.into();
+        let err: ProviderError = LlamafileError::ContextLengthExceeded {
+            max: 4096,
+            actual: 5000,
+        }
+        .into();
         assert!(matches!(err, ProviderError::ContextLengthExceeded { .. }));
     }
 

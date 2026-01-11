@@ -2,13 +2,13 @@
 //!
 //! Comprehensive tests for Cohere provider functionality
 
+use self::config::{CohereApiVersion, CohereConfig};
 use super::*;
 use crate::core::traits::provider::llm_provider::trait_definition::LLMProvider;
 use crate::core::types::common::ProviderCapability;
 use crate::core::types::requests::{
     ChatMessage, ChatRequest, EmbeddingInput, EmbeddingRequest, MessageContent, MessageRole,
 };
-use self::config::{CohereApiVersion, CohereConfig};
 use rerank::{RerankDocument, RerankRequest};
 use serde_json::json;
 
@@ -197,7 +197,10 @@ async fn test_calculate_cost_command_r_plus() {
     let provider = CohereProvider::with_api_key("key").await.unwrap();
 
     // command-r-plus: $0.003 input, $0.015 output per 1k
-    let cost = provider.calculate_cost("command-r-plus", 1000, 1000).await.unwrap();
+    let cost = provider
+        .calculate_cost("command-r-plus", 1000, 1000)
+        .await
+        .unwrap();
 
     // (1000/1000 * 0.003) + (1000/1000 * 0.015) = 0.003 + 0.015 = 0.018
     assert!((cost - 0.018).abs() < 0.0001);
@@ -208,7 +211,10 @@ async fn test_calculate_cost_command_r() {
     let provider = CohereProvider::with_api_key("key").await.unwrap();
 
     // command-r: $0.0005 input, $0.0015 output per 1k
-    let cost = provider.calculate_cost("command-r", 1000, 1000).await.unwrap();
+    let cost = provider
+        .calculate_cost("command-r", 1000, 1000)
+        .await
+        .unwrap();
 
     // (1000/1000 * 0.0005) + (1000/1000 * 0.0015) = 0.0005 + 0.0015 = 0.002
     assert!((cost - 0.002).abs() < 0.0001);
@@ -219,7 +225,10 @@ async fn test_calculate_cost_embed_model() {
     let provider = CohereProvider::with_api_key("key").await.unwrap();
 
     // embed-english-v3.0: $0.0001 input, $0 output per 1k
-    let cost = provider.calculate_cost("embed-english-v3.0", 1000, 0).await.unwrap();
+    let cost = provider
+        .calculate_cost("embed-english-v3.0", 1000, 0)
+        .await
+        .unwrap();
 
     assert!((cost - 0.0001).abs() < 0.00001);
 }
@@ -229,7 +238,10 @@ async fn test_calculate_cost_rerank_model() {
     let provider = CohereProvider::with_api_key("key").await.unwrap();
 
     // rerank-english-v3.0: $0.002 input per 1k
-    let cost = provider.calculate_cost("rerank-english-v3.0", 1000, 0).await.unwrap();
+    let cost = provider
+        .calculate_cost("rerank-english-v3.0", 1000, 0)
+        .await
+        .unwrap();
 
     assert!((cost - 0.002).abs() < 0.0001);
 }
@@ -246,7 +258,10 @@ async fn test_calculate_cost_unknown_model() {
 async fn test_calculate_cost_zero_tokens() {
     let provider = CohereProvider::with_api_key("key").await.unwrap();
 
-    let cost = provider.calculate_cost("command-r-plus", 0, 0).await.unwrap();
+    let cost = provider
+        .calculate_cost("command-r-plus", 0, 0)
+        .await
+        .unwrap();
     assert!(cost.abs() < 0.0001);
 }
 
@@ -368,7 +383,9 @@ async fn test_error_mapper_server_error() {
     let error = mapper.map_http_error(500, "Internal server error");
 
     match error {
-        CohereError::ApiError { provider, status, .. } => {
+        CohereError::ApiError {
+            provider, status, ..
+        } => {
             assert_eq!(provider, "cohere");
             assert_eq!(status, 500);
         }

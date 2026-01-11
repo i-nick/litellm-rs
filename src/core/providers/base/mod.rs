@@ -9,8 +9,8 @@ pub mod sse;
 
 pub use config::BaseConfig;
 pub use connection_pool::{
-    ConnectionPool, GlobalPoolManager, HeaderPair, HttpMethod, PoolConfig, header, header_owned,
-    global_client, streaming_client,
+    ConnectionPool, GlobalPoolManager, HeaderPair, HttpMethod, PoolConfig, global_client, header,
+    header_owned, streaming_client,
 };
 pub use pricing::{PricingDatabase, get_pricing_db};
 pub use sse::{

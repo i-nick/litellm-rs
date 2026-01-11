@@ -135,7 +135,9 @@ impl From<WatsonxError> for ProviderError {
             WatsonxError::ApiError(msg) => ProviderError::api_error("watsonx", 500, msg),
             WatsonxError::AuthenticationError(msg) => ProviderError::authentication("watsonx", msg),
             WatsonxError::RateLimitError(_) => ProviderError::rate_limit("watsonx", None),
-            WatsonxError::InvalidRequestError(msg) => ProviderError::invalid_request("watsonx", msg),
+            WatsonxError::InvalidRequestError(msg) => {
+                ProviderError::invalid_request("watsonx", msg)
+            }
             WatsonxError::ModelNotFoundError(msg) => ProviderError::model_not_found("watsonx", msg),
             WatsonxError::ServiceUnavailableError(msg) => {
                 ProviderError::api_error("watsonx", 503, msg)

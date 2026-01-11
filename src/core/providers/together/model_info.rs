@@ -706,7 +706,9 @@ mod tests {
             "togethercomputer/m2-bert-80M-2k-retrieval"
         ));
         assert!(is_embedding_model("BAAI/bge-large-en-v1.5"));
-        assert!(!is_embedding_model("meta-llama/Llama-3.3-70B-Instruct-Turbo"));
+        assert!(!is_embedding_model(
+            "meta-llama/Llama-3.3-70B-Instruct-Turbo"
+        ));
         assert!(!is_embedding_model("nonexistent-model"));
     }
 
@@ -796,7 +798,10 @@ mod tests {
             get_pricing_category("model-3b"),
             Some("together-ai-up-to-4b")
         );
-        assert_eq!(get_pricing_category("model-7b"), Some("together-ai-4.1b-8b"));
+        assert_eq!(
+            get_pricing_category("model-7b"),
+            Some("together-ai-4.1b-8b")
+        );
         assert_eq!(
             get_pricing_category("model-13b"),
             Some("together-ai-8.1b-21b")
