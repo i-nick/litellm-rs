@@ -5,7 +5,9 @@
 pub mod ai;
 pub mod auth;
 pub mod health;
+pub mod keys;
 pub mod pricing;
+pub mod teams;
 
 use actix_web::HttpResponse;
 
