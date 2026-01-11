@@ -4,43 +4,66 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Version Management
 
-### Release Workflow
+### Automated Version Bumping (CI/CD)
 
-Follow [Semantic Versioning](https://semver.org/) (MAJOR.MINOR.PATCH):
-- **MAJOR**: Breaking API changes
-- **MINOR**: New features, backward compatible
-- **PATCH**: Bug fixes, backward compatible
+Version bumping is **fully automated** via GitHub Actions. On every push to `main`:
 
-### Version Bump Process
+1. **Analyzes commits** using [Conventional Commits](https://conventionalcommits.org/):
+   - `feat:` → Minor bump (0.1.x → 0.2.0)
+   - `fix:`, `perf:`, `refactor:` → Patch bump (0.1.3 → 0.1.4)
+   - `feat!:`, `BREAKING CHANGE:` → Major bump (0.x.x → 1.0.0)
 
-```bash
-# 1. Update version in Cargo.toml
-cargo set-version 0.1.4  # or manually edit [package] version
+2. **Auto-updates**:
+   - `Cargo.toml` version
+   - `CHANGELOG.md` with categorized changes
+   - Creates git tag `v0.1.4`
 
-# 2. Update CHANGELOG.md
-#    - Move [Unreleased] items to new version section
-#    - Add release date in format [0.1.4] - YYYY-MM-DD
+3. **Triggers release pipeline** → builds binaries, Docker images, publishes to crates.io
 
-# 3. Commit version bump
-git add Cargo.toml Cargo.lock CHANGELOG.md
-git commit -m "chore(release): bump version to 0.1.4"
+### Commit Message Format
 
-# 4. Create annotated tag
-git tag -a v0.1.4 -m "Release v0.1.4"
+```
+<type>(<scope>): <description>
 
-# 5. Push with tags
-git push && git push --tags
+[optional body]
+
+[optional footer]
 ```
 
-### Changelog Guidelines
+**Types**: `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `chore`
 
-Follow [Keep a Changelog](https://keepachangelog.com/) format:
-- **Added**: New features
-- **Changed**: Changes in existing functionality
-- **Deprecated**: Soon-to-be removed features
-- **Removed**: Now removed features
-- **Fixed**: Bug fixes
-- **Security**: Vulnerability fixes
+**Examples**:
+```bash
+git commit -m "feat(router): add weighted load balancing"     # → minor
+git commit -m "fix(auth): resolve JWT validation issue"       # → patch
+git commit -m "feat!: redesign provider interface"            # → major
+```
+
+### Version Info in Code
+
+Access build information programmatically:
+```rust
+use litellm_rs::{VERSION, GIT_HASH, full_version, build_info};
+
+println!("Version: {}", VERSION);           // "0.1.4"
+println!("Full: {}", full_version());       // "0.1.4-a1b2c3d"
+println!("Info: {}", build_info());         // "0.1.4-a1b2c3d (built 1704067200 with rustc 1.87)"
+```
+
+### Manual Release (if needed)
+
+```bash
+# 1. Update version
+cargo set-version 0.1.4
+
+# 2. Update CHANGELOG.md
+
+# 3. Commit and tag
+git add Cargo.toml Cargo.lock CHANGELOG.md
+git commit -m "chore(release): bump version to 0.1.4"
+git tag -a v0.1.4 -m "Release v0.1.4"
+git push && git push --tags
+```
 
 ### Quick Commands
 ```bash

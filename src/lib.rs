@@ -79,10 +79,12 @@ pub mod server;
 pub mod services; // Add services module
 pub mod storage;
 pub mod utils;
+pub mod version; // Build and version information
 
 // Re-export main types
 pub use config::Config;
 pub use utils::error::{GatewayError, Result};
+pub use version::{BuildInfo, build_info, full_version, VERSION, GIT_HASH};
 
 // Export core completion functionality (Python LiteLLM compatible)
 pub use core::completion::{
@@ -149,42 +151,11 @@ impl Gateway {
     }
 }
 
-// Version information
-/// Current version of the crate
-pub const VERSION: &str = env!("CARGO_PKG_VERSION");
+// Version information - re-exported from version module
 /// Name of the crate
 pub const NAME: &str = env!("CARGO_PKG_NAME");
 /// Description of the crate
 pub const DESCRIPTION: &str = env!("CARGO_PKG_DESCRIPTION");
-
-/// Gateway build information
-#[derive(Debug, Clone)]
-pub struct BuildInfo {
-    /// Version number
-    pub version: &'static str,
-    /// Build
-    pub build_time: &'static str,
-    /// Git commit hash
-    pub git_hash: &'static str,
-    /// Rust version
-    pub rust_version: &'static str,
-}
-
-impl Default for BuildInfo {
-    fn default() -> Self {
-        Self {
-            version: VERSION,
-            build_time: "unknown",
-            git_hash: "unknown",
-            rust_version: "unknown",
-        }
-    }
-}
-
-/// Build
-pub fn build_info() -> BuildInfo {
-    BuildInfo::default()
-}
 
 #[cfg(test)]
 mod tests {
