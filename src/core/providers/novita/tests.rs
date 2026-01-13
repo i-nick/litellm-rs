@@ -179,7 +179,7 @@ mod tests {
 
         let info = info.unwrap();
         assert!(info.supports_tools);
-        assert_eq!(info.context_length, 131072);
+        assert_eq!(info.max_context_length, 131072);
     }
 
     #[test]

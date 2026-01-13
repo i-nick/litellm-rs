@@ -26,8 +26,8 @@ fn test_github_copilot_model_info_completeness() {
         let info = get_model_info(model_id).unwrap();
         assert!(!info.model_id.is_empty());
         assert!(!info.display_name.is_empty());
-        assert!(info.context_length > 0);
-        assert!(info.max_output_tokens > 0);
+        assert!(info.max_context_length > 0);
+        assert!(info.max_output_length > 0);
     }
 }
 

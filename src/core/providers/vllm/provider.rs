@@ -239,11 +239,11 @@ fn model_info_to_gateway_model(info: &VLLMModelInfo) -> ModelInfo {
         id: info.model_id.clone(),
         name: info.display_name.clone(),
         provider: "vllm".to_string(),
-        max_context_length: info.context_length,
-        max_output_length: Some(info.max_output_tokens),
+        max_context_length: info.max_context_length,
+        max_output_length: Some(info.max_output_length),
         supports_streaming: true,
         supports_tools: info.supports_tools,
-        supports_multimodal: info.supports_vision,
+        supports_multimodal: info.supports_multimodal,
         input_cost_per_1k_tokens: None, // vLLM is self-hosted, no API costs
         output_cost_per_1k_tokens: None, // vLLM is self-hosted, no API costs
         currency: "USD".to_string(),

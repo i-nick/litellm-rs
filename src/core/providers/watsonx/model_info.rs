@@ -11,9 +11,9 @@ pub struct WatsonxModel {
     /// Display name
     pub display_name: &'static str,
     /// Maximum context length in tokens
-    pub context_length: usize,
+    pub max_context_length: usize,
     /// Maximum output tokens
-    pub max_output_tokens: usize,
+    pub max_output_length: usize,
     /// Input cost per million tokens (USD)
     pub input_cost_per_million: f64,
     /// Output cost per million tokens (USD)
@@ -32,8 +32,8 @@ static WATSONX_MODELS: &[WatsonxModel] = &[
     WatsonxModel {
         model_id: "ibm/granite-13b-chat-v2",
         display_name: "Granite 13B Chat v2",
-        context_length: 8192,
-        max_output_tokens: 4096,
+        max_context_length: 8192,
+        max_output_length: 4096,
         input_cost_per_million: 0.15,
         output_cost_per_million: 0.15,
         supports_tools: true,
@@ -43,8 +43,8 @@ static WATSONX_MODELS: &[WatsonxModel] = &[
     WatsonxModel {
         model_id: "ibm/granite-20b-multilingual",
         display_name: "Granite 20B Multilingual",
-        context_length: 8192,
-        max_output_tokens: 4096,
+        max_context_length: 8192,
+        max_output_length: 4096,
         input_cost_per_million: 0.20,
         output_cost_per_million: 0.20,
         supports_tools: true,
@@ -54,8 +54,8 @@ static WATSONX_MODELS: &[WatsonxModel] = &[
     WatsonxModel {
         model_id: "ibm/granite-3b-code-instruct",
         display_name: "Granite 3B Code Instruct",
-        context_length: 8192,
-        max_output_tokens: 4096,
+        max_context_length: 8192,
+        max_output_length: 4096,
         input_cost_per_million: 0.05,
         output_cost_per_million: 0.05,
         supports_tools: false,
@@ -65,8 +65,8 @@ static WATSONX_MODELS: &[WatsonxModel] = &[
     WatsonxModel {
         model_id: "ibm/granite-8b-code-instruct",
         display_name: "Granite 8B Code Instruct",
-        context_length: 8192,
-        max_output_tokens: 4096,
+        max_context_length: 8192,
+        max_output_length: 4096,
         input_cost_per_million: 0.10,
         output_cost_per_million: 0.10,
         supports_tools: false,
@@ -76,8 +76,8 @@ static WATSONX_MODELS: &[WatsonxModel] = &[
     WatsonxModel {
         model_id: "ibm/granite-20b-code-instruct",
         display_name: "Granite 20B Code Instruct",
-        context_length: 8192,
-        max_output_tokens: 4096,
+        max_context_length: 8192,
+        max_output_length: 4096,
         input_cost_per_million: 0.20,
         output_cost_per_million: 0.20,
         supports_tools: false,
@@ -87,8 +87,8 @@ static WATSONX_MODELS: &[WatsonxModel] = &[
     WatsonxModel {
         model_id: "ibm/granite-34b-code-instruct",
         display_name: "Granite 34B Code Instruct",
-        context_length: 8192,
-        max_output_tokens: 4096,
+        max_context_length: 8192,
+        max_output_length: 4096,
         input_cost_per_million: 0.30,
         output_cost_per_million: 0.30,
         supports_tools: false,
@@ -99,8 +99,8 @@ static WATSONX_MODELS: &[WatsonxModel] = &[
     WatsonxModel {
         model_id: "meta-llama/llama-3-1-70b-instruct",
         display_name: "Llama 3.1 70B Instruct",
-        context_length: 128000,
-        max_output_tokens: 4096,
+        max_context_length: 128000,
+        max_output_length: 4096,
         input_cost_per_million: 0.90,
         output_cost_per_million: 0.90,
         supports_tools: true,
@@ -110,8 +110,8 @@ static WATSONX_MODELS: &[WatsonxModel] = &[
     WatsonxModel {
         model_id: "meta-llama/llama-3-1-8b-instruct",
         display_name: "Llama 3.1 8B Instruct",
-        context_length: 128000,
-        max_output_tokens: 4096,
+        max_context_length: 128000,
+        max_output_length: 4096,
         input_cost_per_million: 0.15,
         output_cost_per_million: 0.15,
         supports_tools: true,
@@ -121,8 +121,8 @@ static WATSONX_MODELS: &[WatsonxModel] = &[
     WatsonxModel {
         model_id: "meta-llama/llama-3-2-1b-instruct",
         display_name: "Llama 3.2 1B Instruct",
-        context_length: 128000,
-        max_output_tokens: 4096,
+        max_context_length: 128000,
+        max_output_length: 4096,
         input_cost_per_million: 0.05,
         output_cost_per_million: 0.05,
         supports_tools: true,
@@ -132,8 +132,8 @@ static WATSONX_MODELS: &[WatsonxModel] = &[
     WatsonxModel {
         model_id: "meta-llama/llama-3-2-3b-instruct",
         display_name: "Llama 3.2 3B Instruct",
-        context_length: 128000,
-        max_output_tokens: 4096,
+        max_context_length: 128000,
+        max_output_length: 4096,
         input_cost_per_million: 0.08,
         output_cost_per_million: 0.08,
         supports_tools: true,
@@ -143,8 +143,8 @@ static WATSONX_MODELS: &[WatsonxModel] = &[
     WatsonxModel {
         model_id: "meta-llama/llama-3-2-11b-vision-instruct",
         display_name: "Llama 3.2 11B Vision Instruct",
-        context_length: 128000,
-        max_output_tokens: 4096,
+        max_context_length: 128000,
+        max_output_length: 4096,
         input_cost_per_million: 0.20,
         output_cost_per_million: 0.20,
         supports_tools: true,
@@ -154,8 +154,8 @@ static WATSONX_MODELS: &[WatsonxModel] = &[
     WatsonxModel {
         model_id: "meta-llama/llama-3-2-90b-vision-instruct",
         display_name: "Llama 3.2 90B Vision Instruct",
-        context_length: 128000,
-        max_output_tokens: 4096,
+        max_context_length: 128000,
+        max_output_length: 4096,
         input_cost_per_million: 1.00,
         output_cost_per_million: 1.00,
         supports_tools: true,
@@ -166,8 +166,8 @@ static WATSONX_MODELS: &[WatsonxModel] = &[
     WatsonxModel {
         model_id: "mistralai/mistral-large",
         display_name: "Mistral Large",
-        context_length: 128000,
-        max_output_tokens: 4096,
+        max_context_length: 128000,
+        max_output_length: 4096,
         input_cost_per_million: 3.00,
         output_cost_per_million: 9.00,
         supports_tools: true,
@@ -177,8 +177,8 @@ static WATSONX_MODELS: &[WatsonxModel] = &[
     WatsonxModel {
         model_id: "mistralai/mixtral-8x7b-instruct-v01",
         display_name: "Mixtral 8x7B Instruct",
-        context_length: 32768,
-        max_output_tokens: 4096,
+        max_context_length: 32768,
+        max_output_length: 4096,
         input_cost_per_million: 0.45,
         output_cost_per_million: 0.45,
         supports_tools: true,
@@ -189,8 +189,8 @@ static WATSONX_MODELS: &[WatsonxModel] = &[
     WatsonxModel {
         model_id: "deepseek-ai/deepseek-coder-33b-instruct",
         display_name: "DeepSeek Coder 33B Instruct",
-        context_length: 16384,
-        max_output_tokens: 4096,
+        max_context_length: 16384,
+        max_output_length: 4096,
         input_cost_per_million: 0.30,
         output_cost_per_million: 0.30,
         supports_tools: false,
@@ -201,8 +201,8 @@ static WATSONX_MODELS: &[WatsonxModel] = &[
     WatsonxModel {
         model_id: "sdaia/allam-1-13b-instruct",
         display_name: "Allam 1 13B Instruct",
-        context_length: 8192,
-        max_output_tokens: 4096,
+        max_context_length: 8192,
+        max_output_length: 4096,
         input_cost_per_million: 0.20,
         output_cost_per_million: 0.20,
         supports_tools: false,
@@ -213,8 +213,8 @@ static WATSONX_MODELS: &[WatsonxModel] = &[
     WatsonxModel {
         model_id: "google/flan-t5-xxl",
         display_name: "FLAN-T5 XXL",
-        context_length: 4096,
-        max_output_tokens: 2048,
+        max_context_length: 4096,
+        max_output_length: 2048,
         input_cost_per_million: 0.10,
         output_cost_per_million: 0.10,
         supports_tools: false,
@@ -224,8 +224,8 @@ static WATSONX_MODELS: &[WatsonxModel] = &[
     WatsonxModel {
         model_id: "google/flan-ul2",
         display_name: "FLAN-UL2",
-        context_length: 4096,
-        max_output_tokens: 2048,
+        max_context_length: 4096,
+        max_output_length: 2048,
         input_cost_per_million: 0.20,
         output_cost_per_million: 0.20,
         supports_tools: false,
@@ -339,8 +339,8 @@ mod tests {
         for model in get_available_models() {
             assert!(model.input_cost_per_million >= 0.0);
             assert!(model.output_cost_per_million >= 0.0);
-            assert!(model.context_length > 0);
-            assert!(model.max_output_tokens > 0);
+            assert!(model.max_context_length > 0);
+            assert!(model.max_output_length > 0);
         }
     }
 }

@@ -16,13 +16,13 @@ pub struct OllamaModelInfo {
     pub display_name: String,
 
     /// Context length (if known)
-    pub context_length: Option<u32>,
+    pub max_context_length: Option<u32>,
 
     /// Whether the model supports tools/function calling
     pub supports_tools: bool,
 
     /// Whether the model supports vision/images
-    pub supports_vision: bool,
+    pub supports_multimodal: bool,
 
     /// Model size in bytes (if known)
     pub size: Option<u64>,
@@ -48,9 +48,9 @@ impl OllamaModelInfo {
         Self {
             name,
             display_name,
-            context_length: None,
+            max_context_length: None,
             supports_tools: false,
-            supports_vision: false,
+            supports_multimodal: false,
             size: None,
             family: None,
             parameter_size: None,
@@ -93,7 +93,7 @@ impl OllamaModelInfo {
             || name_lower.contains("moondream")
             || name_lower.contains("bakllava")
         {
-            self.supports_vision = true;
+            self.supports_multimodal = true;
         }
 
         // Infer tool support (newer models typically support tools)
@@ -120,7 +120,7 @@ impl OllamaModelInfo {
         }
 
         // Infer context length based on model
-        self.context_length = infer_context_length(&name_lower);
+        self.max_context_length = infer_context_length(&name_lower);
 
         self
     }
@@ -292,7 +292,7 @@ mod tests {
         assert_eq!(info.name, "llama3:8b");
         assert_eq!(info.display_name, "llama3:8b");
         assert!(!info.supports_tools);
-        assert!(!info.supports_vision);
+        assert!(!info.supports_multimodal);
     }
 
     #[test]
@@ -300,14 +300,14 @@ mod tests {
         let info = get_model_info("llama3:8b");
         assert_eq!(info.family, Some("llama".to_string()));
         assert!(info.supports_tools);
-        assert!(!info.supports_vision);
+        assert!(!info.supports_multimodal);
         assert_eq!(info.parameter_size, Some("8B".to_string()));
     }
 
     #[test]
     fn test_infer_capabilities_llava() {
         let info = get_model_info("llava:13b");
-        assert!(info.supports_vision);
+        assert!(info.supports_multimodal);
     }
 
     #[test]
@@ -316,7 +316,7 @@ mod tests {
         assert_eq!(info.family, Some("mistral".to_string()));
         assert!(info.supports_tools);
         assert_eq!(info.parameter_size, Some("7B".to_string()));
-        assert_eq!(info.context_length, Some(32768));
+        assert_eq!(info.max_context_length, Some(32768));
     }
 
     #[test]
@@ -337,7 +337,7 @@ mod tests {
     fn test_infer_capabilities_gemma() {
         let info = get_model_info("gemma:7b");
         assert_eq!(info.family, Some("gemma".to_string()));
-        assert_eq!(info.context_length, Some(8192));
+        assert_eq!(info.max_context_length, Some(8192));
     }
 
     #[test]
@@ -350,13 +350,13 @@ mod tests {
     #[test]
     fn test_infer_capabilities_vision_model() {
         let info = get_model_info("llama3-vision:11b");
-        assert!(info.supports_vision);
+        assert!(info.supports_multimodal);
 
         let info = get_model_info("moondream:1.8b");
-        assert!(info.supports_vision);
+        assert!(info.supports_multimodal);
 
         let info = get_model_info("bakllava:7b");
-        assert!(info.supports_vision);
+        assert!(info.supports_multimodal);
     }
 
     #[test]

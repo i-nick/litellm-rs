@@ -33,13 +33,13 @@ pub struct ModelInfo {
     /// Display name
     pub display_name: &'static str,
     /// Maximum context length
-    pub context_length: u32,
+    pub max_context_length: u32,
     /// Maximum output tokens
-    pub max_output_tokens: u32,
+    pub max_output_length: u32,
     /// Whether the model supports tools/functions
     pub supports_tools: bool,
     /// Whether the model supports vision
-    pub supports_vision: bool,
+    pub supports_multimodal: bool,
     /// Whether the model supports web search
     pub supports_web_search: bool,
     /// Whether the model has reasoning capabilities
@@ -62,10 +62,10 @@ static MODEL_CONFIGS: LazyLock<HashMap<&'static str, ModelInfo>> = LazyLock::new
         ModelInfo {
             model_id: "grok-4",
             display_name: "Grok 4",
-            context_length: 256000, // 256K context
-            max_output_tokens: 128000,
+            max_context_length: 256000, // 256K context
+            max_output_length: 128000,
             supports_tools: true,
-            supports_vision: true,
+            supports_multimodal: true,
             supports_web_search: true,
             supports_reasoning: true,
             input_cost_per_million: 3.0,
@@ -80,10 +80,10 @@ static MODEL_CONFIGS: LazyLock<HashMap<&'static str, ModelInfo>> = LazyLock::new
         ModelInfo {
             model_id: "grok-3",
             display_name: "Grok 3",
-            context_length: 131072, // 128K context
-            max_output_tokens: 65536,
+            max_context_length: 131072, // 128K context
+            max_output_length: 65536,
             supports_tools: true,
-            supports_vision: true,
+            supports_multimodal: true,
             supports_web_search: true,
             supports_reasoning: true,
             input_cost_per_million: 3.0,
@@ -97,10 +97,10 @@ static MODEL_CONFIGS: LazyLock<HashMap<&'static str, ModelInfo>> = LazyLock::new
         ModelInfo {
             model_id: "grok-3-mini",
             display_name: "Grok 3 Mini",
-            context_length: 131072,
-            max_output_tokens: 32768,
+            max_context_length: 131072,
+            max_output_length: 32768,
             supports_tools: true,
-            supports_vision: false,
+            supports_multimodal: false,
             supports_web_search: true,
             supports_reasoning: true,
             input_cost_per_million: 0.3,
@@ -114,10 +114,10 @@ static MODEL_CONFIGS: LazyLock<HashMap<&'static str, ModelInfo>> = LazyLock::new
         ModelInfo {
             model_id: "grok-3-fast",
             display_name: "Grok 3 Fast",
-            context_length: 131072,
-            max_output_tokens: 32768,
+            max_context_length: 131072,
+            max_output_length: 32768,
             supports_tools: true,
-            supports_vision: false,
+            supports_multimodal: false,
             supports_web_search: true,
             supports_reasoning: false,
             input_cost_per_million: 5.0,
@@ -132,10 +132,10 @@ static MODEL_CONFIGS: LazyLock<HashMap<&'static str, ModelInfo>> = LazyLock::new
         ModelInfo {
             model_id: "grok-2",
             display_name: "Grok-2",
-            context_length: 131072, // 128K context
-            max_output_tokens: 32768,
+            max_context_length: 131072, // 128K context
+            max_output_length: 32768,
             supports_tools: true,
-            supports_vision: false,
+            supports_multimodal: false,
             supports_web_search: true,
             supports_reasoning: true,
             input_cost_per_million: 2.0,
@@ -149,10 +149,10 @@ static MODEL_CONFIGS: LazyLock<HashMap<&'static str, ModelInfo>> = LazyLock::new
         ModelInfo {
             model_id: "grok-2-mini",
             display_name: "Grok-2 Mini",
-            context_length: 131072,
-            max_output_tokens: 16384,
+            max_context_length: 131072,
+            max_output_length: 16384,
             supports_tools: true,
-            supports_vision: false,
+            supports_multimodal: false,
             supports_web_search: true,
             supports_reasoning: false,
             input_cost_per_million: 0.5,
@@ -166,10 +166,10 @@ static MODEL_CONFIGS: LazyLock<HashMap<&'static str, ModelInfo>> = LazyLock::new
         ModelInfo {
             model_id: "grok-2-1212",
             display_name: "Grok-2 (Dec 2024)",
-            context_length: 131072,
-            max_output_tokens: 32768,
+            max_context_length: 131072,
+            max_output_length: 32768,
             supports_tools: true,
-            supports_vision: false,
+            supports_multimodal: false,
             supports_web_search: true,
             supports_reasoning: true,
             input_cost_per_million: 2.0,
@@ -183,10 +183,10 @@ static MODEL_CONFIGS: LazyLock<HashMap<&'static str, ModelInfo>> = LazyLock::new
         ModelInfo {
             model_id: "grok-2-vision-1212",
             display_name: "Grok-2 Vision (Dec 2024)",
-            context_length: 32768,
-            max_output_tokens: 8192,
+            max_context_length: 32768,
+            max_output_length: 8192,
             supports_tools: true,
-            supports_vision: true,
+            supports_multimodal: true,
             supports_web_search: true,
             supports_reasoning: false,
             input_cost_per_million: 2.0,
@@ -201,10 +201,10 @@ static MODEL_CONFIGS: LazyLock<HashMap<&'static str, ModelInfo>> = LazyLock::new
         ModelInfo {
             model_id: "grok-beta",
             display_name: "Grok Beta",
-            context_length: 131072,
-            max_output_tokens: 32768,
+            max_context_length: 131072,
+            max_output_length: 32768,
             supports_tools: true,
-            supports_vision: true,
+            supports_multimodal: true,
             supports_web_search: true,
             supports_reasoning: true,
             input_cost_per_million: 5.0,
@@ -218,10 +218,10 @@ static MODEL_CONFIGS: LazyLock<HashMap<&'static str, ModelInfo>> = LazyLock::new
         ModelInfo {
             model_id: "grok-vision-beta",
             display_name: "Grok Vision Beta",
-            context_length: 8192,
-            max_output_tokens: 4096,
+            max_context_length: 8192,
+            max_output_length: 4096,
             supports_tools: true,
-            supports_vision: true,
+            supports_multimodal: true,
             supports_web_search: true,
             supports_reasoning: false,
             input_cost_per_million: 5.0,
@@ -307,9 +307,9 @@ mod tests {
         // Test Grok-4 model info (latest)
         let info = get_model_info("grok-4").unwrap();
         assert_eq!(info.model_id, "grok-4");
-        assert_eq!(info.context_length, 256000);
+        assert_eq!(info.max_context_length, 256000);
         assert!(info.supports_reasoning);
-        assert!(info.supports_vision);
+        assert!(info.supports_multimodal);
         assert!(info.supports_web_search);
 
         // Test Grok-3 model info
@@ -320,7 +320,7 @@ mod tests {
         // Test Grok-2 model info
         let info = get_model_info("grok-2").unwrap();
         assert_eq!(info.model_id, "grok-2");
-        assert_eq!(info.context_length, 131072);
+        assert_eq!(info.max_context_length, 131072);
         assert!(info.supports_reasoning);
         assert!(info.supports_web_search);
         assert!(info.reasoning_cost_per_million.is_some());

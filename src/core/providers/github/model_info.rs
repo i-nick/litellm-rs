@@ -10,13 +10,13 @@ pub struct GitHubModel {
     /// Display name for the model
     pub display_name: &'static str,
     /// Context window size
-    pub context_length: u32,
+    pub max_context_length: u32,
     /// Maximum output tokens
-    pub max_output_tokens: u32,
+    pub max_output_length: u32,
     /// Whether the model supports tools/function calling
     pub supports_tools: bool,
     /// Whether the model supports vision/images
-    pub supports_vision: bool,
+    pub supports_multimodal: bool,
     /// Whether the model supports streaming
     pub supports_streaming: bool,
     /// Input cost per million tokens (USD)
@@ -31,10 +31,10 @@ static GITHUB_MODELS: &[GitHubModel] = &[
     GitHubModel {
         model_id: "gpt-4o",
         display_name: "GPT-4o",
-        context_length: 128000,
-        max_output_tokens: 16384,
+        max_context_length: 128000,
+        max_output_length: 16384,
         supports_tools: true,
-        supports_vision: true,
+        supports_multimodal: true,
         supports_streaming: true,
         input_cost_per_million: 2.5,
         output_cost_per_million: 10.0,
@@ -42,10 +42,10 @@ static GITHUB_MODELS: &[GitHubModel] = &[
     GitHubModel {
         model_id: "gpt-4o-mini",
         display_name: "GPT-4o Mini",
-        context_length: 128000,
-        max_output_tokens: 16384,
+        max_context_length: 128000,
+        max_output_length: 16384,
         supports_tools: true,
-        supports_vision: true,
+        supports_multimodal: true,
         supports_streaming: true,
         input_cost_per_million: 0.15,
         output_cost_per_million: 0.6,
@@ -53,10 +53,10 @@ static GITHUB_MODELS: &[GitHubModel] = &[
     GitHubModel {
         model_id: "o1-preview",
         display_name: "O1 Preview",
-        context_length: 128000,
-        max_output_tokens: 32768,
+        max_context_length: 128000,
+        max_output_length: 32768,
         supports_tools: false,
-        supports_vision: false,
+        supports_multimodal: false,
         supports_streaming: true,
         input_cost_per_million: 15.0,
         output_cost_per_million: 60.0,
@@ -64,10 +64,10 @@ static GITHUB_MODELS: &[GitHubModel] = &[
     GitHubModel {
         model_id: "o1-mini",
         display_name: "O1 Mini",
-        context_length: 128000,
-        max_output_tokens: 65536,
+        max_context_length: 128000,
+        max_output_length: 65536,
         supports_tools: false,
-        supports_vision: false,
+        supports_multimodal: false,
         supports_streaming: true,
         input_cost_per_million: 3.0,
         output_cost_per_million: 12.0,
@@ -76,10 +76,10 @@ static GITHUB_MODELS: &[GitHubModel] = &[
     GitHubModel {
         model_id: "meta-llama-3.1-405b-instruct",
         display_name: "Meta Llama 3.1 405B Instruct",
-        context_length: 128000,
-        max_output_tokens: 4096,
+        max_context_length: 128000,
+        max_output_length: 4096,
         supports_tools: true,
-        supports_vision: false,
+        supports_multimodal: false,
         supports_streaming: true,
         input_cost_per_million: 0.0,
         output_cost_per_million: 0.0,
@@ -87,10 +87,10 @@ static GITHUB_MODELS: &[GitHubModel] = &[
     GitHubModel {
         model_id: "meta-llama-3.1-70b-instruct",
         display_name: "Meta Llama 3.1 70B Instruct",
-        context_length: 128000,
-        max_output_tokens: 4096,
+        max_context_length: 128000,
+        max_output_length: 4096,
         supports_tools: true,
-        supports_vision: false,
+        supports_multimodal: false,
         supports_streaming: true,
         input_cost_per_million: 0.0,
         output_cost_per_million: 0.0,
@@ -98,10 +98,10 @@ static GITHUB_MODELS: &[GitHubModel] = &[
     GitHubModel {
         model_id: "meta-llama-3.1-8b-instruct",
         display_name: "Meta Llama 3.1 8B Instruct",
-        context_length: 128000,
-        max_output_tokens: 4096,
+        max_context_length: 128000,
+        max_output_length: 4096,
         supports_tools: true,
-        supports_vision: false,
+        supports_multimodal: false,
         supports_streaming: true,
         input_cost_per_million: 0.0,
         output_cost_per_million: 0.0,
@@ -110,10 +110,10 @@ static GITHUB_MODELS: &[GitHubModel] = &[
     GitHubModel {
         model_id: "mistral-large-2407",
         display_name: "Mistral Large 2407",
-        context_length: 128000,
-        max_output_tokens: 4096,
+        max_context_length: 128000,
+        max_output_length: 4096,
         supports_tools: true,
-        supports_vision: false,
+        supports_multimodal: false,
         supports_streaming: true,
         input_cost_per_million: 0.0,
         output_cost_per_million: 0.0,
@@ -121,10 +121,10 @@ static GITHUB_MODELS: &[GitHubModel] = &[
     GitHubModel {
         model_id: "mistral-small-2409",
         display_name: "Mistral Small 2409",
-        context_length: 32000,
-        max_output_tokens: 4096,
+        max_context_length: 32000,
+        max_output_length: 4096,
         supports_tools: true,
-        supports_vision: false,
+        supports_multimodal: false,
         supports_streaming: true,
         input_cost_per_million: 0.0,
         output_cost_per_million: 0.0,
@@ -133,10 +133,10 @@ static GITHUB_MODELS: &[GitHubModel] = &[
     GitHubModel {
         model_id: "cohere-command-r-plus",
         display_name: "Cohere Command R+",
-        context_length: 128000,
-        max_output_tokens: 4096,
+        max_context_length: 128000,
+        max_output_length: 4096,
         supports_tools: true,
-        supports_vision: false,
+        supports_multimodal: false,
         supports_streaming: true,
         input_cost_per_million: 0.0,
         output_cost_per_million: 0.0,
@@ -144,10 +144,10 @@ static GITHUB_MODELS: &[GitHubModel] = &[
     GitHubModel {
         model_id: "cohere-command-r",
         display_name: "Cohere Command R",
-        context_length: 128000,
-        max_output_tokens: 4096,
+        max_context_length: 128000,
+        max_output_length: 4096,
         supports_tools: true,
-        supports_vision: false,
+        supports_multimodal: false,
         supports_streaming: true,
         input_cost_per_million: 0.0,
         output_cost_per_million: 0.0,
@@ -156,10 +156,10 @@ static GITHUB_MODELS: &[GitHubModel] = &[
     GitHubModel {
         model_id: "ai21-jamba-1.5-large",
         display_name: "AI21 Jamba 1.5 Large",
-        context_length: 256000,
-        max_output_tokens: 4096,
+        max_context_length: 256000,
+        max_output_length: 4096,
         supports_tools: false,
-        supports_vision: false,
+        supports_multimodal: false,
         supports_streaming: true,
         input_cost_per_million: 0.0,
         output_cost_per_million: 0.0,
@@ -167,10 +167,10 @@ static GITHUB_MODELS: &[GitHubModel] = &[
     GitHubModel {
         model_id: "ai21-jamba-1.5-mini",
         display_name: "AI21 Jamba 1.5 Mini",
-        context_length: 256000,
-        max_output_tokens: 4096,
+        max_context_length: 256000,
+        max_output_length: 4096,
         supports_tools: false,
-        supports_vision: false,
+        supports_multimodal: false,
         supports_streaming: true,
         input_cost_per_million: 0.0,
         output_cost_per_million: 0.0,
@@ -179,10 +179,10 @@ static GITHUB_MODELS: &[GitHubModel] = &[
     GitHubModel {
         model_id: "phi-3.5-moe-instruct",
         display_name: "Phi 3.5 MoE Instruct",
-        context_length: 128000,
-        max_output_tokens: 4096,
+        max_context_length: 128000,
+        max_output_length: 4096,
         supports_tools: false,
-        supports_vision: false,
+        supports_multimodal: false,
         supports_streaming: true,
         input_cost_per_million: 0.0,
         output_cost_per_million: 0.0,
@@ -190,10 +190,10 @@ static GITHUB_MODELS: &[GitHubModel] = &[
     GitHubModel {
         model_id: "phi-3.5-mini-instruct",
         display_name: "Phi 3.5 Mini Instruct",
-        context_length: 128000,
-        max_output_tokens: 4096,
+        max_context_length: 128000,
+        max_output_length: 4096,
         supports_tools: false,
-        supports_vision: false,
+        supports_multimodal: false,
         supports_streaming: true,
         input_cost_per_million: 0.0,
         output_cost_per_million: 0.0,
@@ -201,10 +201,10 @@ static GITHUB_MODELS: &[GitHubModel] = &[
     GitHubModel {
         model_id: "phi-3.5-vision-instruct",
         display_name: "Phi 3.5 Vision Instruct",
-        context_length: 128000,
-        max_output_tokens: 4096,
+        max_context_length: 128000,
+        max_output_length: 4096,
         supports_tools: false,
-        supports_vision: true,
+        supports_multimodal: true,
         supports_streaming: true,
         input_cost_per_million: 0.0,
         output_cost_per_million: 0.0,
@@ -223,7 +223,7 @@ pub fn get_model_info(model_id: &str) -> Option<&'static GitHubModel> {
 
 /// Check if a model supports vision
 pub fn is_vision_model(model_id: &str) -> bool {
-    get_model_info(model_id).is_some_and(|m| m.supports_vision)
+    get_model_info(model_id).is_some_and(|m| m.supports_multimodal)
 }
 
 /// Check if a model supports tools
@@ -250,9 +250,9 @@ mod tests {
         assert!(model.is_some());
         let model = model.unwrap();
         assert_eq!(model.model_id, "gpt-4o");
-        assert_eq!(model.context_length, 128000);
+        assert_eq!(model.max_context_length, 128000);
         assert!(model.supports_tools);
-        assert!(model.supports_vision);
+        assert!(model.supports_multimodal);
     }
 
     #[test]

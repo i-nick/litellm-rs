@@ -54,10 +54,10 @@ pub struct ModelInfo {
     pub display_name: &'static str,
 
     /// Maximum context length (tokens)
-    pub context_length: u32,
+    pub max_context_length: u32,
 
     /// Maximum output tokens
-    pub max_output_tokens: u32,
+    pub max_output_length: u32,
 
     /// Whether the model supports tool/function calling
     pub supports_tools: bool,
@@ -66,7 +66,7 @@ pub struct ModelInfo {
     pub is_reasoning: bool,
 
     /// Whether the model supports vision
-    pub supports_vision: bool,
+    pub supports_multimodal: bool,
 
     /// Whether this is an audio model
     pub is_audio: bool,
@@ -88,11 +88,11 @@ static MODEL_CONFIGS: LazyLock<HashMap<&'static str, ModelInfo>> = LazyLock::new
         ModelInfo {
             model_id: "llama-3.3-70b-versatile",
             display_name: "Llama 3.3 70B",
-            context_length: 128000,
-            max_output_tokens: 32768,
+            max_context_length: 128000,
+            max_output_length: 32768,
             supports_tools: true,
             is_reasoning: false,
-            supports_vision: false,
+            supports_multimodal: false,
             is_audio: false,
             input_cost_per_million: 0.59,
             output_cost_per_million: 0.79,
@@ -105,11 +105,11 @@ static MODEL_CONFIGS: LazyLock<HashMap<&'static str, ModelInfo>> = LazyLock::new
         ModelInfo {
             model_id: "llama-3.2-90b-text-preview",
             display_name: "Llama 3.2 90B Text Preview",
-            context_length: 128000,
-            max_output_tokens: 8192,
+            max_context_length: 128000,
+            max_output_length: 8192,
             supports_tools: false,
             is_reasoning: false,
-            supports_vision: false,
+            supports_multimodal: false,
             is_audio: false,
             input_cost_per_million: 0.90,
             output_cost_per_million: 0.90,
@@ -121,11 +121,11 @@ static MODEL_CONFIGS: LazyLock<HashMap<&'static str, ModelInfo>> = LazyLock::new
         ModelInfo {
             model_id: "llama-3.2-11b-text-preview",
             display_name: "Llama 3.2 11B Text Preview",
-            context_length: 128000,
-            max_output_tokens: 8192,
+            max_context_length: 128000,
+            max_output_length: 8192,
             supports_tools: false,
             is_reasoning: false,
-            supports_vision: false,
+            supports_multimodal: false,
             is_audio: false,
             input_cost_per_million: 0.18,
             output_cost_per_million: 0.18,
@@ -138,11 +138,11 @@ static MODEL_CONFIGS: LazyLock<HashMap<&'static str, ModelInfo>> = LazyLock::new
         ModelInfo {
             model_id: "llama-3.1-405b-reasoning",
             display_name: "Llama 3.1 405B Reasoning",
-            context_length: 131072,
-            max_output_tokens: 16384,
+            max_context_length: 131072,
+            max_output_length: 16384,
             supports_tools: true,
             is_reasoning: true,
-            supports_vision: false,
+            supports_multimodal: false,
             is_audio: false,
             input_cost_per_million: 3.00,
             output_cost_per_million: 3.00,
@@ -154,11 +154,11 @@ static MODEL_CONFIGS: LazyLock<HashMap<&'static str, ModelInfo>> = LazyLock::new
         ModelInfo {
             model_id: "llama-3.1-70b-versatile",
             display_name: "Llama 3.1 70B",
-            context_length: 131072,
-            max_output_tokens: 8192,
+            max_context_length: 131072,
+            max_output_length: 8192,
             supports_tools: true,
             is_reasoning: false,
-            supports_vision: false,
+            supports_multimodal: false,
             is_audio: false,
             input_cost_per_million: 0.59,
             output_cost_per_million: 0.79,
@@ -170,11 +170,11 @@ static MODEL_CONFIGS: LazyLock<HashMap<&'static str, ModelInfo>> = LazyLock::new
         ModelInfo {
             model_id: "llama-3.1-8b-instant",
             display_name: "Llama 3.1 8B",
-            context_length: 131072,
-            max_output_tokens: 8192,
+            max_context_length: 131072,
+            max_output_length: 8192,
             supports_tools: true,
             is_reasoning: false,
-            supports_vision: false,
+            supports_multimodal: false,
             is_audio: false,
             input_cost_per_million: 0.05,
             output_cost_per_million: 0.08,
@@ -187,11 +187,11 @@ static MODEL_CONFIGS: LazyLock<HashMap<&'static str, ModelInfo>> = LazyLock::new
         ModelInfo {
             model_id: "mixtral-8x7b-32768",
             display_name: "Mixtral 8x7B",
-            context_length: 32768,
-            max_output_tokens: 32768,
+            max_context_length: 32768,
+            max_output_length: 32768,
             supports_tools: true,
             is_reasoning: false,
-            supports_vision: false,
+            supports_multimodal: false,
             is_audio: false,
             input_cost_per_million: 0.24,
             output_cost_per_million: 0.24,
@@ -204,11 +204,11 @@ static MODEL_CONFIGS: LazyLock<HashMap<&'static str, ModelInfo>> = LazyLock::new
         ModelInfo {
             model_id: "gemma2-9b-it",
             display_name: "Gemma2 9B",
-            context_length: 8192,
-            max_output_tokens: 8192,
+            max_context_length: 8192,
+            max_output_length: 8192,
             supports_tools: true,
             is_reasoning: false,
-            supports_vision: false,
+            supports_multimodal: false,
             is_audio: false,
             input_cost_per_million: 0.20,
             output_cost_per_million: 0.20,
@@ -221,11 +221,11 @@ static MODEL_CONFIGS: LazyLock<HashMap<&'static str, ModelInfo>> = LazyLock::new
         ModelInfo {
             model_id: "llama3-groq-70b-8192-tool-use-preview",
             display_name: "Llama 3 Groq 70B Tool Use",
-            context_length: 8192,
-            max_output_tokens: 8192,
+            max_context_length: 8192,
+            max_output_length: 8192,
             supports_tools: true,
             is_reasoning: false,
-            supports_vision: false,
+            supports_multimodal: false,
             is_audio: false,
             input_cost_per_million: 0.89,
             output_cost_per_million: 0.89,
@@ -237,11 +237,11 @@ static MODEL_CONFIGS: LazyLock<HashMap<&'static str, ModelInfo>> = LazyLock::new
         ModelInfo {
             model_id: "llama3-groq-8b-8192-tool-use-preview",
             display_name: "Llama 3 Groq 8B Tool Use",
-            context_length: 8192,
-            max_output_tokens: 8192,
+            max_context_length: 8192,
+            max_output_length: 8192,
             supports_tools: true,
             is_reasoning: false,
-            supports_vision: false,
+            supports_multimodal: false,
             is_audio: false,
             input_cost_per_million: 0.19,
             output_cost_per_million: 0.19,
@@ -254,11 +254,11 @@ static MODEL_CONFIGS: LazyLock<HashMap<&'static str, ModelInfo>> = LazyLock::new
         ModelInfo {
             model_id: "whisper-large-v3",
             display_name: "Whisper Large v3",
-            context_length: 0,    // Audio model
-            max_output_tokens: 0, // Audio model
+            max_context_length: 0,    // Audio model
+            max_output_length: 0, // Audio model
             supports_tools: false,
             is_reasoning: false,
-            supports_vision: false,
+            supports_multimodal: false,
             is_audio: true,
             input_cost_per_million: 0.111, // Per hour of audio
             output_cost_per_million: 0.0,
@@ -270,11 +270,11 @@ static MODEL_CONFIGS: LazyLock<HashMap<&'static str, ModelInfo>> = LazyLock::new
         ModelInfo {
             model_id: "whisper-large-v3-turbo",
             display_name: "Whisper Large v3 Turbo",
-            context_length: 0,
-            max_output_tokens: 0,
+            max_context_length: 0,
+            max_output_length: 0,
             supports_tools: false,
             is_reasoning: false,
-            supports_vision: false,
+            supports_multimodal: false,
             is_audio: true,
             input_cost_per_million: 0.04, // Per hour of audio
             output_cost_per_million: 0.0,
@@ -286,11 +286,11 @@ static MODEL_CONFIGS: LazyLock<HashMap<&'static str, ModelInfo>> = LazyLock::new
         ModelInfo {
             model_id: "distil-whisper-large-v3-en",
             display_name: "Distil Whisper Large v3",
-            context_length: 0,
-            max_output_tokens: 0,
+            max_context_length: 0,
+            max_output_length: 0,
             supports_tools: false,
             is_reasoning: false,
-            supports_vision: false,
+            supports_multimodal: false,
             is_audio: true,
             input_cost_per_million: 0.02, // Per hour of audio
             output_cost_per_million: 0.0,
@@ -303,11 +303,11 @@ static MODEL_CONFIGS: LazyLock<HashMap<&'static str, ModelInfo>> = LazyLock::new
         ModelInfo {
             model_id: "deepseek-r1-distill-llama-70b",
             display_name: "DeepSeek R1 Distill Llama 70B",
-            context_length: 131072,
-            max_output_tokens: 131072,
+            max_context_length: 131072,
+            max_output_length: 131072,
             supports_tools: true,
             is_reasoning: true,
-            supports_vision: false,
+            supports_multimodal: false,
             is_audio: false,
             input_cost_per_million: 0.59,
             output_cost_per_million: 0.79,
@@ -319,11 +319,11 @@ static MODEL_CONFIGS: LazyLock<HashMap<&'static str, ModelInfo>> = LazyLock::new
         ModelInfo {
             model_id: "qwen3-32b",
             display_name: "Qwen 3 32B",
-            context_length: 131072,
-            max_output_tokens: 131072,
+            max_context_length: 131072,
+            max_output_length: 131072,
             supports_tools: true,
             is_reasoning: true,
-            supports_vision: false,
+            supports_multimodal: false,
             is_audio: false,
             input_cost_per_million: 0.59,
             output_cost_per_million: 0.79,
@@ -335,11 +335,11 @@ static MODEL_CONFIGS: LazyLock<HashMap<&'static str, ModelInfo>> = LazyLock::new
         ModelInfo {
             model_id: "gpt-oss-20b",
             display_name: "GPT OSS 20B",
-            context_length: 131072,
-            max_output_tokens: 32766,
+            max_context_length: 131072,
+            max_output_length: 32766,
             supports_tools: true,
             is_reasoning: true,
-            supports_vision: false,
+            supports_multimodal: false,
             is_audio: false,
             input_cost_per_million: 0.15,
             output_cost_per_million: 0.75,
@@ -351,11 +351,11 @@ static MODEL_CONFIGS: LazyLock<HashMap<&'static str, ModelInfo>> = LazyLock::new
         ModelInfo {
             model_id: "gpt-oss-120b",
             display_name: "GPT OSS 120B",
-            context_length: 131072,
-            max_output_tokens: 32766,
+            max_context_length: 131072,
+            max_output_length: 32766,
             supports_tools: true,
             is_reasoning: true,
-            supports_vision: false,
+            supports_multimodal: false,
             is_audio: false,
             input_cost_per_million: 0.15,
             output_cost_per_million: 0.75,
@@ -402,7 +402,7 @@ mod tests {
         let info = info.unwrap();
         assert_eq!(info.model_id, "llama-3.3-70b-versatile");
         assert_eq!(info.display_name, "Llama 3.3 70B");
-        assert_eq!(info.context_length, 128000);
+        assert_eq!(info.max_context_length, 128000);
         assert!(info.supports_tools);
         assert!(!info.is_reasoning);
     }
@@ -447,7 +447,7 @@ mod tests {
         let whisper = get_model_info("whisper-large-v3").unwrap();
         assert!(whisper.is_audio);
         assert!(!whisper.supports_tools);
-        assert_eq!(whisper.context_length, 0);
+        assert_eq!(whisper.max_context_length, 0);
 
         let whisper_turbo = get_model_info("whisper-large-v3-turbo").unwrap();
         assert!(whisper_turbo.is_audio);
@@ -477,15 +477,15 @@ mod tests {
     fn test_model_info_serialization() {
         let info = get_model_info("mixtral-8x7b-32768").unwrap();
         assert_eq!(info.model_id, "mixtral-8x7b-32768");
-        assert_eq!(info.context_length, 32768);
-        assert_eq!(info.max_output_tokens, 32768);
+        assert_eq!(info.max_context_length, 32768);
+        assert_eq!(info.max_output_length, 32768);
     }
 
     #[test]
     fn test_tool_use_models() {
         let tool_70b = get_model_info("llama3-groq-70b-8192-tool-use-preview").unwrap();
         assert!(tool_70b.supports_tools);
-        assert_eq!(tool_70b.context_length, 8192);
+        assert_eq!(tool_70b.max_context_length, 8192);
 
         let tool_8b = get_model_info("llama3-groq-8b-8192-tool-use-preview").unwrap();
         assert!(tool_8b.supports_tools);

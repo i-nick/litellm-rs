@@ -10,13 +10,13 @@ pub struct GitHubCopilotModel {
     /// Display name for the model
     pub display_name: &'static str,
     /// Context window size
-    pub context_length: u32,
+    pub max_context_length: u32,
     /// Maximum output tokens
-    pub max_output_tokens: u32,
+    pub max_output_length: u32,
     /// Whether the model supports tools/function calling
     pub supports_tools: bool,
     /// Whether the model supports vision/images
-    pub supports_vision: bool,
+    pub supports_multimodal: bool,
     /// Whether the model supports streaming
     pub supports_streaming: bool,
     /// Whether the model supports extended thinking/reasoning
@@ -30,30 +30,30 @@ static GITHUB_COPILOT_MODELS: &[GitHubCopilotModel] = &[
     GitHubCopilotModel {
         model_id: "gpt-4o",
         display_name: "GPT-4o",
-        context_length: 128000,
-        max_output_tokens: 16384,
+        max_context_length: 128000,
+        max_output_length: 16384,
         supports_tools: true,
-        supports_vision: true,
+        supports_multimodal: true,
         supports_streaming: true,
         supports_reasoning: false,
     },
     GitHubCopilotModel {
         model_id: "gpt-4o-mini",
         display_name: "GPT-4o Mini",
-        context_length: 128000,
-        max_output_tokens: 16384,
+        max_context_length: 128000,
+        max_output_length: 16384,
         supports_tools: true,
-        supports_vision: true,
+        supports_multimodal: true,
         supports_streaming: true,
         supports_reasoning: false,
     },
     GitHubCopilotModel {
         model_id: "gpt-4-turbo",
         display_name: "GPT-4 Turbo",
-        context_length: 128000,
-        max_output_tokens: 4096,
+        max_context_length: 128000,
+        max_output_length: 4096,
         supports_tools: true,
-        supports_vision: true,
+        supports_multimodal: true,
         supports_streaming: true,
         supports_reasoning: false,
     },
@@ -61,40 +61,40 @@ static GITHUB_COPILOT_MODELS: &[GitHubCopilotModel] = &[
     GitHubCopilotModel {
         model_id: "o1-preview",
         display_name: "O1 Preview",
-        context_length: 128000,
-        max_output_tokens: 32768,
+        max_context_length: 128000,
+        max_output_length: 32768,
         supports_tools: false,
-        supports_vision: false,
+        supports_multimodal: false,
         supports_streaming: true,
         supports_reasoning: true,
     },
     GitHubCopilotModel {
         model_id: "o1-mini",
         display_name: "O1 Mini",
-        context_length: 128000,
-        max_output_tokens: 65536,
+        max_context_length: 128000,
+        max_output_length: 65536,
         supports_tools: false,
-        supports_vision: false,
+        supports_multimodal: false,
         supports_streaming: true,
         supports_reasoning: true,
     },
     GitHubCopilotModel {
         model_id: "o1",
         display_name: "O1",
-        context_length: 200000,
-        max_output_tokens: 100000,
+        max_context_length: 200000,
+        max_output_length: 100000,
         supports_tools: false,
-        supports_vision: false,
+        supports_multimodal: false,
         supports_streaming: true,
         supports_reasoning: true,
     },
     GitHubCopilotModel {
         model_id: "o3-mini",
         display_name: "O3 Mini",
-        context_length: 200000,
-        max_output_tokens: 100000,
+        max_context_length: 200000,
+        max_output_length: 100000,
         supports_tools: false,
-        supports_vision: false,
+        supports_multimodal: false,
         supports_streaming: true,
         supports_reasoning: true,
     },
@@ -102,30 +102,30 @@ static GITHUB_COPILOT_MODELS: &[GitHubCopilotModel] = &[
     GitHubCopilotModel {
         model_id: "claude-3.5-sonnet",
         display_name: "Claude 3.5 Sonnet",
-        context_length: 200000,
-        max_output_tokens: 8192,
+        max_context_length: 200000,
+        max_output_length: 8192,
         supports_tools: true,
-        supports_vision: true,
+        supports_multimodal: true,
         supports_streaming: true,
         supports_reasoning: false,
     },
     GitHubCopilotModel {
         model_id: "claude-3-7-sonnet",
         display_name: "Claude 3.7 Sonnet",
-        context_length: 200000,
-        max_output_tokens: 16384,
+        max_context_length: 200000,
+        max_output_length: 16384,
         supports_tools: true,
-        supports_vision: true,
+        supports_multimodal: true,
         supports_streaming: true,
         supports_reasoning: true,
     },
     GitHubCopilotModel {
         model_id: "claude-sonnet-4",
         display_name: "Claude Sonnet 4",
-        context_length: 200000,
-        max_output_tokens: 16384,
+        max_context_length: 200000,
+        max_output_length: 16384,
         supports_tools: true,
-        supports_vision: true,
+        supports_multimodal: true,
         supports_streaming: true,
         supports_reasoning: true,
     },
@@ -133,10 +133,10 @@ static GITHUB_COPILOT_MODELS: &[GitHubCopilotModel] = &[
     GitHubCopilotModel {
         model_id: "gpt-5.1-codex",
         display_name: "GPT-5.1 Codex",
-        context_length: 256000,
-        max_output_tokens: 32768,
+        max_context_length: 256000,
+        max_output_length: 32768,
         supports_tools: true,
-        supports_vision: false,
+        supports_multimodal: false,
         supports_streaming: true,
         supports_reasoning: false,
     },
@@ -144,10 +144,10 @@ static GITHUB_COPILOT_MODELS: &[GitHubCopilotModel] = &[
     GitHubCopilotModel {
         model_id: "gemini-2.0-flash",
         display_name: "Gemini 2.0 Flash",
-        context_length: 1000000,
-        max_output_tokens: 8192,
+        max_context_length: 1000000,
+        max_output_length: 8192,
         supports_tools: true,
-        supports_vision: true,
+        supports_multimodal: true,
         supports_streaming: true,
         supports_reasoning: false,
     },
@@ -167,7 +167,7 @@ pub fn get_model_info(model_id: &str) -> Option<&'static GitHubCopilotModel> {
 
 /// Check if a model supports vision
 pub fn is_vision_model(model_id: &str) -> bool {
-    get_model_info(model_id).is_some_and(|m| m.supports_vision)
+    get_model_info(model_id).is_some_and(|m| m.supports_multimodal)
 }
 
 /// Check if a model supports tools
@@ -205,7 +205,7 @@ mod tests {
         let model = model.unwrap();
         assert_eq!(model.model_id, "gpt-4o");
         assert!(model.supports_tools);
-        assert!(model.supports_vision);
+        assert!(model.supports_multimodal);
     }
 
     #[test]

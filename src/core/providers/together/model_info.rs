@@ -70,16 +70,16 @@ pub struct ModelInfo {
     pub display_name: &'static str,
 
     /// Maximum context length (tokens)
-    pub context_length: u32,
+    pub max_context_length: u32,
 
     /// Maximum output tokens
-    pub max_output_tokens: u32,
+    pub max_output_length: u32,
 
     /// Whether the model supports tool/function calling
     pub supports_tools: bool,
 
     /// Whether the model supports vision
-    pub supports_vision: bool,
+    pub supports_multimodal: bool,
 
     /// Whether this is an embedding model
     pub is_embedding: bool,
@@ -104,10 +104,10 @@ static MODEL_CONFIGS: LazyLock<HashMap<&'static str, ModelInfo>> = LazyLock::new
         ModelInfo {
             model_id: "meta-llama/Llama-3.3-70B-Instruct-Turbo",
             display_name: "Llama 3.3 70B Instruct Turbo",
-            context_length: 131072,
-            max_output_tokens: 4096,
+            max_context_length: 131072,
+            max_output_length: 4096,
             supports_tools: true,
-            supports_vision: false,
+            supports_multimodal: false,
             is_embedding: false,
             is_rerank: false,
             input_cost_per_million: 0.88,
@@ -121,10 +121,10 @@ static MODEL_CONFIGS: LazyLock<HashMap<&'static str, ModelInfo>> = LazyLock::new
         ModelInfo {
             model_id: "meta-llama/Llama-3.2-90B-Vision-Instruct-Turbo",
             display_name: "Llama 3.2 90B Vision Instruct Turbo",
-            context_length: 131072,
-            max_output_tokens: 4096,
+            max_context_length: 131072,
+            max_output_length: 4096,
             supports_tools: false,
-            supports_vision: true,
+            supports_multimodal: true,
             is_embedding: false,
             is_rerank: false,
             input_cost_per_million: 1.20,
@@ -137,10 +137,10 @@ static MODEL_CONFIGS: LazyLock<HashMap<&'static str, ModelInfo>> = LazyLock::new
         ModelInfo {
             model_id: "meta-llama/Llama-3.2-11B-Vision-Instruct-Turbo",
             display_name: "Llama 3.2 11B Vision Instruct Turbo",
-            context_length: 131072,
-            max_output_tokens: 4096,
+            max_context_length: 131072,
+            max_output_length: 4096,
             supports_tools: false,
-            supports_vision: true,
+            supports_multimodal: true,
             is_embedding: false,
             is_rerank: false,
             input_cost_per_million: 0.18,
@@ -153,10 +153,10 @@ static MODEL_CONFIGS: LazyLock<HashMap<&'static str, ModelInfo>> = LazyLock::new
         ModelInfo {
             model_id: "meta-llama/Llama-3.2-3B-Instruct-Turbo",
             display_name: "Llama 3.2 3B Instruct Turbo",
-            context_length: 131072,
-            max_output_tokens: 4096,
+            max_context_length: 131072,
+            max_output_length: 4096,
             supports_tools: true,
-            supports_vision: false,
+            supports_multimodal: false,
             is_embedding: false,
             is_rerank: false,
             input_cost_per_million: 0.06,
@@ -170,10 +170,10 @@ static MODEL_CONFIGS: LazyLock<HashMap<&'static str, ModelInfo>> = LazyLock::new
         ModelInfo {
             model_id: "meta-llama/Meta-Llama-3.1-405B-Instruct-Turbo",
             display_name: "Llama 3.1 405B Instruct Turbo",
-            context_length: 131072,
-            max_output_tokens: 4096,
+            max_context_length: 131072,
+            max_output_length: 4096,
             supports_tools: true,
-            supports_vision: false,
+            supports_multimodal: false,
             is_embedding: false,
             is_rerank: false,
             input_cost_per_million: 3.50,
@@ -186,10 +186,10 @@ static MODEL_CONFIGS: LazyLock<HashMap<&'static str, ModelInfo>> = LazyLock::new
         ModelInfo {
             model_id: "meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo",
             display_name: "Llama 3.1 70B Instruct Turbo",
-            context_length: 131072,
-            max_output_tokens: 4096,
+            max_context_length: 131072,
+            max_output_length: 4096,
             supports_tools: true,
-            supports_vision: false,
+            supports_multimodal: false,
             is_embedding: false,
             is_rerank: false,
             input_cost_per_million: 0.88,
@@ -202,10 +202,10 @@ static MODEL_CONFIGS: LazyLock<HashMap<&'static str, ModelInfo>> = LazyLock::new
         ModelInfo {
             model_id: "meta-llama/Meta-Llama-3.1-8B-Instruct-Turbo",
             display_name: "Llama 3.1 8B Instruct Turbo",
-            context_length: 131072,
-            max_output_tokens: 4096,
+            max_context_length: 131072,
+            max_output_length: 4096,
             supports_tools: true,
-            supports_vision: false,
+            supports_multimodal: false,
             is_embedding: false,
             is_rerank: false,
             input_cost_per_million: 0.18,
@@ -219,10 +219,10 @@ static MODEL_CONFIGS: LazyLock<HashMap<&'static str, ModelInfo>> = LazyLock::new
         ModelInfo {
             model_id: "meta-llama/Llama-3-70b-chat-hf",
             display_name: "Llama 3 70B Chat",
-            context_length: 8192,
-            max_output_tokens: 4096,
+            max_context_length: 8192,
+            max_output_length: 4096,
             supports_tools: true,
-            supports_vision: false,
+            supports_multimodal: false,
             is_embedding: false,
             is_rerank: false,
             input_cost_per_million: 0.90,
@@ -235,10 +235,10 @@ static MODEL_CONFIGS: LazyLock<HashMap<&'static str, ModelInfo>> = LazyLock::new
         ModelInfo {
             model_id: "meta-llama/Llama-3-8b-chat-hf",
             display_name: "Llama 3 8B Chat",
-            context_length: 8192,
-            max_output_tokens: 4096,
+            max_context_length: 8192,
+            max_output_length: 4096,
             supports_tools: true,
-            supports_vision: false,
+            supports_multimodal: false,
             is_embedding: false,
             is_rerank: false,
             input_cost_per_million: 0.20,
@@ -252,10 +252,10 @@ static MODEL_CONFIGS: LazyLock<HashMap<&'static str, ModelInfo>> = LazyLock::new
         ModelInfo {
             model_id: "deepseek-ai/DeepSeek-V3",
             display_name: "DeepSeek V3",
-            context_length: 131072,
-            max_output_tokens: 8192,
+            max_context_length: 131072,
+            max_output_length: 8192,
             supports_tools: true,
-            supports_vision: false,
+            supports_multimodal: false,
             is_embedding: false,
             is_rerank: false,
             input_cost_per_million: 1.25,
@@ -268,10 +268,10 @@ static MODEL_CONFIGS: LazyLock<HashMap<&'static str, ModelInfo>> = LazyLock::new
         ModelInfo {
             model_id: "deepseek-ai/DeepSeek-R1",
             display_name: "DeepSeek R1",
-            context_length: 131072,
-            max_output_tokens: 8192,
+            max_context_length: 131072,
+            max_output_length: 8192,
             supports_tools: true,
-            supports_vision: false,
+            supports_multimodal: false,
             is_embedding: false,
             is_rerank: false,
             input_cost_per_million: 3.00,
@@ -284,10 +284,10 @@ static MODEL_CONFIGS: LazyLock<HashMap<&'static str, ModelInfo>> = LazyLock::new
         ModelInfo {
             model_id: "deepseek-ai/DeepSeek-R1-Distill-Llama-70B",
             display_name: "DeepSeek R1 Distill Llama 70B",
-            context_length: 131072,
-            max_output_tokens: 8192,
+            max_context_length: 131072,
+            max_output_length: 8192,
             supports_tools: true,
-            supports_vision: false,
+            supports_multimodal: false,
             is_embedding: false,
             is_rerank: false,
             input_cost_per_million: 0.88,
@@ -300,10 +300,10 @@ static MODEL_CONFIGS: LazyLock<HashMap<&'static str, ModelInfo>> = LazyLock::new
         ModelInfo {
             model_id: "deepseek-ai/DeepSeek-R1-Distill-Qwen-32B",
             display_name: "DeepSeek R1 Distill Qwen 32B",
-            context_length: 131072,
-            max_output_tokens: 8192,
+            max_context_length: 131072,
+            max_output_length: 8192,
             supports_tools: true,
-            supports_vision: false,
+            supports_multimodal: false,
             is_embedding: false,
             is_rerank: false,
             input_cost_per_million: 0.65,
@@ -317,10 +317,10 @@ static MODEL_CONFIGS: LazyLock<HashMap<&'static str, ModelInfo>> = LazyLock::new
         ModelInfo {
             model_id: "Qwen/Qwen2.5-72B-Instruct-Turbo",
             display_name: "Qwen 2.5 72B Instruct Turbo",
-            context_length: 131072,
-            max_output_tokens: 4096,
+            max_context_length: 131072,
+            max_output_length: 4096,
             supports_tools: true,
-            supports_vision: false,
+            supports_multimodal: false,
             is_embedding: false,
             is_rerank: false,
             input_cost_per_million: 1.20,
@@ -333,10 +333,10 @@ static MODEL_CONFIGS: LazyLock<HashMap<&'static str, ModelInfo>> = LazyLock::new
         ModelInfo {
             model_id: "Qwen/Qwen2.5-7B-Instruct-Turbo",
             display_name: "Qwen 2.5 7B Instruct Turbo",
-            context_length: 131072,
-            max_output_tokens: 4096,
+            max_context_length: 131072,
+            max_output_length: 4096,
             supports_tools: true,
-            supports_vision: false,
+            supports_multimodal: false,
             is_embedding: false,
             is_rerank: false,
             input_cost_per_million: 0.30,
@@ -349,10 +349,10 @@ static MODEL_CONFIGS: LazyLock<HashMap<&'static str, ModelInfo>> = LazyLock::new
         ModelInfo {
             model_id: "Qwen/QwQ-32B-Preview",
             display_name: "QwQ 32B Preview",
-            context_length: 32768,
-            max_output_tokens: 4096,
+            max_context_length: 32768,
+            max_output_length: 4096,
             supports_tools: false,
-            supports_vision: false,
+            supports_multimodal: false,
             is_embedding: false,
             is_rerank: false,
             input_cost_per_million: 1.20,
@@ -366,10 +366,10 @@ static MODEL_CONFIGS: LazyLock<HashMap<&'static str, ModelInfo>> = LazyLock::new
         ModelInfo {
             model_id: "mistralai/Mixtral-8x22B-Instruct-v0.1",
             display_name: "Mixtral 8x22B Instruct",
-            context_length: 65536,
-            max_output_tokens: 4096,
+            max_context_length: 65536,
+            max_output_length: 4096,
             supports_tools: true,
-            supports_vision: false,
+            supports_multimodal: false,
             is_embedding: false,
             is_rerank: false,
             input_cost_per_million: 1.20,
@@ -382,10 +382,10 @@ static MODEL_CONFIGS: LazyLock<HashMap<&'static str, ModelInfo>> = LazyLock::new
         ModelInfo {
             model_id: "mistralai/Mixtral-8x7B-Instruct-v0.1",
             display_name: "Mixtral 8x7B Instruct",
-            context_length: 32768,
-            max_output_tokens: 4096,
+            max_context_length: 32768,
+            max_output_length: 4096,
             supports_tools: true,
-            supports_vision: false,
+            supports_multimodal: false,
             is_embedding: false,
             is_rerank: false,
             input_cost_per_million: 0.60,
@@ -398,10 +398,10 @@ static MODEL_CONFIGS: LazyLock<HashMap<&'static str, ModelInfo>> = LazyLock::new
         ModelInfo {
             model_id: "mistralai/Mistral-7B-Instruct-v0.3",
             display_name: "Mistral 7B Instruct",
-            context_length: 32768,
-            max_output_tokens: 4096,
+            max_context_length: 32768,
+            max_output_length: 4096,
             supports_tools: true,
-            supports_vision: false,
+            supports_multimodal: false,
             is_embedding: false,
             is_rerank: false,
             input_cost_per_million: 0.20,
@@ -415,10 +415,10 @@ static MODEL_CONFIGS: LazyLock<HashMap<&'static str, ModelInfo>> = LazyLock::new
         ModelInfo {
             model_id: "google/gemma-2-27b-it",
             display_name: "Gemma 2 27B IT",
-            context_length: 8192,
-            max_output_tokens: 4096,
+            max_context_length: 8192,
+            max_output_length: 4096,
             supports_tools: false,
-            supports_vision: false,
+            supports_multimodal: false,
             is_embedding: false,
             is_rerank: false,
             input_cost_per_million: 0.80,
@@ -431,10 +431,10 @@ static MODEL_CONFIGS: LazyLock<HashMap<&'static str, ModelInfo>> = LazyLock::new
         ModelInfo {
             model_id: "google/gemma-2-9b-it",
             display_name: "Gemma 2 9B IT",
-            context_length: 8192,
-            max_output_tokens: 4096,
+            max_context_length: 8192,
+            max_output_length: 4096,
             supports_tools: false,
-            supports_vision: false,
+            supports_multimodal: false,
             is_embedding: false,
             is_rerank: false,
             input_cost_per_million: 0.30,
@@ -448,10 +448,10 @@ static MODEL_CONFIGS: LazyLock<HashMap<&'static str, ModelInfo>> = LazyLock::new
         ModelInfo {
             model_id: "nvidia/Llama-3.1-Nemotron-70B-Instruct-HF",
             display_name: "Llama 3.1 Nemotron 70B Instruct",
-            context_length: 131072,
-            max_output_tokens: 4096,
+            max_context_length: 131072,
+            max_output_length: 4096,
             supports_tools: true,
-            supports_vision: false,
+            supports_multimodal: false,
             is_embedding: false,
             is_rerank: false,
             input_cost_per_million: 0.88,
@@ -465,10 +465,10 @@ static MODEL_CONFIGS: LazyLock<HashMap<&'static str, ModelInfo>> = LazyLock::new
         ModelInfo {
             model_id: "togethercomputer/m2-bert-80M-2k-retrieval",
             display_name: "M2 BERT 80M 2K Retrieval",
-            context_length: 2048,
-            max_output_tokens: 0,
+            max_context_length: 2048,
+            max_output_length: 0,
             supports_tools: false,
-            supports_vision: false,
+            supports_multimodal: false,
             is_embedding: true,
             is_rerank: false,
             input_cost_per_million: 0.008,
@@ -481,10 +481,10 @@ static MODEL_CONFIGS: LazyLock<HashMap<&'static str, ModelInfo>> = LazyLock::new
         ModelInfo {
             model_id: "togethercomputer/m2-bert-80M-32k-retrieval",
             display_name: "M2 BERT 80M 32K Retrieval",
-            context_length: 32768,
-            max_output_tokens: 0,
+            max_context_length: 32768,
+            max_output_length: 0,
             supports_tools: false,
-            supports_vision: false,
+            supports_multimodal: false,
             is_embedding: true,
             is_rerank: false,
             input_cost_per_million: 0.008,
@@ -497,10 +497,10 @@ static MODEL_CONFIGS: LazyLock<HashMap<&'static str, ModelInfo>> = LazyLock::new
         ModelInfo {
             model_id: "WhereIsAI/UAE-Large-V1",
             display_name: "UAE Large V1",
-            context_length: 512,
-            max_output_tokens: 0,
+            max_context_length: 512,
+            max_output_length: 0,
             supports_tools: false,
-            supports_vision: false,
+            supports_multimodal: false,
             is_embedding: true,
             is_rerank: false,
             input_cost_per_million: 0.016,
@@ -513,10 +513,10 @@ static MODEL_CONFIGS: LazyLock<HashMap<&'static str, ModelInfo>> = LazyLock::new
         ModelInfo {
             model_id: "BAAI/bge-large-en-v1.5",
             display_name: "BGE Large EN V1.5",
-            context_length: 512,
-            max_output_tokens: 0,
+            max_context_length: 512,
+            max_output_length: 0,
             supports_tools: false,
-            supports_vision: false,
+            supports_multimodal: false,
             is_embedding: true,
             is_rerank: false,
             input_cost_per_million: 0.016,
@@ -529,10 +529,10 @@ static MODEL_CONFIGS: LazyLock<HashMap<&'static str, ModelInfo>> = LazyLock::new
         ModelInfo {
             model_id: "BAAI/bge-base-en-v1.5",
             display_name: "BGE Base EN V1.5",
-            context_length: 512,
-            max_output_tokens: 0,
+            max_context_length: 512,
+            max_output_length: 0,
             supports_tools: false,
-            supports_vision: false,
+            supports_multimodal: false,
             is_embedding: true,
             is_rerank: false,
             input_cost_per_million: 0.008,
@@ -546,10 +546,10 @@ static MODEL_CONFIGS: LazyLock<HashMap<&'static str, ModelInfo>> = LazyLock::new
         ModelInfo {
             model_id: "Salesforce/Llama-Rank-V1",
             display_name: "Llama Rank V1",
-            context_length: 8192,
-            max_output_tokens: 0,
+            max_context_length: 8192,
+            max_output_length: 0,
             supports_tools: false,
-            supports_vision: false,
+            supports_multimodal: false,
             is_embedding: false,
             is_rerank: true,
             input_cost_per_million: 0.30,
@@ -575,7 +575,7 @@ pub fn is_function_calling_model(model_id: &str) -> bool {
 /// Check if a model supports vision
 pub fn is_vision_model(model_id: &str) -> bool {
     get_model_info(model_id)
-        .map(|info| info.supports_vision)
+        .map(|info| info.supports_multimodal)
         .unwrap_or(false)
 }
 
@@ -665,9 +665,9 @@ mod tests {
         let info = info.unwrap();
         assert_eq!(info.model_id, "meta-llama/Llama-3.3-70B-Instruct-Turbo");
         assert_eq!(info.display_name, "Llama 3.3 70B Instruct Turbo");
-        assert_eq!(info.context_length, 131072);
+        assert_eq!(info.max_context_length, 131072);
         assert!(info.supports_tools);
-        assert!(!info.supports_vision);
+        assert!(!info.supports_multimodal);
     }
 
     #[test]
@@ -771,8 +771,8 @@ mod tests {
     fn test_deepseek_models() {
         let v3 = get_model_info("deepseek-ai/DeepSeek-V3").unwrap();
         assert!(v3.supports_tools);
-        assert!(!v3.supports_vision);
-        assert_eq!(v3.context_length, 131072);
+        assert!(!v3.supports_multimodal);
+        assert_eq!(v3.max_context_length, 131072);
 
         let r1 = get_model_info("deepseek-ai/DeepSeek-R1").unwrap();
         assert!(r1.supports_tools);
@@ -789,7 +789,7 @@ mod tests {
     fn test_mistral_models() {
         let mixtral = get_model_info("mistralai/Mixtral-8x22B-Instruct-v0.1").unwrap();
         assert!(mixtral.supports_tools);
-        assert_eq!(mixtral.context_length, 65536);
+        assert_eq!(mixtral.max_context_length, 65536);
     }
 
     #[test]

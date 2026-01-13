@@ -144,17 +144,17 @@ fn test_get_available_models() {
 fn test_get_model_info_llama3() {
     let info = model_info::get_model_info("meta/llama3-70b-instruct").unwrap();
     assert_eq!(info.display_name, "Llama 3 70B Instruct");
-    assert_eq!(info.context_length, 8192);
+    assert_eq!(info.max_context_length, 8192);
     assert!(info.supports_streaming);
     assert!(info.supports_tools);
-    assert!(!info.supports_vision);
+    assert!(!info.supports_multimodal);
 }
 
 #[test]
 fn test_get_model_info_mistral() {
     let info = model_info::get_model_info("mistralai/mistral-large").unwrap();
     assert_eq!(info.display_name, "Mistral Large");
-    assert_eq!(info.context_length, 32768);
+    assert_eq!(info.max_context_length, 32768);
     assert!(info.supports_streaming);
     assert!(info.supports_tools);
 }
@@ -163,7 +163,7 @@ fn test_get_model_info_mistral() {
 fn test_get_model_info_phi3() {
     let info = model_info::get_model_info("microsoft/phi-3-small-128k-instruct").unwrap();
     assert_eq!(info.display_name, "Phi-3 Small 128K Instruct");
-    assert_eq!(info.context_length, 131072);
+    assert_eq!(info.max_context_length, 131072);
     assert!(info.supports_streaming);
     assert!(!info.supports_tools);
 }

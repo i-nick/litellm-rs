@@ -16,16 +16,16 @@ pub struct ModelInfo {
     pub display_name: &'static str,
 
     /// Maximum context length (tokens)
-    pub context_length: u32,
+    pub max_context_length: u32,
 
     /// Maximum output tokens
-    pub max_output_tokens: u32,
+    pub max_output_length: u32,
 
     /// Whether the model supports tool/function calling
     pub supports_tools: bool,
 
     /// Whether the model supports vision
-    pub supports_vision: bool,
+    pub supports_multimodal: bool,
 
     /// Cost per 1M input tokens (USD)
     pub input_cost_per_million: f64,
@@ -44,10 +44,10 @@ static MODEL_CONFIGS: LazyLock<HashMap<&'static str, ModelInfo>> = LazyLock::new
         ModelInfo {
             model_id: "meta-llama/llama-3.1-8b-instruct",
             display_name: "Llama 3.1 8B Instruct",
-            context_length: 131072,
-            max_output_tokens: 8192,
+            max_context_length: 131072,
+            max_output_length: 8192,
             supports_tools: true,
-            supports_vision: false,
+            supports_multimodal: false,
             input_cost_per_million: 0.05,
             output_cost_per_million: 0.08,
         },
@@ -58,10 +58,10 @@ static MODEL_CONFIGS: LazyLock<HashMap<&'static str, ModelInfo>> = LazyLock::new
         ModelInfo {
             model_id: "meta-llama/llama-3.1-70b-instruct",
             display_name: "Llama 3.1 70B Instruct",
-            context_length: 131072,
-            max_output_tokens: 8192,
+            max_context_length: 131072,
+            max_output_length: 8192,
             supports_tools: true,
-            supports_vision: false,
+            supports_multimodal: false,
             input_cost_per_million: 0.59,
             output_cost_per_million: 0.79,
         },
@@ -72,10 +72,10 @@ static MODEL_CONFIGS: LazyLock<HashMap<&'static str, ModelInfo>> = LazyLock::new
         ModelInfo {
             model_id: "meta-llama/llama-3.1-405b-instruct",
             display_name: "Llama 3.1 405B Instruct",
-            context_length: 131072,
-            max_output_tokens: 8192,
+            max_context_length: 131072,
+            max_output_length: 8192,
             supports_tools: true,
-            supports_vision: false,
+            supports_multimodal: false,
             input_cost_per_million: 3.00,
             output_cost_per_million: 3.00,
         },
@@ -87,10 +87,10 @@ static MODEL_CONFIGS: LazyLock<HashMap<&'static str, ModelInfo>> = LazyLock::new
         ModelInfo {
             model_id: "mistralai/mistral-7b-instruct",
             display_name: "Mistral 7B Instruct",
-            context_length: 32768,
-            max_output_tokens: 8192,
+            max_context_length: 32768,
+            max_output_length: 8192,
             supports_tools: false,
-            supports_vision: false,
+            supports_multimodal: false,
             input_cost_per_million: 0.05,
             output_cost_per_million: 0.05,
         },
@@ -101,10 +101,10 @@ static MODEL_CONFIGS: LazyLock<HashMap<&'static str, ModelInfo>> = LazyLock::new
         ModelInfo {
             model_id: "mistralai/mixtral-8x7b-instruct",
             display_name: "Mixtral 8x7B Instruct",
-            context_length: 32768,
-            max_output_tokens: 8192,
+            max_context_length: 32768,
+            max_output_length: 8192,
             supports_tools: true,
-            supports_vision: false,
+            supports_multimodal: false,
             input_cost_per_million: 0.24,
             output_cost_per_million: 0.24,
         },
@@ -116,10 +116,10 @@ static MODEL_CONFIGS: LazyLock<HashMap<&'static str, ModelInfo>> = LazyLock::new
         ModelInfo {
             model_id: "qwen/qwen-2-7b-instruct",
             display_name: "Qwen 2 7B Instruct",
-            context_length: 32768,
-            max_output_tokens: 8192,
+            max_context_length: 32768,
+            max_output_length: 8192,
             supports_tools: false,
-            supports_vision: false,
+            supports_multimodal: false,
             input_cost_per_million: 0.07,
             output_cost_per_million: 0.07,
         },
@@ -130,10 +130,10 @@ static MODEL_CONFIGS: LazyLock<HashMap<&'static str, ModelInfo>> = LazyLock::new
         ModelInfo {
             model_id: "qwen/qwen-2-72b-instruct",
             display_name: "Qwen 2 72B Instruct",
-            context_length: 32768,
-            max_output_tokens: 8192,
+            max_context_length: 32768,
+            max_output_length: 8192,
             supports_tools: true,
-            supports_vision: false,
+            supports_multimodal: false,
             input_cost_per_million: 0.59,
             output_cost_per_million: 0.79,
         },
@@ -145,10 +145,10 @@ static MODEL_CONFIGS: LazyLock<HashMap<&'static str, ModelInfo>> = LazyLock::new
         ModelInfo {
             model_id: "deepseek/deepseek-v2.5",
             display_name: "DeepSeek V2.5",
-            context_length: 65536,
-            max_output_tokens: 8192,
+            max_context_length: 65536,
+            max_output_length: 8192,
             supports_tools: true,
-            supports_vision: false,
+            supports_multimodal: false,
             input_cost_per_million: 0.14,
             output_cost_per_million: 0.28,
         },
@@ -160,10 +160,10 @@ static MODEL_CONFIGS: LazyLock<HashMap<&'static str, ModelInfo>> = LazyLock::new
         ModelInfo {
             model_id: "01-ai/yi-1.5-34b-chat",
             display_name: "Yi 1.5 34B Chat",
-            context_length: 32768,
-            max_output_tokens: 8192,
+            max_context_length: 32768,
+            max_output_length: 8192,
             supports_tools: false,
-            supports_vision: false,
+            supports_multimodal: false,
             input_cost_per_million: 0.18,
             output_cost_per_million: 0.18,
         },
@@ -202,7 +202,7 @@ mod tests {
         let info = info.unwrap();
         assert_eq!(info.model_id, "meta-llama/llama-3.1-70b-instruct");
         assert_eq!(info.display_name, "Llama 3.1 70B Instruct");
-        assert_eq!(info.context_length, 131072);
+        assert_eq!(info.max_context_length, 131072);
         assert!(info.supports_tools);
     }
 
@@ -239,14 +239,14 @@ mod tests {
     #[test]
     fn test_mixtral_model() {
         let info = get_model_info("mistralai/mixtral-8x7b-instruct").unwrap();
-        assert_eq!(info.context_length, 32768);
+        assert_eq!(info.max_context_length, 32768);
         assert!(info.supports_tools);
     }
 
     #[test]
     fn test_deepseek_model() {
         let info = get_model_info("deepseek/deepseek-v2.5").unwrap();
-        assert_eq!(info.context_length, 65536);
+        assert_eq!(info.max_context_length, 65536);
         assert!(info.supports_tools);
     }
 }

@@ -55,7 +55,7 @@ fn test_model_info_llama() {
     assert!(info.is_some());
     let info = info.unwrap();
     assert_eq!(info.model_id, "llama-3.3-70b-instruct-fp8");
-    assert_eq!(info.context_length, 128000);
+    assert_eq!(info.max_context_length, 128000);
     assert!(info.supports_tools);
 }
 
@@ -215,7 +215,7 @@ fn test_128k_context_model() {
     let info = get_model_info("hermes-3-llama-3.1-405b-fp8-128k");
     assert!(info.is_some());
     let info = info.unwrap();
-    assert_eq!(info.context_length, 128000);
+    assert_eq!(info.max_context_length, 128000);
 }
 
 #[test]

@@ -11,9 +11,9 @@ pub struct SnowflakeModel {
     /// Display name
     pub display_name: &'static str,
     /// Maximum context length in tokens
-    pub context_length: usize,
+    pub max_context_length: usize,
     /// Maximum output tokens
-    pub max_output_tokens: usize,
+    pub max_output_length: usize,
     /// Whether the model supports tool/function calling
     pub supports_tools: bool,
     /// Whether the model supports streaming
@@ -30,8 +30,8 @@ static SNOWFLAKE_MODELS: &[SnowflakeModel] = &[
     SnowflakeModel {
         model_id: "claude-3-5-sonnet",
         display_name: "Claude 3.5 Sonnet",
-        context_length: 200000,
-        max_output_tokens: 8192,
+        max_context_length: 200000,
+        max_output_length: 8192,
         supports_tools: true,
         supports_streaming: true,
         provider: "anthropic",
@@ -40,8 +40,8 @@ static SNOWFLAKE_MODELS: &[SnowflakeModel] = &[
     SnowflakeModel {
         model_id: "claude-3-5-haiku",
         display_name: "Claude 3.5 Haiku",
-        context_length: 200000,
-        max_output_tokens: 8192,
+        max_context_length: 200000,
+        max_output_length: 8192,
         supports_tools: true,
         supports_streaming: true,
         provider: "anthropic",
@@ -51,8 +51,8 @@ static SNOWFLAKE_MODELS: &[SnowflakeModel] = &[
     SnowflakeModel {
         model_id: "llama3.1-8b",
         display_name: "Llama 3.1 8B",
-        context_length: 128000,
-        max_output_tokens: 4096,
+        max_context_length: 128000,
+        max_output_length: 4096,
         supports_tools: false,
         supports_streaming: true,
         provider: "meta",
@@ -61,8 +61,8 @@ static SNOWFLAKE_MODELS: &[SnowflakeModel] = &[
     SnowflakeModel {
         model_id: "llama3.1-70b",
         display_name: "Llama 3.1 70B",
-        context_length: 128000,
-        max_output_tokens: 4096,
+        max_context_length: 128000,
+        max_output_length: 4096,
         supports_tools: false,
         supports_streaming: true,
         provider: "meta",
@@ -71,8 +71,8 @@ static SNOWFLAKE_MODELS: &[SnowflakeModel] = &[
     SnowflakeModel {
         model_id: "llama3.1-405b",
         display_name: "Llama 3.1 405B",
-        context_length: 128000,
-        max_output_tokens: 4096,
+        max_context_length: 128000,
+        max_output_length: 4096,
         supports_tools: false,
         supports_streaming: true,
         provider: "meta",
@@ -81,8 +81,8 @@ static SNOWFLAKE_MODELS: &[SnowflakeModel] = &[
     SnowflakeModel {
         model_id: "llama3.2-1b",
         display_name: "Llama 3.2 1B",
-        context_length: 128000,
-        max_output_tokens: 4096,
+        max_context_length: 128000,
+        max_output_length: 4096,
         supports_tools: false,
         supports_streaming: true,
         provider: "meta",
@@ -91,8 +91,8 @@ static SNOWFLAKE_MODELS: &[SnowflakeModel] = &[
     SnowflakeModel {
         model_id: "llama3.2-3b",
         display_name: "Llama 3.2 3B",
-        context_length: 128000,
-        max_output_tokens: 4096,
+        max_context_length: 128000,
+        max_output_length: 4096,
         supports_tools: false,
         supports_streaming: true,
         provider: "meta",
@@ -102,8 +102,8 @@ static SNOWFLAKE_MODELS: &[SnowflakeModel] = &[
     SnowflakeModel {
         model_id: "mistral-large",
         display_name: "Mistral Large",
-        context_length: 128000,
-        max_output_tokens: 4096,
+        max_context_length: 128000,
+        max_output_length: 4096,
         supports_tools: false,
         supports_streaming: true,
         provider: "mistral",
@@ -112,8 +112,8 @@ static SNOWFLAKE_MODELS: &[SnowflakeModel] = &[
     SnowflakeModel {
         model_id: "mistral-large2",
         display_name: "Mistral Large 2",
-        context_length: 128000,
-        max_output_tokens: 4096,
+        max_context_length: 128000,
+        max_output_length: 4096,
         supports_tools: false,
         supports_streaming: true,
         provider: "mistral",
@@ -122,8 +122,8 @@ static SNOWFLAKE_MODELS: &[SnowflakeModel] = &[
     SnowflakeModel {
         model_id: "mixtral-8x7b",
         display_name: "Mixtral 8x7B",
-        context_length: 32768,
-        max_output_tokens: 4096,
+        max_context_length: 32768,
+        max_output_length: 4096,
         supports_tools: false,
         supports_streaming: true,
         provider: "mistral",
@@ -132,8 +132,8 @@ static SNOWFLAKE_MODELS: &[SnowflakeModel] = &[
     SnowflakeModel {
         model_id: "mistral-7b",
         display_name: "Mistral 7B",
-        context_length: 32768,
-        max_output_tokens: 4096,
+        max_context_length: 32768,
+        max_output_length: 4096,
         supports_tools: false,
         supports_streaming: true,
         provider: "mistral",
@@ -143,8 +143,8 @@ static SNOWFLAKE_MODELS: &[SnowflakeModel] = &[
     SnowflakeModel {
         model_id: "snowflake-arctic",
         display_name: "Snowflake Arctic",
-        context_length: 8192,
-        max_output_tokens: 4096,
+        max_context_length: 8192,
+        max_output_length: 4096,
         supports_tools: false,
         supports_streaming: true,
         provider: "snowflake",
@@ -154,8 +154,8 @@ static SNOWFLAKE_MODELS: &[SnowflakeModel] = &[
     SnowflakeModel {
         model_id: "reka-core",
         display_name: "Reka Core",
-        context_length: 32768,
-        max_output_tokens: 4096,
+        max_context_length: 32768,
+        max_output_length: 4096,
         supports_tools: false,
         supports_streaming: true,
         provider: "reka",
@@ -164,8 +164,8 @@ static SNOWFLAKE_MODELS: &[SnowflakeModel] = &[
     SnowflakeModel {
         model_id: "reka-flash",
         display_name: "Reka Flash",
-        context_length: 32768,
-        max_output_tokens: 4096,
+        max_context_length: 32768,
+        max_output_length: 4096,
         supports_tools: false,
         supports_streaming: true,
         provider: "reka",
@@ -175,8 +175,8 @@ static SNOWFLAKE_MODELS: &[SnowflakeModel] = &[
     SnowflakeModel {
         model_id: "gemma-7b",
         display_name: "Gemma 7B",
-        context_length: 8192,
-        max_output_tokens: 4096,
+        max_context_length: 8192,
+        max_output_length: 4096,
         supports_tools: false,
         supports_streaming: true,
         provider: "google",
@@ -186,8 +186,8 @@ static SNOWFLAKE_MODELS: &[SnowflakeModel] = &[
     SnowflakeModel {
         model_id: "jamba-1.5-mini",
         display_name: "Jamba 1.5 Mini",
-        context_length: 256000,
-        max_output_tokens: 4096,
+        max_context_length: 256000,
+        max_output_length: 4096,
         supports_tools: false,
         supports_streaming: true,
         provider: "ai21",
@@ -196,8 +196,8 @@ static SNOWFLAKE_MODELS: &[SnowflakeModel] = &[
     SnowflakeModel {
         model_id: "jamba-1.5-large",
         display_name: "Jamba 1.5 Large",
-        context_length: 256000,
-        max_output_tokens: 4096,
+        max_context_length: 256000,
+        max_output_length: 4096,
         supports_tools: false,
         supports_streaming: true,
         provider: "ai21",
@@ -313,20 +313,20 @@ mod tests {
     #[test]
     fn test_model_context_lengths() {
         for model in get_available_models() {
-            assert!(model.context_length > 0);
-            assert!(model.max_output_tokens > 0);
+            assert!(model.max_context_length > 0);
+            assert!(model.max_output_length > 0);
         }
     }
 
     #[test]
     fn test_claude_has_high_context() {
         let claude = get_model_info("claude-3-5-sonnet").unwrap();
-        assert_eq!(claude.context_length, 200000);
+        assert_eq!(claude.max_context_length, 200000);
     }
 
     #[test]
     fn test_jamba_has_highest_context() {
         let jamba = get_model_info("jamba-1.5-large").unwrap();
-        assert_eq!(jamba.context_length, 256000);
+        assert_eq!(jamba.max_context_length, 256000);
     }
 }

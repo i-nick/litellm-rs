@@ -40,13 +40,13 @@ pub struct ModelInfo {
     /// Display name
     pub display_name: &'static str,
     /// Maximum context length
-    pub context_length: u32,
+    pub max_context_length: u32,
     /// Maximum output tokens
-    pub max_output_tokens: u32,
+    pub max_output_length: u32,
     /// Whether the model supports tools/functions
     pub supports_tools: bool,
     /// Whether the model supports vision
-    pub supports_vision: bool,
+    pub supports_multimodal: bool,
     /// Whether the model supports streaming
     pub supports_streaming: bool,
     /// Input cost per million tokens (in USD)
@@ -65,10 +65,10 @@ static MODEL_CONFIGS: LazyLock<HashMap<&'static str, ModelInfo>> = LazyLock::new
         ModelInfo {
             model_id: "@cf/meta/llama-3-8b-instruct",
             display_name: "Llama 3 8B Instruct",
-            context_length: 8192,
-            max_output_tokens: 2048,
+            max_context_length: 8192,
+            max_output_length: 2048,
             supports_tools: false,
-            supports_vision: false,
+            supports_multimodal: false,
             supports_streaming: true,
             input_cost_per_million: 0.0, // Free on Cloudflare Workers
             output_cost_per_million: 0.0,
@@ -80,10 +80,10 @@ static MODEL_CONFIGS: LazyLock<HashMap<&'static str, ModelInfo>> = LazyLock::new
         ModelInfo {
             model_id: "@cf/meta/llama-3-70b-instruct",
             display_name: "Llama 3 70B Instruct",
-            context_length: 8192,
-            max_output_tokens: 2048,
+            max_context_length: 8192,
+            max_output_length: 2048,
             supports_tools: false,
-            supports_vision: false,
+            supports_multimodal: false,
             supports_streaming: true,
             input_cost_per_million: 0.0,
             output_cost_per_million: 0.0,
@@ -95,10 +95,10 @@ static MODEL_CONFIGS: LazyLock<HashMap<&'static str, ModelInfo>> = LazyLock::new
         ModelInfo {
             model_id: "@cf/meta/llama-2-7b-chat-int8",
             display_name: "Llama 2 7B Chat",
-            context_length: 4096,
-            max_output_tokens: 2048,
+            max_context_length: 4096,
+            max_output_length: 2048,
             supports_tools: false,
-            supports_vision: false,
+            supports_multimodal: false,
             supports_streaming: true,
             input_cost_per_million: 0.0,
             output_cost_per_million: 0.0,
@@ -111,10 +111,10 @@ static MODEL_CONFIGS: LazyLock<HashMap<&'static str, ModelInfo>> = LazyLock::new
         ModelInfo {
             model_id: "@cf/mistral/mistral-7b-instruct-v0.1",
             display_name: "Mistral 7B Instruct",
-            context_length: 8192,
-            max_output_tokens: 2048,
+            max_context_length: 8192,
+            max_output_length: 2048,
             supports_tools: false,
-            supports_vision: false,
+            supports_multimodal: false,
             supports_streaming: true,
             input_cost_per_million: 0.0,
             output_cost_per_million: 0.0,
@@ -126,10 +126,10 @@ static MODEL_CONFIGS: LazyLock<HashMap<&'static str, ModelInfo>> = LazyLock::new
         ModelInfo {
             model_id: "@hf/thebloke/mixtral-8x7b-instruct-v0.1-awq",
             display_name: "Mixtral 8x7B Instruct",
-            context_length: 32768,
-            max_output_tokens: 4096,
+            max_context_length: 32768,
+            max_output_length: 4096,
             supports_tools: false,
-            supports_vision: false,
+            supports_multimodal: false,
             supports_streaming: true,
             input_cost_per_million: 0.0,
             output_cost_per_million: 0.0,
@@ -142,10 +142,10 @@ static MODEL_CONFIGS: LazyLock<HashMap<&'static str, ModelInfo>> = LazyLock::new
         ModelInfo {
             model_id: "@cf/qwen/qwen1.5-7b-chat-awq",
             display_name: "Qwen 1.5 7B Chat",
-            context_length: 32768,
-            max_output_tokens: 4096,
+            max_context_length: 32768,
+            max_output_length: 4096,
             supports_tools: false,
-            supports_vision: false,
+            supports_multimodal: false,
             supports_streaming: true,
             input_cost_per_million: 0.0,
             output_cost_per_million: 0.0,
@@ -158,10 +158,10 @@ static MODEL_CONFIGS: LazyLock<HashMap<&'static str, ModelInfo>> = LazyLock::new
         ModelInfo {
             model_id: "@cf/meta/codellama-7b-instruct",
             display_name: "Code Llama 7B",
-            context_length: 16384,
-            max_output_tokens: 4096,
+            max_context_length: 16384,
+            max_output_length: 4096,
             supports_tools: false,
-            supports_vision: false,
+            supports_multimodal: false,
             supports_streaming: true,
             input_cost_per_million: 0.0,
             output_cost_per_million: 0.0,
@@ -173,10 +173,10 @@ static MODEL_CONFIGS: LazyLock<HashMap<&'static str, ModelInfo>> = LazyLock::new
         ModelInfo {
             model_id: "@cf/deepseek-ai/deepseek-coder-6.7b-instruct-awq",
             display_name: "DeepSeek Coder 6.7B",
-            context_length: 16384,
-            max_output_tokens: 4096,
+            max_context_length: 16384,
+            max_output_length: 4096,
             supports_tools: false,
-            supports_vision: false,
+            supports_multimodal: false,
             supports_streaming: true,
             input_cost_per_million: 0.0,
             output_cost_per_million: 0.0,
@@ -189,10 +189,10 @@ static MODEL_CONFIGS: LazyLock<HashMap<&'static str, ModelInfo>> = LazyLock::new
         ModelInfo {
             model_id: "@cf/microsoft/phi-2",
             display_name: "Phi-2",
-            context_length: 2048,
-            max_output_tokens: 1024,
+            max_context_length: 2048,
+            max_output_length: 1024,
             supports_tools: false,
-            supports_vision: false,
+            supports_multimodal: false,
             supports_streaming: true,
             input_cost_per_million: 0.0,
             output_cost_per_million: 0.0,
@@ -204,10 +204,10 @@ static MODEL_CONFIGS: LazyLock<HashMap<&'static str, ModelInfo>> = LazyLock::new
         ModelInfo {
             model_id: "@cf/google/gemma-7b-it",
             display_name: "Gemma 7B IT",
-            context_length: 8192,
-            max_output_tokens: 2048,
+            max_context_length: 8192,
+            max_output_length: 2048,
             supports_tools: false,
-            supports_vision: false,
+            supports_multimodal: false,
             supports_streaming: true,
             input_cost_per_million: 0.0,
             output_cost_per_million: 0.0,
@@ -274,7 +274,7 @@ mod tests {
     fn test_model_info() {
         let info = get_model_info("@cf/meta/llama-3-8b-instruct").unwrap();
         assert_eq!(info.model_id, "@cf/meta/llama-3-8b-instruct");
-        assert_eq!(info.context_length, 8192);
+        assert_eq!(info.max_context_length, 8192);
         assert!(info.supports_streaming);
 
         // Test with cloudflare/ prefix
@@ -286,17 +286,17 @@ mod tests {
     fn test_model_info_llama3_70b() {
         let info = get_model_info("@cf/meta/llama-3-70b-instruct").unwrap();
         assert_eq!(info.display_name, "Llama 3 70B Instruct");
-        assert_eq!(info.context_length, 8192);
-        assert_eq!(info.max_output_tokens, 2048);
+        assert_eq!(info.max_context_length, 8192);
+        assert_eq!(info.max_output_length, 2048);
         assert!(!info.supports_tools);
-        assert!(!info.supports_vision);
+        assert!(!info.supports_multimodal);
     }
 
     #[test]
     fn test_model_info_mistral() {
         let info = get_model_info("@cf/mistral/mistral-7b-instruct-v0.1").unwrap();
         assert_eq!(info.display_name, "Mistral 7B Instruct");
-        assert_eq!(info.context_length, 8192);
+        assert_eq!(info.max_context_length, 8192);
         assert!(info.supports_streaming);
     }
 
@@ -304,52 +304,52 @@ mod tests {
     fn test_model_info_mixtral() {
         let info = get_model_info("@hf/thebloke/mixtral-8x7b-instruct-v0.1-awq").unwrap();
         assert_eq!(info.display_name, "Mixtral 8x7B Instruct");
-        assert_eq!(info.context_length, 32768);
-        assert_eq!(info.max_output_tokens, 4096);
+        assert_eq!(info.max_context_length, 32768);
+        assert_eq!(info.max_output_length, 4096);
     }
 
     #[test]
     fn test_model_info_qwen() {
         let info = get_model_info("@cf/qwen/qwen1.5-7b-chat-awq").unwrap();
         assert_eq!(info.display_name, "Qwen 1.5 7B Chat");
-        assert_eq!(info.context_length, 32768);
+        assert_eq!(info.max_context_length, 32768);
     }
 
     #[test]
     fn test_model_info_codellama() {
         let info = get_model_info("@cf/meta/codellama-7b-instruct").unwrap();
         assert_eq!(info.display_name, "Code Llama 7B");
-        assert_eq!(info.context_length, 16384);
-        assert_eq!(info.max_output_tokens, 4096);
+        assert_eq!(info.max_context_length, 16384);
+        assert_eq!(info.max_output_length, 4096);
     }
 
     #[test]
     fn test_model_info_deepseek_coder() {
         let info = get_model_info("@cf/deepseek-ai/deepseek-coder-6.7b-instruct-awq").unwrap();
         assert_eq!(info.display_name, "DeepSeek Coder 6.7B");
-        assert_eq!(info.context_length, 16384);
+        assert_eq!(info.max_context_length, 16384);
     }
 
     #[test]
     fn test_model_info_phi2() {
         let info = get_model_info("@cf/microsoft/phi-2").unwrap();
         assert_eq!(info.display_name, "Phi-2");
-        assert_eq!(info.context_length, 2048);
-        assert_eq!(info.max_output_tokens, 1024);
+        assert_eq!(info.max_context_length, 2048);
+        assert_eq!(info.max_output_length, 1024);
     }
 
     #[test]
     fn test_model_info_gemma() {
         let info = get_model_info("@cf/google/gemma-7b-it").unwrap();
         assert_eq!(info.display_name, "Gemma 7B IT");
-        assert_eq!(info.context_length, 8192);
+        assert_eq!(info.max_context_length, 8192);
     }
 
     #[test]
     fn test_model_info_llama2() {
         let info = get_model_info("@cf/meta/llama-2-7b-chat-int8").unwrap();
         assert_eq!(info.display_name, "Llama 2 7B Chat");
-        assert_eq!(info.context_length, 4096);
+        assert_eq!(info.max_context_length, 4096);
     }
 
     #[test]
@@ -544,7 +544,7 @@ mod tests {
         let info = CloudflareModel::Llama3_8BInstruct.info().unwrap();
         assert_eq!(info.model_id, "@cf/meta/llama-3-8b-instruct");
         assert_eq!(info.display_name, "Llama 3 8B Instruct");
-        assert_eq!(info.context_length, 8192);
+        assert_eq!(info.max_context_length, 8192);
     }
 
     // ==================== ModelInfo Struct Tests ====================
@@ -605,7 +605,7 @@ mod tests {
         for model_id in models {
             if let Some(info) = get_model_info(model_id) {
                 assert!(
-                    !info.supports_vision,
+                    !info.supports_multimodal,
                     "Model {} shouldn't support vision yet",
                     model_id
                 );

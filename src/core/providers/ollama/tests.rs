@@ -151,7 +151,7 @@ fn test_model_info_new() {
     assert_eq!(info.name, "llama3:8b");
     assert_eq!(info.display_name, "llama3:8b");
     assert!(!info.supports_tools);
-    assert!(!info.supports_vision);
+    assert!(!info.supports_multimodal);
 }
 
 #[test]
@@ -159,23 +159,23 @@ fn test_model_info_infer_llama() {
     let info = get_model_info("llama3:8b");
     assert_eq!(info.family, Some("llama".to_string()));
     assert!(info.supports_tools);
-    assert!(!info.supports_vision);
+    assert!(!info.supports_multimodal);
     assert_eq!(info.parameter_size, Some("8B".to_string()));
 }
 
 #[test]
 fn test_model_info_infer_vision() {
     let info = get_model_info("llava:13b");
-    assert!(info.supports_vision);
+    assert!(info.supports_multimodal);
 
     let info = get_model_info("llama3-vision:11b");
-    assert!(info.supports_vision);
+    assert!(info.supports_multimodal);
 
     let info = get_model_info("moondream:1.8b");
-    assert!(info.supports_vision);
+    assert!(info.supports_multimodal);
 
     let info = get_model_info("bakllava:7b");
-    assert!(info.supports_vision);
+    assert!(info.supports_multimodal);
 }
 
 #[test]
@@ -183,7 +183,7 @@ fn test_model_info_infer_mistral() {
     let info = get_model_info("mistral:7b");
     assert_eq!(info.family, Some("mistral".to_string()));
     assert!(info.supports_tools);
-    assert_eq!(info.context_length, Some(32768));
+    assert_eq!(info.max_context_length, Some(32768));
 }
 
 #[test]
@@ -204,7 +204,7 @@ fn test_model_info_infer_qwen() {
 fn test_model_info_infer_gemma() {
     let info = get_model_info("gemma:7b");
     assert_eq!(info.family, Some("gemma".to_string()));
-    assert_eq!(info.context_length, Some(8192));
+    assert_eq!(info.max_context_length, Some(8192));
 }
 
 #[test]
@@ -218,7 +218,7 @@ fn test_model_info_infer_deepseek() {
 fn test_model_info_infer_phi() {
     let info = get_model_info("phi:3b");
     assert_eq!(info.family, Some("phi".to_string()));
-    assert_eq!(info.context_length, Some(4096));
+    assert_eq!(info.max_context_length, Some(4096));
 }
 
 #[test]

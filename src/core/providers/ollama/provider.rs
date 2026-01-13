@@ -718,7 +718,7 @@ impl OllamaProvider {
 
                 // Enrich with server data
                 if let Some(ctx_len) = show_response.get_context_length() {
-                    info.context_length = Some(ctx_len);
+                    info.max_context_length = Some(ctx_len);
                 }
                 if show_response.supports_tools() {
                     info.supports_tools = true;
@@ -748,11 +748,11 @@ impl OllamaProvider {
                 id: m.name.clone(),
                 name: m.display_name.clone(),
                 provider: "ollama".to_string(),
-                max_context_length: m.context_length.unwrap_or(4096),
+                max_context_length: m.max_context_length.unwrap_or(4096),
                 max_output_length: None,
                 supports_streaming: true,
                 supports_tools: m.supports_tools,
-                supports_multimodal: m.supports_vision,
+                supports_multimodal: m.supports_multimodal,
                 input_cost_per_1k_tokens: Some(0.0), // Ollama is free
                 output_cost_per_1k_tokens: Some(0.0), // Ollama is free
                 currency: "USD".to_string(),

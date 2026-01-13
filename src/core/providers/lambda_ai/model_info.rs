@@ -41,16 +41,16 @@ pub struct ModelInfo {
     pub display_name: &'static str,
 
     /// Maximum context length (tokens)
-    pub context_length: u32,
+    pub max_context_length: u32,
 
     /// Maximum output tokens
-    pub max_output_tokens: u32,
+    pub max_output_length: u32,
 
     /// Whether the model supports tool/function calling
     pub supports_tools: bool,
 
     /// Whether the model supports vision/multimodal input
-    pub supports_vision: bool,
+    pub supports_multimodal: bool,
 
     /// Whether this is a reasoning model
     pub is_reasoning: bool,
@@ -72,10 +72,10 @@ static MODEL_CONFIGS: LazyLock<HashMap<&'static str, ModelInfo>> = LazyLock::new
         ModelInfo {
             model_id: "hermes-3-llama-3.1-405b-fp8",
             display_name: "Hermes 3 Llama 3.1 405B FP8",
-            context_length: 32768,
-            max_output_tokens: 4096,
+            max_context_length: 32768,
+            max_output_length: 4096,
             supports_tools: true,
-            supports_vision: false,
+            supports_multimodal: false,
             is_reasoning: false,
             input_cost_per_million: 0.80,
             output_cost_per_million: 0.80,
@@ -87,10 +87,10 @@ static MODEL_CONFIGS: LazyLock<HashMap<&'static str, ModelInfo>> = LazyLock::new
         ModelInfo {
             model_id: "hermes-3-llama-3.1-405b-fp8-128k",
             display_name: "Hermes 3 Llama 3.1 405B FP8 128K",
-            context_length: 128000,
-            max_output_tokens: 8192,
+            max_context_length: 128000,
+            max_output_length: 8192,
             supports_tools: true,
-            supports_vision: false,
+            supports_multimodal: false,
             is_reasoning: false,
             input_cost_per_million: 0.90,
             output_cost_per_million: 0.90,
@@ -103,10 +103,10 @@ static MODEL_CONFIGS: LazyLock<HashMap<&'static str, ModelInfo>> = LazyLock::new
         ModelInfo {
             model_id: "llama-3.3-70b-instruct-fp8",
             display_name: "Llama 3.3 70B Instruct FP8",
-            context_length: 128000,
-            max_output_tokens: 8192,
+            max_context_length: 128000,
+            max_output_length: 8192,
             supports_tools: true,
-            supports_vision: false,
+            supports_multimodal: false,
             is_reasoning: false,
             input_cost_per_million: 0.20,
             output_cost_per_million: 0.20,
@@ -119,10 +119,10 @@ static MODEL_CONFIGS: LazyLock<HashMap<&'static str, ModelInfo>> = LazyLock::new
         ModelInfo {
             model_id: "llama-3.1-405b-instruct-fp8",
             display_name: "Llama 3.1 405B Instruct FP8",
-            context_length: 128000,
-            max_output_tokens: 8192,
+            max_context_length: 128000,
+            max_output_length: 8192,
             supports_tools: true,
-            supports_vision: false,
+            supports_multimodal: false,
             is_reasoning: false,
             input_cost_per_million: 0.80,
             output_cost_per_million: 0.80,
@@ -134,10 +134,10 @@ static MODEL_CONFIGS: LazyLock<HashMap<&'static str, ModelInfo>> = LazyLock::new
         ModelInfo {
             model_id: "llama-3.1-70b-instruct-fp8",
             display_name: "Llama 3.1 70B Instruct FP8",
-            context_length: 128000,
-            max_output_tokens: 8192,
+            max_context_length: 128000,
+            max_output_length: 8192,
             supports_tools: true,
-            supports_vision: false,
+            supports_multimodal: false,
             is_reasoning: false,
             input_cost_per_million: 0.20,
             output_cost_per_million: 0.20,
@@ -149,10 +149,10 @@ static MODEL_CONFIGS: LazyLock<HashMap<&'static str, ModelInfo>> = LazyLock::new
         ModelInfo {
             model_id: "llama-3.1-8b-instruct",
             display_name: "Llama 3.1 8B Instruct",
-            context_length: 128000,
-            max_output_tokens: 8192,
+            max_context_length: 128000,
+            max_output_length: 8192,
             supports_tools: true,
-            supports_vision: false,
+            supports_multimodal: false,
             is_reasoning: false,
             input_cost_per_million: 0.10,
             output_cost_per_million: 0.10,
@@ -165,10 +165,10 @@ static MODEL_CONFIGS: LazyLock<HashMap<&'static str, ModelInfo>> = LazyLock::new
         ModelInfo {
             model_id: "qwen2.5-72b-instruct",
             display_name: "Qwen 2.5 72B Instruct",
-            context_length: 32768,
-            max_output_tokens: 8192,
+            max_context_length: 32768,
+            max_output_length: 8192,
             supports_tools: true,
-            supports_vision: false,
+            supports_multimodal: false,
             is_reasoning: false,
             input_cost_per_million: 0.20,
             output_cost_per_million: 0.20,
@@ -180,10 +180,10 @@ static MODEL_CONFIGS: LazyLock<HashMap<&'static str, ModelInfo>> = LazyLock::new
         ModelInfo {
             model_id: "qwen2.5-coder-32b-instruct",
             display_name: "Qwen 2.5 Coder 32B Instruct",
-            context_length: 32768,
-            max_output_tokens: 8192,
+            max_context_length: 32768,
+            max_output_length: 8192,
             supports_tools: true,
-            supports_vision: false,
+            supports_multimodal: false,
             is_reasoning: false,
             input_cost_per_million: 0.10,
             output_cost_per_million: 0.10,
@@ -196,10 +196,10 @@ static MODEL_CONFIGS: LazyLock<HashMap<&'static str, ModelInfo>> = LazyLock::new
         ModelInfo {
             model_id: "deepseek-r1",
             display_name: "DeepSeek R1",
-            context_length: 64000,
-            max_output_tokens: 16384,
+            max_context_length: 64000,
+            max_output_length: 16384,
             supports_tools: true,
-            supports_vision: false,
+            supports_multimodal: false,
             is_reasoning: true,
             input_cost_per_million: 0.55,
             output_cost_per_million: 2.19,
@@ -211,10 +211,10 @@ static MODEL_CONFIGS: LazyLock<HashMap<&'static str, ModelInfo>> = LazyLock::new
         ModelInfo {
             model_id: "deepseek-r1-671b",
             display_name: "DeepSeek R1 671B",
-            context_length: 64000,
-            max_output_tokens: 16384,
+            max_context_length: 64000,
+            max_output_length: 16384,
             supports_tools: true,
-            supports_vision: false,
+            supports_multimodal: false,
             is_reasoning: true,
             input_cost_per_million: 0.55,
             output_cost_per_million: 2.19,
@@ -261,7 +261,7 @@ mod tests {
         let info = info.unwrap();
         assert_eq!(info.model_id, "hermes-3-llama-3.1-405b-fp8");
         assert_eq!(info.display_name, "Hermes 3 Llama 3.1 405B FP8");
-        assert_eq!(info.context_length, 32768);
+        assert_eq!(info.max_context_length, 32768);
         assert!(info.supports_tools);
         assert!(!info.is_reasoning);
     }
@@ -317,8 +317,8 @@ mod tests {
     #[test]
     fn test_128k_context_model() {
         let info = get_model_info("hermes-3-llama-3.1-405b-fp8-128k").unwrap();
-        assert_eq!(info.context_length, 128000);
-        assert_eq!(info.max_output_tokens, 8192);
+        assert_eq!(info.max_context_length, 128000);
+        assert_eq!(info.max_output_length, 8192);
     }
 
     #[test]

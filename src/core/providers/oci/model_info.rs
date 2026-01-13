@@ -11,9 +11,9 @@ pub struct OciModel {
     /// Display name
     pub display_name: &'static str,
     /// Maximum context length in tokens
-    pub context_length: u32,
+    pub max_context_length: u32,
     /// Maximum output tokens
-    pub max_output_tokens: u32,
+    pub max_output_length: u32,
     /// Input cost per million tokens (USD)
     pub input_cost_per_million: f64,
     /// Output cost per million tokens (USD)
@@ -21,7 +21,7 @@ pub struct OciModel {
     /// Whether the model supports tool/function calling
     pub supports_tools: bool,
     /// Whether the model supports vision
-    pub supports_vision: bool,
+    pub supports_multimodal: bool,
     /// Model provider/family
     pub provider: &'static str,
 }
@@ -32,96 +32,96 @@ static OCI_MODELS: &[OciModel] = &[
     OciModel {
         model_id: "cohere.command-r-plus",
         display_name: "Cohere Command R+",
-        context_length: 128_000,
-        max_output_tokens: 4_096,
+        max_context_length: 128_000,
+        max_output_length: 4_096,
         input_cost_per_million: 3.0,
         output_cost_per_million: 15.0,
         supports_tools: true,
-        supports_vision: false,
+        supports_multimodal: false,
         provider: "cohere",
     },
     // Cohere Command R Model
     OciModel {
         model_id: "cohere.command-r-16k",
         display_name: "Cohere Command R",
-        context_length: 16_000,
-        max_output_tokens: 4_096,
+        max_context_length: 16_000,
+        max_output_length: 4_096,
         input_cost_per_million: 0.5,
         output_cost_per_million: 1.5,
         supports_tools: true,
-        supports_vision: false,
+        supports_multimodal: false,
         provider: "cohere",
     },
     // Cohere Command Model
     OciModel {
         model_id: "cohere.command",
         display_name: "Cohere Command",
-        context_length: 4_096,
-        max_output_tokens: 4_096,
+        max_context_length: 4_096,
+        max_output_length: 4_096,
         input_cost_per_million: 1.0,
         output_cost_per_million: 2.0,
         supports_tools: true,
-        supports_vision: false,
+        supports_multimodal: false,
         provider: "cohere",
     },
     // Cohere Command Light Model
     OciModel {
         model_id: "cohere.command-light",
         display_name: "Cohere Command Light",
-        context_length: 4_096,
-        max_output_tokens: 4_096,
+        max_context_length: 4_096,
+        max_output_length: 4_096,
         input_cost_per_million: 0.3,
         output_cost_per_million: 0.6,
         supports_tools: false,
-        supports_vision: false,
+        supports_multimodal: false,
         provider: "cohere",
     },
     // Meta Llama 3.1 405B
     OciModel {
         model_id: "meta.llama-3.1-405b-instruct",
         display_name: "Llama 3.1 405B Instruct",
-        context_length: 128_000,
-        max_output_tokens: 4_096,
+        max_context_length: 128_000,
+        max_output_length: 4_096,
         input_cost_per_million: 5.0,
         output_cost_per_million: 16.0,
         supports_tools: true,
-        supports_vision: false,
+        supports_multimodal: false,
         provider: "meta",
     },
     // Meta Llama 3.1 70B
     OciModel {
         model_id: "meta.llama-3.1-70b-instruct",
         display_name: "Llama 3.1 70B Instruct",
-        context_length: 128_000,
-        max_output_tokens: 4_096,
+        max_context_length: 128_000,
+        max_output_length: 4_096,
         input_cost_per_million: 0.9,
         output_cost_per_million: 0.9,
         supports_tools: true,
-        supports_vision: false,
+        supports_multimodal: false,
         provider: "meta",
     },
     // Meta Llama 3 70B
     OciModel {
         model_id: "meta.llama-3-70b-instruct",
         display_name: "Llama 3 70B Instruct",
-        context_length: 8_192,
-        max_output_tokens: 4_096,
+        max_context_length: 8_192,
+        max_output_length: 4_096,
         input_cost_per_million: 0.9,
         output_cost_per_million: 0.9,
         supports_tools: true,
-        supports_vision: false,
+        supports_multimodal: false,
         provider: "meta",
     },
     // Meta Llama 2 70B
     OciModel {
         model_id: "meta.llama-2-70b-chat",
         display_name: "Llama 2 70B Chat",
-        context_length: 4_096,
-        max_output_tokens: 4_096,
+        max_context_length: 4_096,
+        max_output_length: 4_096,
         input_cost_per_million: 0.9,
         output_cost_per_million: 0.9,
         supports_tools: false,
-        supports_vision: false,
+        supports_multimodal: false,
         provider: "meta",
     },
 ];
@@ -154,7 +154,7 @@ pub fn supports_tools(model_id: &str) -> bool {
 /// Check if a model supports vision
 pub fn supports_vision(model_id: &str) -> bool {
     get_model_info(model_id)
-        .map(|m| m.supports_vision)
+        .map(|m| m.supports_multimodal)
         .unwrap_or(false)
 }
 
@@ -216,8 +216,8 @@ mod tests {
         for model in get_available_models() {
             assert!(model.input_cost_per_million >= 0.0);
             assert!(model.output_cost_per_million >= 0.0);
-            assert!(model.context_length > 0);
-            assert!(model.max_output_tokens > 0);
+            assert!(model.max_context_length > 0);
+            assert!(model.max_output_length > 0);
         }
     }
 }

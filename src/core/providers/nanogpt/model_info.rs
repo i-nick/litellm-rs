@@ -27,10 +27,10 @@ pub struct ModelInfo {
     pub display_name: &'static str,
 
     /// Maximum context length (tokens)
-    pub context_length: u32,
+    pub max_context_length: u32,
 
     /// Maximum output tokens
-    pub max_output_tokens: u32,
+    pub max_output_length: u32,
 
     /// Whether the model supports tool/function calling
     pub supports_tools: bool,
@@ -39,7 +39,7 @@ pub struct ModelInfo {
     pub is_reasoning: bool,
 
     /// Whether the model supports vision
-    pub supports_vision: bool,
+    pub supports_multimodal: bool,
 
     /// Cost per 1M input tokens (USD)
     pub input_cost_per_million: f64,
@@ -57,11 +57,11 @@ static MODEL_CONFIGS: LazyLock<HashMap<&'static str, ModelInfo>> = LazyLock::new
         ModelInfo {
             model_id: "nano-base-7b",
             display_name: "NanoGPT Base 7B",
-            context_length: 8192,
-            max_output_tokens: 4096,
+            max_context_length: 8192,
+            max_output_length: 4096,
             supports_tools: true,
             is_reasoning: false,
-            supports_vision: false,
+            supports_multimodal: false,
             input_cost_per_million: 0.10,
             output_cost_per_million: 0.20,
         },
@@ -72,11 +72,11 @@ static MODEL_CONFIGS: LazyLock<HashMap<&'static str, ModelInfo>> = LazyLock::new
         ModelInfo {
             model_id: "nano-pro-13b",
             display_name: "NanoGPT Pro 13B",
-            context_length: 16384,
-            max_output_tokens: 8192,
+            max_context_length: 16384,
+            max_output_length: 8192,
             supports_tools: true,
             is_reasoning: false,
-            supports_vision: false,
+            supports_multimodal: false,
             input_cost_per_million: 0.30,
             output_cost_per_million: 0.60,
         },
@@ -87,11 +87,11 @@ static MODEL_CONFIGS: LazyLock<HashMap<&'static str, ModelInfo>> = LazyLock::new
         ModelInfo {
             model_id: "nano-ultra-70b",
             display_name: "NanoGPT Ultra 70B",
-            context_length: 32768,
-            max_output_tokens: 16384,
+            max_context_length: 32768,
+            max_output_length: 16384,
             supports_tools: true,
             is_reasoning: true,
-            supports_vision: false,
+            supports_multimodal: false,
             input_cost_per_million: 0.80,
             output_cost_per_million: 1.60,
         },

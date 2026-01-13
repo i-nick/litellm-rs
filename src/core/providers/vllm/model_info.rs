@@ -18,16 +18,16 @@ pub struct VLLMModelInfo {
     pub display_name: String,
 
     /// Maximum context length (tokens)
-    pub context_length: u32,
+    pub max_context_length: u32,
 
     /// Maximum output tokens
-    pub max_output_tokens: u32,
+    pub max_output_length: u32,
 
     /// Whether the model supports tool/function calling
     pub supports_tools: bool,
 
     /// Whether the model supports vision
-    pub supports_vision: bool,
+    pub supports_multimodal: bool,
 
     /// Model family (e.g., "llama", "mistral", "qwen")
     pub family: String,
@@ -38,15 +38,15 @@ impl VLLMModelInfo {
     pub fn new(
         model_id: impl Into<String>,
         display_name: impl Into<String>,
-        context_length: u32,
+        max_context_length: u32,
     ) -> Self {
         Self {
             model_id: model_id.into(),
             display_name: display_name.into(),
-            context_length,
-            max_output_tokens: context_length / 2, // Default to half of context
+            max_context_length,
+            max_output_length: max_context_length / 2, // Default to half of context
             supports_tools: false,
-            supports_vision: false,
+            supports_multimodal: false,
             family: "unknown".to_string(),
         }
     }
@@ -57,10 +57,10 @@ impl VLLMModelInfo {
         Self {
             model_id: id.clone(),
             display_name: id.clone(),
-            context_length: 4096,    // Conservative default
-            max_output_tokens: 2048, // Conservative default
+            max_context_length: 4096,    // Conservative default
+            max_output_length: 2048, // Conservative default
             supports_tools: false,   // Unknown capability
-            supports_vision: false,  // Unknown capability
+            supports_multimodal: false,  // Unknown capability
             family: "custom".to_string(),
         }
     }
@@ -76,10 +76,10 @@ static MODEL_CONFIGS: LazyLock<HashMap<&'static str, VLLMModelInfo>> = LazyLock:
         VLLMModelInfo {
             model_id: "meta-llama/Meta-Llama-3.1-8B-Instruct".to_string(),
             display_name: "Llama 3.1 8B Instruct".to_string(),
-            context_length: 131072,
-            max_output_tokens: 8192,
+            max_context_length: 131072,
+            max_output_length: 8192,
             supports_tools: true,
-            supports_vision: false,
+            supports_multimodal: false,
             family: "llama".to_string(),
         },
     );
@@ -89,10 +89,10 @@ static MODEL_CONFIGS: LazyLock<HashMap<&'static str, VLLMModelInfo>> = LazyLock:
         VLLMModelInfo {
             model_id: "meta-llama/Meta-Llama-3.1-70B-Instruct".to_string(),
             display_name: "Llama 3.1 70B Instruct".to_string(),
-            context_length: 131072,
-            max_output_tokens: 8192,
+            max_context_length: 131072,
+            max_output_length: 8192,
             supports_tools: true,
-            supports_vision: false,
+            supports_multimodal: false,
             family: "llama".to_string(),
         },
     );
@@ -102,10 +102,10 @@ static MODEL_CONFIGS: LazyLock<HashMap<&'static str, VLLMModelInfo>> = LazyLock:
         VLLMModelInfo {
             model_id: "meta-llama/Meta-Llama-3.1-405B-Instruct".to_string(),
             display_name: "Llama 3.1 405B Instruct".to_string(),
-            context_length: 131072,
-            max_output_tokens: 8192,
+            max_context_length: 131072,
+            max_output_length: 8192,
             supports_tools: true,
-            supports_vision: false,
+            supports_multimodal: false,
             family: "llama".to_string(),
         },
     );
@@ -116,10 +116,10 @@ static MODEL_CONFIGS: LazyLock<HashMap<&'static str, VLLMModelInfo>> = LazyLock:
         VLLMModelInfo {
             model_id: "meta-llama/Llama-3.2-1B-Instruct".to_string(),
             display_name: "Llama 3.2 1B Instruct".to_string(),
-            context_length: 131072,
-            max_output_tokens: 8192,
+            max_context_length: 131072,
+            max_output_length: 8192,
             supports_tools: true,
-            supports_vision: false,
+            supports_multimodal: false,
             family: "llama".to_string(),
         },
     );
@@ -129,10 +129,10 @@ static MODEL_CONFIGS: LazyLock<HashMap<&'static str, VLLMModelInfo>> = LazyLock:
         VLLMModelInfo {
             model_id: "meta-llama/Llama-3.2-3B-Instruct".to_string(),
             display_name: "Llama 3.2 3B Instruct".to_string(),
-            context_length: 131072,
-            max_output_tokens: 8192,
+            max_context_length: 131072,
+            max_output_length: 8192,
             supports_tools: true,
-            supports_vision: false,
+            supports_multimodal: false,
             family: "llama".to_string(),
         },
     );
@@ -143,10 +143,10 @@ static MODEL_CONFIGS: LazyLock<HashMap<&'static str, VLLMModelInfo>> = LazyLock:
         VLLMModelInfo {
             model_id: "meta-llama/Llama-3.3-70B-Instruct".to_string(),
             display_name: "Llama 3.3 70B Instruct".to_string(),
-            context_length: 131072,
-            max_output_tokens: 8192,
+            max_context_length: 131072,
+            max_output_length: 8192,
             supports_tools: true,
-            supports_vision: false,
+            supports_multimodal: false,
             family: "llama".to_string(),
         },
     );
@@ -157,10 +157,10 @@ static MODEL_CONFIGS: LazyLock<HashMap<&'static str, VLLMModelInfo>> = LazyLock:
         VLLMModelInfo {
             model_id: "mistralai/Mistral-7B-Instruct-v0.3".to_string(),
             display_name: "Mistral 7B Instruct v0.3".to_string(),
-            context_length: 32768,
-            max_output_tokens: 8192,
+            max_context_length: 32768,
+            max_output_length: 8192,
             supports_tools: true,
-            supports_vision: false,
+            supports_multimodal: false,
             family: "mistral".to_string(),
         },
     );
@@ -170,10 +170,10 @@ static MODEL_CONFIGS: LazyLock<HashMap<&'static str, VLLMModelInfo>> = LazyLock:
         VLLMModelInfo {
             model_id: "mistralai/Mixtral-8x7B-Instruct-v0.1".to_string(),
             display_name: "Mixtral 8x7B Instruct".to_string(),
-            context_length: 32768,
-            max_output_tokens: 8192,
+            max_context_length: 32768,
+            max_output_length: 8192,
             supports_tools: true,
-            supports_vision: false,
+            supports_multimodal: false,
             family: "mistral".to_string(),
         },
     );
@@ -183,10 +183,10 @@ static MODEL_CONFIGS: LazyLock<HashMap<&'static str, VLLMModelInfo>> = LazyLock:
         VLLMModelInfo {
             model_id: "mistralai/Mixtral-8x22B-Instruct-v0.1".to_string(),
             display_name: "Mixtral 8x22B Instruct".to_string(),
-            context_length: 65536,
-            max_output_tokens: 8192,
+            max_context_length: 65536,
+            max_output_length: 8192,
             supports_tools: true,
-            supports_vision: false,
+            supports_multimodal: false,
             family: "mistral".to_string(),
         },
     );
@@ -197,10 +197,10 @@ static MODEL_CONFIGS: LazyLock<HashMap<&'static str, VLLMModelInfo>> = LazyLock:
         VLLMModelInfo {
             model_id: "Qwen/Qwen2.5-7B-Instruct".to_string(),
             display_name: "Qwen 2.5 7B Instruct".to_string(),
-            context_length: 131072,
-            max_output_tokens: 8192,
+            max_context_length: 131072,
+            max_output_length: 8192,
             supports_tools: true,
-            supports_vision: false,
+            supports_multimodal: false,
             family: "qwen".to_string(),
         },
     );
@@ -210,10 +210,10 @@ static MODEL_CONFIGS: LazyLock<HashMap<&'static str, VLLMModelInfo>> = LazyLock:
         VLLMModelInfo {
             model_id: "Qwen/Qwen2.5-72B-Instruct".to_string(),
             display_name: "Qwen 2.5 72B Instruct".to_string(),
-            context_length: 131072,
-            max_output_tokens: 8192,
+            max_context_length: 131072,
+            max_output_length: 8192,
             supports_tools: true,
-            supports_vision: false,
+            supports_multimodal: false,
             family: "qwen".to_string(),
         },
     );
@@ -224,10 +224,10 @@ static MODEL_CONFIGS: LazyLock<HashMap<&'static str, VLLMModelInfo>> = LazyLock:
         VLLMModelInfo {
             model_id: "deepseek-ai/DeepSeek-V3".to_string(),
             display_name: "DeepSeek V3".to_string(),
-            context_length: 131072,
-            max_output_tokens: 8192,
+            max_context_length: 131072,
+            max_output_length: 8192,
             supports_tools: true,
-            supports_vision: false,
+            supports_multimodal: false,
             family: "deepseek".to_string(),
         },
     );
@@ -237,10 +237,10 @@ static MODEL_CONFIGS: LazyLock<HashMap<&'static str, VLLMModelInfo>> = LazyLock:
         VLLMModelInfo {
             model_id: "deepseek-ai/DeepSeek-R1".to_string(),
             display_name: "DeepSeek R1".to_string(),
-            context_length: 131072,
-            max_output_tokens: 32768,
+            max_context_length: 131072,
+            max_output_length: 32768,
             supports_tools: true,
-            supports_vision: false,
+            supports_multimodal: false,
             family: "deepseek".to_string(),
         },
     );
@@ -251,10 +251,10 @@ static MODEL_CONFIGS: LazyLock<HashMap<&'static str, VLLMModelInfo>> = LazyLock:
         VLLMModelInfo {
             model_id: "codellama/CodeLlama-34b-Instruct-hf".to_string(),
             display_name: "CodeLlama 34B Instruct".to_string(),
-            context_length: 16384,
-            max_output_tokens: 4096,
+            max_context_length: 16384,
+            max_output_length: 4096,
             supports_tools: false,
-            supports_vision: false,
+            supports_multimodal: false,
             family: "codellama".to_string(),
         },
     );
@@ -265,10 +265,10 @@ static MODEL_CONFIGS: LazyLock<HashMap<&'static str, VLLMModelInfo>> = LazyLock:
         VLLMModelInfo {
             model_id: "microsoft/Phi-3-mini-4k-instruct".to_string(),
             display_name: "Phi-3 Mini 4K Instruct".to_string(),
-            context_length: 4096,
-            max_output_tokens: 2048,
+            max_context_length: 4096,
+            max_output_length: 2048,
             supports_tools: true,
-            supports_vision: false,
+            supports_multimodal: false,
             family: "phi".to_string(),
         },
     );
@@ -278,10 +278,10 @@ static MODEL_CONFIGS: LazyLock<HashMap<&'static str, VLLMModelInfo>> = LazyLock:
         VLLMModelInfo {
             model_id: "microsoft/Phi-3-medium-128k-instruct".to_string(),
             display_name: "Phi-3 Medium 128K Instruct".to_string(),
-            context_length: 131072,
-            max_output_tokens: 8192,
+            max_context_length: 131072,
+            max_output_length: 8192,
             supports_tools: true,
-            supports_vision: false,
+            supports_multimodal: false,
             family: "phi".to_string(),
         },
     );
@@ -292,10 +292,10 @@ static MODEL_CONFIGS: LazyLock<HashMap<&'static str, VLLMModelInfo>> = LazyLock:
         VLLMModelInfo {
             model_id: "google/gemma-2-9b-it".to_string(),
             display_name: "Gemma 2 9B IT".to_string(),
-            context_length: 8192,
-            max_output_tokens: 4096,
+            max_context_length: 8192,
+            max_output_length: 4096,
             supports_tools: false,
-            supports_vision: false,
+            supports_multimodal: false,
             family: "gemma".to_string(),
         },
     );
@@ -305,10 +305,10 @@ static MODEL_CONFIGS: LazyLock<HashMap<&'static str, VLLMModelInfo>> = LazyLock:
         VLLMModelInfo {
             model_id: "google/gemma-2-27b-it".to_string(),
             display_name: "Gemma 2 27B IT".to_string(),
-            context_length: 8192,
-            max_output_tokens: 4096,
+            max_context_length: 8192,
+            max_output_length: 4096,
             supports_tools: false,
-            supports_vision: false,
+            supports_multimodal: false,
             family: "gemma".to_string(),
         },
     );
@@ -360,7 +360,7 @@ mod tests {
         let info = info.unwrap();
         assert_eq!(info.model_id, "meta-llama/Meta-Llama-3.1-8B-Instruct");
         assert_eq!(info.display_name, "Llama 3.1 8B Instruct");
-        assert_eq!(info.context_length, 131072);
+        assert_eq!(info.max_context_length, 131072);
         assert!(info.supports_tools);
         assert_eq!(info.family, "llama");
     }
@@ -384,7 +384,7 @@ mod tests {
         assert_eq!(info.model_id, "my-custom-model");
         assert_eq!(info.display_name, "my-custom-model");
         assert_eq!(info.family, "custom");
-        assert_eq!(info.context_length, 4096); // Default
+        assert_eq!(info.max_context_length, 4096); // Default
     }
 
     #[test]
@@ -392,8 +392,8 @@ mod tests {
         let info = VLLMModelInfo::new("test-model", "Test Model", 8192);
         assert_eq!(info.model_id, "test-model");
         assert_eq!(info.display_name, "Test Model");
-        assert_eq!(info.context_length, 8192);
-        assert_eq!(info.max_output_tokens, 4096); // Half of context
+        assert_eq!(info.max_context_length, 8192);
+        assert_eq!(info.max_output_length, 4096); // Half of context
     }
 
     #[test]
@@ -402,7 +402,7 @@ mod tests {
         assert_eq!(info.model_id, "custom-model");
         assert_eq!(info.family, "custom");
         assert!(!info.supports_tools);
-        assert!(!info.supports_vision);
+        assert!(!info.supports_multimodal);
     }
 
     #[test]
@@ -453,15 +453,15 @@ mod tests {
         assert!(v3.supports_tools);
 
         let r1 = get_model_info("deepseek-ai/DeepSeek-R1").unwrap();
-        assert_eq!(r1.max_output_tokens, 32768); // R1 has larger output
+        assert_eq!(r1.max_output_length, 32768); // R1 has larger output
     }
 
     #[test]
     fn test_phi_models() {
         let phi3_mini = get_model_info("microsoft/Phi-3-mini-4k-instruct").unwrap();
-        assert_eq!(phi3_mini.context_length, 4096);
+        assert_eq!(phi3_mini.max_context_length, 4096);
 
         let phi3_medium = get_model_info("microsoft/Phi-3-medium-128k-instruct").unwrap();
-        assert_eq!(phi3_medium.context_length, 131072);
+        assert_eq!(phi3_medium.max_context_length, 131072);
     }
 }
