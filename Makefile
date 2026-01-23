@@ -235,6 +235,14 @@ sync-models-json: ## Fetch latest models as JSON
 sync-models-provider: ## Fetch models for specific provider (usage: make sync-models-provider PROVIDER=openai)
 	@python3 scripts/sync_models.py --provider $(PROVIDER)
 
+sync-models-update: ## Update data/model_prices.json with latest from OpenRouter
+	@echo "Updating model prices..."
+	@python3 scripts/sync_models.py --output update
+	@echo "Done! Review changes in data/model_prices.json"
+
+sync-models-rust: ## Generate Rust code snippets for models (usage: make sync-models-rust PROVIDER=deepseek)
+	@python3 scripts/sync_models.py --output rust --provider $(PROVIDER)
+
 # =============================================================================
 # RELEASE
 # =============================================================================
