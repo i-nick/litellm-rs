@@ -3,8 +3,16 @@
 //! Handles file uploads, management, and processing for Vertex AI
 
 use crate::ProviderError;
+use once_cell::sync::Lazy;
+use regex::Regex;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
+
+/// Regex for matching GCS URIs
+static GCS_PATTERN: Lazy<Regex> = Lazy::new(|| Regex::new(r"gs://[^\s]+").unwrap());
+
+/// Regex for matching file IDs
+static FILE_PATTERN: Lazy<Regex> = Lazy::new(|| Regex::new(r"files/[a-zA-Z0-9\-_]+").unwrap());
 
 /// File upload request
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -263,14 +271,12 @@ impl FileTransformation {
         let mut references = Vec::new();
 
         // Look for gs:// URIs
-        let gcs_pattern = regex::Regex::new(r"gs://[^\s]+").unwrap();
-        for mat in gcs_pattern.find_iter(text) {
+        for mat in GCS_PATTERN.find_iter(text) {
             references.push(mat.as_str().to_string());
         }
 
         // Look for files/* patterns
-        let file_pattern = regex::Regex::new(r"files/[a-zA-Z0-9\-_]+").unwrap();
-        for mat in file_pattern.find_iter(text) {
+        for mat in FILE_PATTERN.find_iter(text) {
             references.push(mat.as_str().to_string());
         }
 

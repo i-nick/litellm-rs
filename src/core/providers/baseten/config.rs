@@ -3,11 +3,16 @@
 //! Configuration for Baseten API access including authentication and model settings.
 
 use crate::core::traits::ProviderConfig;
+use once_cell::sync::Lazy;
 use regex::Regex;
 use serde::{Deserialize, Serialize};
 
 /// Default API base URL for Baseten Model API
 pub const BASETEN_API_BASE: &str = "https://inference.baseten.co/v1";
+
+/// Regex for matching dedicated deployment model IDs
+static DEDICATED_DEPLOYMENT_REGEX: Lazy<Regex> =
+    Lazy::new(|| Regex::new(r"^[a-zA-Z0-9]{8}$").unwrap());
 
 /// Baseten provider configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -100,8 +105,7 @@ impl BasetenConfig {
         let model_id = model.strip_prefix("baseten/").unwrap_or(model);
 
         // Check if it's an 8-character alphanumeric code
-        let re = Regex::new(r"^[a-zA-Z0-9]{8}$").unwrap();
-        re.is_match(model_id)
+        DEDICATED_DEPLOYMENT_REGEX.is_match(model_id)
     }
 
     /// Get the appropriate API base URL for the given model
