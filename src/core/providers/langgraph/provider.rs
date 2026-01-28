@@ -608,7 +608,10 @@ fn create_langgraph_stream(
             async move {
                 match result {
                     Ok((data, model)) => {
-                        let mut buffer_guard = buffer_clone.lock().unwrap();
+                        let mut buffer_guard = match buffer_clone.lock() {
+                            Ok(guard) => guard,
+                            Err(poisoned) => poisoned.into_inner(),
+                        };
                         buffer_guard.push_str(&data);
 
                         // Process complete SSE events
