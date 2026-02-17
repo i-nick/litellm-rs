@@ -18,7 +18,7 @@ pub mod baichuan;
 pub mod baseten;
 pub mod bedrock;
 pub mod bytez;
-pub mod cerebras;
+// cerebras: Tier 1 → registry/catalog.rs
 pub mod clarifai;
 pub mod cloudflare;
 pub mod codestral;
@@ -38,7 +38,7 @@ pub mod elevenlabs;
 pub mod empower;
 pub mod exa_ai;
 pub mod fal_ai;
-pub mod featherless;
+// featherless: Tier 1 → registry/catalog.rs
 pub mod firecrawl;
 pub mod fireworks;
 pub mod friendliai;
@@ -53,7 +53,7 @@ pub mod groq;
 pub mod heroku;
 pub mod hosted_vllm;
 pub mod huggingface;
-pub mod hyperbolic;
+// hyperbolic: Tier 1 → registry/catalog.rs
 pub mod infinity;
 pub mod jina;
 pub mod lambda_ai;
@@ -71,10 +71,10 @@ pub mod mistral;
 pub mod moonshot;
 pub mod morph;
 pub mod nanogpt;
-pub mod nebius;
+// nebius: Tier 1 → registry/catalog.rs
 pub mod nlp_cloud;
-pub mod novita;
-pub mod nscale;
+// novita: Tier 1 → registry/catalog.rs
+// nscale: Tier 1 → registry/catalog.rs
 pub mod nvidia_nim;
 pub mod oci;
 pub mod ollama;
@@ -83,7 +83,7 @@ pub mod openai;
 pub mod openai_like;
 pub mod openrouter;
 pub mod ovhcloud;
-pub mod perplexity;
+// perplexity: Tier 1 → registry/catalog.rs
 pub mod petals;
 pub mod pg_vector;
 pub mod poe;
