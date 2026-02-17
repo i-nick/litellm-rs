@@ -69,7 +69,7 @@ pub mod meta_llama;
 pub mod milvus;
 // minimax: Tier 1 → registry/catalog.rs
 pub mod mistral;
-pub mod moonshot;
+// moonshot: Tier 1 → registry/catalog.rs
 pub mod morph;
 // nanogpt: Tier 1 → registry/catalog.rs
 // nebius: Tier 1 → registry/catalog.rs
@@ -293,7 +293,6 @@ macro_rules! dispatch_provider {
             Provider::Azure(p) => p.$method(),
             Provider::Bedrock(p) => p.$method(),
             Provider::Mistral(p) => p.$method(),
-            Provider::Moonshot(p) => p.$method(),
             Provider::MetaLlama(p) => p.$method(),
             Provider::OpenRouter(p) => p.$method(),
             Provider::VertexAI(p) => p.$method(),
@@ -311,7 +310,6 @@ macro_rules! dispatch_provider {
             Provider::Azure(p) => p.$method($($arg),+),
             Provider::Bedrock(p) => p.$method($($arg),+),
             Provider::Mistral(p) => p.$method($($arg),+),
-            Provider::Moonshot(p) => p.$method($($arg),+),
             Provider::MetaLlama(p) => p.$method($($arg),+),
             Provider::OpenRouter(p) => p.$method($($arg),+),
             Provider::VertexAI(p) => p.$method($($arg),+),
@@ -332,7 +330,6 @@ macro_rules! dispatch_provider_async {
             Provider::Azure(p) => LLMProvider::$method(p, $($arg),*).await.map_err(ProviderError::from),
             Provider::Bedrock(p) => LLMProvider::$method(p, $($arg),*).await.map_err(ProviderError::from),
             Provider::Mistral(p) => LLMProvider::$method(p, $($arg),*).await.map_err(ProviderError::from),
-            Provider::Moonshot(p) => LLMProvider::$method(p, $($arg),*).await.map_err(ProviderError::from),
             Provider::MetaLlama(p) => LLMProvider::$method(p, $($arg),*).await.map_err(ProviderError::from),
             Provider::OpenRouter(p) => LLMProvider::$method(p, $($arg),*).await.map_err(ProviderError::from),
             Provider::VertexAI(p) => LLMProvider::$method(p, $($arg),*).await.map_err(ProviderError::from),
@@ -353,7 +350,6 @@ macro_rules! dispatch_provider_value {
             Provider::Azure(p) => LLMProvider::$method(p),
             Provider::Bedrock(p) => LLMProvider::$method(p),
             Provider::Mistral(p) => LLMProvider::$method(p),
-            Provider::Moonshot(p) => LLMProvider::$method(p),
             Provider::MetaLlama(p) => LLMProvider::$method(p),
             Provider::OpenRouter(p) => LLMProvider::$method(p),
             Provider::VertexAI(p) => LLMProvider::$method(p),
@@ -371,7 +367,6 @@ macro_rules! dispatch_provider_value {
             Provider::Azure(p) => LLMProvider::$method(p, $($arg),+),
             Provider::Bedrock(p) => LLMProvider::$method(p, $($arg),+),
             Provider::Mistral(p) => LLMProvider::$method(p, $($arg),+),
-            Provider::Moonshot(p) => LLMProvider::$method(p, $($arg),+),
             Provider::MetaLlama(p) => LLMProvider::$method(p, $($arg),+),
             Provider::OpenRouter(p) => LLMProvider::$method(p, $($arg),+),
             Provider::VertexAI(p) => LLMProvider::$method(p, $($arg),+),
@@ -412,7 +407,6 @@ macro_rules! dispatch_provider_async_direct {
             Provider::Azure(p) => LLMProvider::$method(p).await,
             Provider::Bedrock(p) => LLMProvider::$method(p).await,
             Provider::Mistral(p) => LLMProvider::$method(p).await,
-            Provider::Moonshot(p) => LLMProvider::$method(p).await,
             Provider::MetaLlama(p) => LLMProvider::$method(p).await,
             Provider::OpenRouter(p) => LLMProvider::$method(p).await,
             Provider::VertexAI(p) => LLMProvider::$method(p).await,
@@ -435,7 +429,6 @@ pub enum Provider {
     Azure(azure::AzureOpenAIProvider),
     Bedrock(bedrock::BedrockProvider),
     Mistral(mistral::MistralProvider),
-    Moonshot(moonshot::MoonshotProvider),
     MetaLlama(meta_llama::LlamaProvider),
     OpenRouter(openrouter::OpenRouterProvider),
     VertexAI(vertex_ai::VertexAIProvider),
@@ -455,7 +448,6 @@ impl Provider {
             Provider::Azure(_) => "azure",
             Provider::Bedrock(_) => "bedrock",
             Provider::Mistral(_) => "mistral",
-            Provider::Moonshot(_) => "moonshot",
             Provider::MetaLlama(_) => "meta_llama",
             Provider::OpenRouter(_) => "openrouter",
             Provider::VertexAI(_) => "vertex_ai",
@@ -477,7 +469,6 @@ impl Provider {
             Provider::Azure(_) => ProviderType::Azure,
             Provider::Bedrock(_) => ProviderType::Bedrock,
             Provider::Mistral(_) => ProviderType::Mistral,
-            Provider::Moonshot(_) => ProviderType::Moonshot,
             Provider::MetaLlama(_) => ProviderType::MetaLlama,
             Provider::OpenRouter(_) => ProviderType::OpenRouter,
             Provider::VertexAI(_) => ProviderType::VertexAI,
@@ -495,7 +486,6 @@ impl Provider {
             ProviderType::Anthropic,
             ProviderType::OpenRouter,
             ProviderType::Mistral,
-            ProviderType::Moonshot,
             ProviderType::Cloudflare,
         ];
         SUPPORTED
@@ -798,17 +788,6 @@ impl Provider {
                     .await
                     .map_err(|e| ProviderError::initialization("mistral", e.to_string()))?;
                 Ok(Provider::Mistral(provider))
-            }
-            ProviderType::Moonshot => {
-                let api_key = macros::require_config_str(&config, "api_key", "moonshot")?;
-                let moonshot_config = moonshot::MoonshotConfig {
-                    api_key: api_key.to_string(),
-                    ..Default::default()
-                };
-                let provider = moonshot::MoonshotProvider::new(moonshot_config)
-                    .await
-                    .map_err(|e| ProviderError::initialization("moonshot", e.to_string()))?;
-                Ok(Provider::Moonshot(provider))
             }
             ProviderType::Cloudflare => {
                 let account_id = macros::require_config_str(&config, "account_id", "cloudflare")?;

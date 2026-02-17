@@ -6,7 +6,7 @@
 
 #[cfg(test)]
 mod tests {
-    use litellm_rs::core::providers::{Provider, ProviderType};
+    use litellm_rs::core::providers::{create_provider, Provider, ProviderType};
     use serde_json::json;
 
     /// Test creating OpenAI provider from config
@@ -150,14 +150,17 @@ mod tests {
         assert!(matches!(provider, Provider::OpenAILike(_)));
     }
 
-    /// Test creating Moonshot provider from config
+    /// Test creating Moonshot provider from catalog (Tier 1 → OpenAILike)
     #[tokio::test]
     async fn test_moonshot_provider_from_config() {
-        let config = json!({
-            "api_key": "moonshot-test-key"
-        });
+        let config = litellm_rs::config::models::provider::ProviderConfig {
+            name: "moonshot".to_string(),
+            provider_type: "".to_string(),
+            api_key: "moonshot-test-key".to_string(),
+            ..Default::default()
+        };
 
-        let result = Provider::from_config_async(ProviderType::Moonshot, config).await;
+        let result = create_provider(config).await;
         assert!(
             result.is_ok(),
             "Failed to create Moonshot provider: {:?}",
@@ -165,7 +168,7 @@ mod tests {
         );
 
         let provider = result.unwrap();
-        assert_eq!(provider.name(), "moonshot");
+        assert!(matches!(provider, Provider::OpenAILike(_)));
     }
 
     /// Test creating Cloudflare provider from config
