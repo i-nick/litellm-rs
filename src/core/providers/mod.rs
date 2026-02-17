@@ -31,7 +31,7 @@ pub mod custom_api;
 pub mod databricks;
 pub mod datarobot;
 pub mod deepgram;
-pub mod deepinfra;
+// deepinfra: Tier 1 → registry/catalog.rs
 pub mod deepl;
 pub mod deepseek;
 // docker_model_runner: Tier 1 → registry/catalog.rs
@@ -299,7 +299,6 @@ macro_rules! dispatch_provider {
             Provider::OpenRouter(p) => p.$method(),
             Provider::VertexAI(p) => p.$method(),
             Provider::V0(p) => p.$method(),
-            Provider::DeepInfra(p) => p.$method(),
             Provider::AzureAI(p) => p.$method(),
             Provider::Cloudflare(p) => p.$method(),
             Provider::OpenAILike(p) => p.$method(),
@@ -319,7 +318,6 @@ macro_rules! dispatch_provider {
             Provider::OpenRouter(p) => p.$method($($arg),+),
             Provider::VertexAI(p) => p.$method($($arg),+),
             Provider::V0(p) => p.$method($($arg),+),
-            Provider::DeepInfra(p) => p.$method($($arg),+),
             Provider::AzureAI(p) => p.$method($($arg),+),
             Provider::Cloudflare(p) => p.$method($($arg),+),
             Provider::OpenAILike(p) => p.$method($($arg),+),
@@ -342,7 +340,6 @@ macro_rules! dispatch_provider_async {
             Provider::OpenRouter(p) => LLMProvider::$method(p, $($arg),*).await.map_err(ProviderError::from),
             Provider::VertexAI(p) => LLMProvider::$method(p, $($arg),*).await.map_err(ProviderError::from),
             Provider::V0(p) => LLMProvider::$method(p, $($arg),*).await.map_err(ProviderError::from),
-            Provider::DeepInfra(p) => LLMProvider::$method(p, $($arg),*).await.map_err(ProviderError::from),
             Provider::AzureAI(p) => LLMProvider::$method(p, $($arg),*).await.map_err(ProviderError::from),
             Provider::Cloudflare(p) => LLMProvider::$method(p, $($arg),*).await.map_err(ProviderError::from),
             Provider::OpenAILike(p) => LLMProvider::$method(p, $($arg),*).await.map_err(ProviderError::from),
@@ -365,7 +362,6 @@ macro_rules! dispatch_provider_value {
             Provider::OpenRouter(p) => LLMProvider::$method(p),
             Provider::VertexAI(p) => LLMProvider::$method(p),
             Provider::V0(p) => LLMProvider::$method(p),
-            Provider::DeepInfra(p) => LLMProvider::$method(p),
             Provider::AzureAI(p) => LLMProvider::$method(p),
             Provider::Cloudflare(p) => LLMProvider::$method(p),
             Provider::OpenAILike(p) => LLMProvider::$method(p),
@@ -385,7 +381,6 @@ macro_rules! dispatch_provider_value {
             Provider::OpenRouter(p) => LLMProvider::$method(p, $($arg),+),
             Provider::VertexAI(p) => LLMProvider::$method(p, $($arg),+),
             Provider::V0(p) => LLMProvider::$method(p, $($arg),+),
-            Provider::DeepInfra(p) => LLMProvider::$method(p, $($arg),+),
             Provider::AzureAI(p) => LLMProvider::$method(p, $($arg),+),
             Provider::Cloudflare(p) => LLMProvider::$method(p, $($arg),+),
             Provider::OpenAILike(p) => LLMProvider::$method(p, $($arg),+),
@@ -428,7 +423,6 @@ macro_rules! dispatch_provider_async_direct {
             Provider::OpenRouter(p) => LLMProvider::$method(p).await,
             Provider::VertexAI(p) => LLMProvider::$method(p).await,
             Provider::V0(p) => LLMProvider::$method(p).await,
-            Provider::DeepInfra(p) => LLMProvider::$method(p).await,
             Provider::AzureAI(p) => LLMProvider::$method(p).await,
             Provider::Cloudflare(p) => LLMProvider::$method(p).await,
             Provider::OpenAILike(p) => LLMProvider::$method(p).await,
@@ -453,7 +447,6 @@ pub enum Provider {
     OpenRouter(openrouter::OpenRouterProvider),
     VertexAI(vertex_ai::VertexAIProvider),
     V0(v0::V0Provider),
-    DeepInfra(deepinfra::DeepInfraProvider),
     AzureAI(azure_ai::AzureAIProvider),
     Cloudflare(cloudflare::CloudflareProvider),
     /// Tier 1: data-driven OpenAI-compatible providers (groq, together, fireworks, etc.)
@@ -475,7 +468,6 @@ impl Provider {
             Provider::OpenRouter(_) => "openrouter",
             Provider::VertexAI(_) => "vertex_ai",
             Provider::V0(_) => "v0",
-            Provider::DeepInfra(_) => "deepinfra",
             Provider::AzureAI(_) => "azure_ai",
             Provider::Cloudflare(_) => "cloudflare",
             Provider::OpenAILike(p) => {
@@ -499,7 +491,6 @@ impl Provider {
             Provider::OpenRouter(_) => ProviderType::OpenRouter,
             Provider::VertexAI(_) => ProviderType::VertexAI,
             Provider::V0(_) => ProviderType::V0,
-            Provider::DeepInfra(_) => ProviderType::DeepInfra,
             Provider::AzureAI(_) => ProviderType::AzureAI,
             Provider::Cloudflare(_) => ProviderType::Cloudflare,
             Provider::OpenAILike(_) => ProviderType::OpenAICompatible,
@@ -605,11 +596,6 @@ impl Provider {
                 Ok(Box::pin(mapped))
             }
             Provider::Anthropic(p) => {
-                let stream = LLMProvider::chat_completion_stream(p, request, context).await?;
-                let mapped = stream.map(|result| result);
-                Ok(Box::pin(mapped))
-            }
-            Provider::DeepInfra(p) => {
                 let stream = LLMProvider::chat_completion_stream(p, request, context).await?;
                 let mapped = stream.map(|result| result);
                 Ok(Box::pin(mapped))
