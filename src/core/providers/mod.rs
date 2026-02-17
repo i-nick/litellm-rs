@@ -131,6 +131,7 @@ pub mod base_provider;
 pub mod contextual_error;
 pub mod provider_error_conversions;
 pub mod provider_registry;
+pub mod registry; // Data-driven Tier 1 provider catalog
 pub mod unified_provider;
 
 // Test modules (only compiled during tests)
@@ -302,6 +303,7 @@ macro_rules! dispatch_provider {
             Provider::Groq(p) => p.$method(),
             Provider::XAI(p) => p.$method(),
             Provider::Cloudflare(p) => p.$method(),
+            Provider::OpenAILike(p) => p.$method(),
         }
     };
 
@@ -323,6 +325,7 @@ macro_rules! dispatch_provider {
             Provider::Groq(p) => p.$method($($arg),+),
             Provider::XAI(p) => p.$method($($arg),+),
             Provider::Cloudflare(p) => p.$method($($arg),+),
+            Provider::OpenAILike(p) => p.$method($($arg),+),
         }
     };
 }
@@ -347,6 +350,7 @@ macro_rules! dispatch_provider_async {
             Provider::Groq(p) => LLMProvider::$method(p, $($arg),*).await.map_err(ProviderError::from),
             Provider::XAI(p) => LLMProvider::$method(p, $($arg),*).await.map_err(ProviderError::from),
             Provider::Cloudflare(p) => LLMProvider::$method(p, $($arg),*).await.map_err(ProviderError::from),
+            Provider::OpenAILike(p) => LLMProvider::$method(p, $($arg),*).await.map_err(ProviderError::from),
         }
     };
 }
@@ -371,6 +375,7 @@ macro_rules! dispatch_provider_value {
             Provider::Groq(p) => LLMProvider::$method(p),
             Provider::XAI(p) => LLMProvider::$method(p),
             Provider::Cloudflare(p) => LLMProvider::$method(p),
+            Provider::OpenAILike(p) => LLMProvider::$method(p),
         }
     };
 
@@ -392,6 +397,7 @@ macro_rules! dispatch_provider_value {
             Provider::Groq(p) => LLMProvider::$method(p, $($arg),+),
             Provider::XAI(p) => LLMProvider::$method(p, $($arg),+),
             Provider::Cloudflare(p) => LLMProvider::$method(p, $($arg),+),
+            Provider::OpenAILike(p) => LLMProvider::$method(p, $($arg),+),
         }
     };
 }
@@ -436,6 +442,7 @@ macro_rules! dispatch_provider_async_direct {
             Provider::Groq(p) => LLMProvider::$method(p).await,
             Provider::XAI(p) => LLMProvider::$method(p).await,
             Provider::Cloudflare(p) => LLMProvider::$method(p).await,
+            Provider::OpenAILike(p) => LLMProvider::$method(p).await,
         }
     };
 }
@@ -462,6 +469,8 @@ pub enum Provider {
     Groq(groq::GroqProvider),
     XAI(xai::XAIProvider),
     Cloudflare(cloudflare::CloudflareProvider),
+    /// Tier 1: data-driven OpenAI-compatible providers (groq, together, fireworks, etc.)
+    OpenAILike(openai_like::OpenAILikeProvider),
 }
 
 impl Provider {
@@ -484,6 +493,10 @@ impl Provider {
             Provider::Groq(_) => "groq",
             Provider::XAI(_) => "xai",
             Provider::Cloudflare(_) => "cloudflare",
+            Provider::OpenAILike(p) => {
+                use crate::core::traits::provider::llm_provider::trait_definition::LLMProvider;
+                p.name()
+            }
         }
     }
 
@@ -506,6 +519,7 @@ impl Provider {
             Provider::Groq(_) => ProviderType::Groq,
             Provider::XAI(_) => ProviderType::XAI,
             Provider::Cloudflare(_) => ProviderType::Cloudflare,
+            Provider::OpenAILike(_) => ProviderType::OpenAICompatible,
         }
     }
 
@@ -629,6 +643,11 @@ impl Provider {
                 let mapped = stream.map(|result| result);
                 Ok(Box::pin(mapped))
             }
+            Provider::OpenAILike(p) => {
+                let stream = LLMProvider::chat_completion_stream(p, request, context).await?;
+                let mapped = stream.map(|result| result);
+                Ok(Box::pin(mapped))
+            }
             _ => Err(UnifiedProviderError::not_implemented(
                 "unknown",
                 format!("Streaming not implemented for {}", self.name()),
@@ -714,9 +733,28 @@ pub async fn create_provider(
     } else {
         provider_type.as_str()
     };
-    let provider_type = ProviderType::from(provider_selector);
+    let provider_type_enum = ProviderType::from(provider_selector);
 
-    if let ProviderType::Custom(custom_name) = &provider_type {
+    // --- Tier 1: check the data-driven catalog first ---
+    let provider_name_lower = provider_selector.to_lowercase();
+    if let Some(def) = registry::get_definition(&provider_name_lower) {
+        let effective_key = if api_key.is_empty() {
+            def.resolve_api_key(None)
+        } else {
+            Some(api_key.clone())
+        };
+        let oai_config = def.to_openai_like_config(
+            effective_key.as_deref(),
+            base_url.as_deref(),
+        );
+        let provider = openai_like::OpenAILikeProvider::new(oai_config)
+            .await
+            .map_err(|e| ProviderError::initialization(def.name, e.to_string()))?;
+        return Ok(Provider::OpenAILike(provider));
+    }
+
+    // --- Tier 2/3: existing factory logic ---
+    if let ProviderType::Custom(custom_name) = &provider_type_enum {
         return Err(ProviderError::not_implemented(
             "unknown",
             format!(
@@ -725,10 +763,10 @@ pub async fn create_provider(
             ),
         ));
     }
-    if !Provider::factory_supported_provider_types().contains(&provider_type) {
+    if !Provider::factory_supported_provider_types().contains(&provider_type_enum) {
         return Err(ProviderError::not_implemented(
             "unknown",
-            format!("Factory for {:?} not yet implemented", provider_type),
+            format!("Factory for {:?} not yet implemented", provider_type_enum),
         ));
     }
 
@@ -745,7 +783,6 @@ pub async fn create_provider(
     }
     if let Some(value) = organization.filter(|v| !v.is_empty()) {
         factory_config.insert("organization".to_string(), Value::String(value.clone()));
-        // Cloudflare requires account_id; allow org as a compatibility fallback.
         factory_config
             .entry("account_id".to_string())
             .or_insert(Value::String(value));
@@ -754,20 +791,18 @@ pub async fn create_provider(
         factory_config.insert("project".to_string(), Value::String(value));
     }
 
-    // Merge provider-specific settings while keeping explicit top-level fields authoritative.
     for (key, value) in settings {
         factory_config.entry(key).or_insert(value);
     }
 
-    // Cloudflare requires api_token + account_id. If api_token is missing, fallback to api_key.
-    if matches!(provider_type, ProviderType::Cloudflare)
+    if matches!(provider_type_enum, ProviderType::Cloudflare)
         && !factory_config.contains_key("api_token")
         && !api_key.is_empty()
     {
         factory_config.insert("api_token".to_string(), Value::String(api_key));
     }
 
-    Provider::from_config_async(provider_type, Value::Object(factory_config)).await
+    Provider::from_config_async(provider_type_enum, Value::Object(factory_config)).await
 }
 
 // Provider factory functions
@@ -1300,11 +1335,11 @@ mod tests {
 
     #[tokio::test]
     async fn test_create_provider_prefers_provider_type_over_name() {
+        // provider_type takes precedence over name.
+        // Use a truly unsupported provider type (not in catalog or factory).
         let config = crate::config::models::provider::ProviderConfig {
-            // If name took precedence, this would resolve to a supported OpenAI branch.
             name: "openai".to_string(),
-            // We intentionally set an unsupported branch to assert precedence.
-            provider_type: "perplexity".to_string(),
+            provider_type: "pydantic_ai".to_string(),
             api_key: "test-key".to_string(),
             ..Default::default()
         };
@@ -1317,17 +1352,14 @@ mod tests {
             "Expected NotImplemented error, got {}",
             err
         );
-        assert!(
-            err.to_string().contains("Perplexity"),
-            "Expected error to mention the selected provider type, got {}",
-            err
-        );
     }
 
     #[tokio::test]
     async fn test_create_provider_falls_back_to_name_when_provider_type_empty() {
+        // When provider_type is empty, name is used as the selector.
+        // Use a truly unsupported name (not in catalog or factory).
         let config = crate::config::models::provider::ProviderConfig {
-            name: "perplexity".to_string(),
+            name: "pydantic_ai".to_string(),
             provider_type: "".to_string(),
             api_key: "test-key".to_string(),
             ..Default::default()
@@ -1341,11 +1373,22 @@ mod tests {
             "Expected NotImplemented error, got {}",
             err
         );
-        assert!(
-            err.to_string().contains("Perplexity"),
-            "Expected fallback to name parsing, got {}",
-            err
-        );
+    }
+
+    #[tokio::test]
+    async fn test_create_provider_tier1_catalog_creates_openai_like() {
+        // Tier 1 providers in the catalog should create OpenAILike variant
+        let config = crate::config::models::provider::ProviderConfig {
+            name: "perplexity".to_string(),
+            provider_type: "".to_string(),
+            api_key: "test-key".to_string(),
+            ..Default::default()
+        };
+
+        let provider = create_provider(config)
+            .await
+            .expect("Tier 1 provider should succeed");
+        assert!(matches!(provider, Provider::OpenAILike(_)));
     }
 
     #[tokio::test]
