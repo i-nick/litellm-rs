@@ -127,14 +127,19 @@ mod tests {
         assert_eq!(provider.name(), "mistral");
     }
 
-    /// Test creating DeepSeek provider from config
+    /// Test creating DeepSeek provider via create_provider (catalog path)
     #[tokio::test]
     async fn test_deepseek_provider_from_config() {
-        let config = json!({
-            "api_key": "deepseek-test-key"
-        });
+        use litellm_rs::core::providers::create_provider;
 
-        let result = Provider::from_config_async(ProviderType::DeepSeek, config).await;
+        let config = litellm_rs::config::models::provider::ProviderConfig {
+            name: "deepseek".to_string(),
+            provider_type: "deepseek".to_string(),
+            api_key: "deepseek-test-key".to_string(),
+            ..Default::default()
+        };
+
+        let result = create_provider(config).await;
         assert!(
             result.is_ok(),
             "Failed to create DeepSeek provider: {:?}",
@@ -142,7 +147,7 @@ mod tests {
         );
 
         let provider = result.unwrap();
-        assert_eq!(provider.name(), "deepseek");
+        assert!(matches!(provider, Provider::OpenAILike(_)));
     }
 
     /// Test creating Moonshot provider from config

@@ -145,13 +145,12 @@ impl DefaultRouter {
         }
 
         // Add DeepSeek provider if API key is available
-        if let Ok(_api_key) = std::env::var("DEEPSEEK_API_KEY") {
-            use crate::core::providers::deepseek::{DeepSeekConfig, DeepSeekProvider};
-
-            let config = DeepSeekConfig::from_env();
-
-            if let Ok(deepseek_provider) = DeepSeekProvider::new(config) {
-                provider_registry.register(Provider::DeepSeek(deepseek_provider));
+        if let Ok(api_key) = std::env::var("DEEPSEEK_API_KEY") {
+            if let Some(def) = crate::core::providers::registry::get_definition("deepseek") {
+                let config = def.to_openai_like_config(Some(&api_key), None);
+                if let Ok(provider) = crate::core::providers::openai_like::OpenAILikeProvider::new(config).await {
+                    provider_registry.register(Provider::OpenAILike(provider));
+                }
             }
         }
 
