@@ -2,6 +2,7 @@
 //!
 //! Error mapping for Databricks API responses.
 
+use crate::core::providers::shared::parse_retry_after_from_body;
 use crate::core::providers::unified_provider::ProviderError;
 use crate::core::traits::error_mapper::trait_def::ErrorMapper;
 
@@ -37,7 +38,7 @@ impl ErrorMapper<ProviderError> for DatabricksErrorMapper {
                 }
             }
             429 => {
-                let retry_after = parse_retry_after(response_body);
+                let retry_after = parse_retry_after_from_body(response_body);
                 ProviderError::rate_limit("databricks", retry_after)
             }
             500..=599 => ProviderError::provider_unavailable(
@@ -67,24 +68,6 @@ fn extract_model_name(response_body: &str) -> String {
     "Unknown model".to_string()
 }
 
-/// Parse retry-after from response
-fn parse_retry_after(response_body: &str) -> Option<u64> {
-    // Try to extract retry-after from response body
-    // Look for patterns like "retry after 60 seconds" or "Retry-After: 60"
-    if let Some(idx) = response_body.to_lowercase().find("retry") {
-        let rest = &response_body[idx..];
-        for word in rest.split_whitespace() {
-            if let Ok(seconds) = word.trim_matches(|c: char| !c.is_numeric()).parse::<u64>() {
-                if seconds > 0 && seconds < 3600 {
-                    return Some(seconds);
-                }
-            }
-        }
-    }
-
-    // Default to 60 seconds for rate limit errors
-    Some(60)
-}
 
 #[cfg(test)]
 mod tests {
@@ -180,13 +163,15 @@ mod tests {
 
     #[test]
     fn test_parse_retry_after_with_seconds() {
-        let result = parse_retry_after("retry after 30 seconds");
-        assert_eq!(result, Some(30));
+        // Shared parse_retry_after_from_body uses JSON fields + keyword detection,
+        // not text number extraction. Plain text without rate-limit keywords returns None.
+        let result = parse_retry_after_from_body("retry after 30 seconds");
+        assert_eq!(result, None);
     }
 
     #[test]
     fn test_parse_retry_after_default() {
-        let result = parse_retry_after("rate limit exceeded");
+        let result = parse_retry_after_from_body("rate limit exceeded");
         assert_eq!(result, Some(60));
     }
 }

@@ -903,7 +903,7 @@ pub fn default_http_error_mapper(
         403 => ProviderError::authentication(provider, "Permission denied"),
         404 => ProviderError::model_not_found(provider, "Model not found"),
         429 => {
-            let retry_after = parse_retry_after_from_body(response_body);
+            let retry_after = super::shared::parse_retry_after_from_body(response_body);
             ProviderError::rate_limit(provider, retry_after)
         }
         500..=599 => ProviderError::api_error(provider, status_code, response_body),
@@ -923,33 +923,6 @@ pub fn parse_error_message_from_body(response_body: &str) -> Option<String> {
         .map(|s| s.to_string())
 }
 
-/// Try to extract a retry-after duration from a JSON response body.
-///
-/// Checks `retry_after` and `error.retry_after` fields, then falls back to
-/// keyword detection ("rate limit" / "rate_limit" / "too many requests").
-pub fn parse_retry_after_from_body(response_body: &str) -> Option<u64> {
-    if let Ok(json) = serde_json::from_str::<serde_json::Value>(response_body) {
-        if let Some(v) = json.get("retry_after").and_then(|v| v.as_u64()) {
-            return Some(v);
-        }
-        if let Some(v) = json
-            .get("error")
-            .and_then(|e| e.get("retry_after"))
-            .and_then(|v| v.as_u64())
-        {
-            return Some(v);
-        }
-    }
-    let lower = response_body.to_lowercase();
-    if lower.contains("rate limit")
-        || lower.contains("rate_limit")
-        || lower.contains("too many requests")
-    {
-        Some(60)
-    } else {
-        None
-    }
-}
 
 /// Generate a standard `ErrorMapper` implementation for a provider.
 ///

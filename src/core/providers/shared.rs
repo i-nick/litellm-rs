@@ -420,6 +420,83 @@ impl TokenCostCalculator {
 }
 
 // ============================================================================
+// Retry-After Parsing
+// ============================================================================
+
+/// Parse retry-after duration from a JSON response body.
+///
+/// Checks `retry_after` and `error.retry_after` fields, then falls back to
+/// keyword detection ("rate limit" / "rate_limit" / "too many requests").
+/// Returns a default of 60 seconds when only keywords match.
+pub fn parse_retry_after_from_body(response_body: &str) -> Option<u64> {
+    if let Ok(json) = serde_json::from_str::<serde_json::Value>(response_body) {
+        if let Some(v) = json.get("retry_after").and_then(|v| v.as_u64()) {
+            return Some(v);
+        }
+        if let Some(v) = json
+            .get("error")
+            .and_then(|e| e.get("retry_after"))
+            .and_then(|v| v.as_u64())
+        {
+            return Some(v);
+        }
+    }
+    let lower = response_body.to_lowercase();
+    if lower.contains("rate limit")
+        || lower.contains("rate_limit")
+        || lower.contains("too many requests")
+    {
+        Some(60)
+    } else {
+        None
+    }
+}
+
+// ============================================================================
+// Vector Math Utilities
+// ============================================================================
+
+/// Calculate cosine similarity between two vectors.
+pub fn cosine_similarity(vec1: &[f32], vec2: &[f32]) -> f32 {
+    if vec1.len() != vec2.len() {
+        return 0.0;
+    }
+
+    let dot_product: f32 = vec1.iter().zip(vec2.iter()).map(|(a, b)| a * b).sum();
+    let norm1: f32 = vec1.iter().map(|x| x * x).sum::<f32>().sqrt();
+    let norm2: f32 = vec2.iter().map(|x| x * x).sum::<f32>().sqrt();
+
+    if norm1 == 0.0 || norm2 == 0.0 {
+        0.0
+    } else {
+        dot_product / (norm1 * norm2)
+    }
+}
+
+/// Calculate L2 (Euclidean) distance between two vectors.
+pub fn l2_distance(vec1: &[f32], vec2: &[f32]) -> f32 {
+    if vec1.len() != vec2.len() {
+        return f32::INFINITY;
+    }
+
+    vec1.iter()
+        .zip(vec2.iter())
+        .map(|(a, b)| (a - b).powi(2))
+        .sum::<f32>()
+        .sqrt()
+}
+
+/// Normalize a vector to unit length in-place.
+pub fn normalize_vector(vector: &mut [f32]) {
+    let norm: f32 = vector.iter().map(|x| x * x).sum::<f32>().sqrt();
+    if norm > 0.0 {
+        for value in vector.iter_mut() {
+            *value /= norm;
+        }
+    }
+}
+
+// ============================================================================
 // Testing Utilities
 // ============================================================================
 

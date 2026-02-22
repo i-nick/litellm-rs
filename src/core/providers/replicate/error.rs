@@ -2,6 +2,7 @@
 //!
 //! Error handling for the Replicate provider
 
+use crate::core::providers::shared::parse_retry_after_from_body;
 use crate::core::providers::unified_provider::ProviderError;
 use crate::core::traits::error_mapper::trait_def::ErrorMapper;
 
@@ -49,7 +50,7 @@ impl ErrorMapper<ProviderError> for ReplicateErrorMapper {
             }
             429 => {
                 // Rate limit - try to parse retry-after
-                let retry_after = parse_retry_after(response_body);
+                let retry_after = parse_retry_after_from_body(response_body);
                 ProviderError::replicate_rate_limit(retry_after)
             }
             500..=599 => ProviderError::provider_unavailable("replicate", response_body),
@@ -92,16 +93,6 @@ impl ErrorMapper<ProviderError> for ReplicateErrorMapper {
     }
 }
 
-/// Parse retry-after from response body
-fn parse_retry_after(response_body: &str) -> Option<u64> {
-    // Try to extract retry-after value from response
-    if response_body.contains("rate limit") || response_body.contains("too many requests") {
-        // Default retry after 60 seconds
-        Some(60)
-    } else {
-        None
-    }
-}
 
 #[cfg(test)]
 mod tests {
@@ -193,19 +184,19 @@ mod tests {
 
     #[test]
     fn test_parse_retry_after_with_rate_limit() {
-        let result = parse_retry_after("rate limit exceeded");
+        let result = parse_retry_after_from_body("rate limit exceeded");
         assert_eq!(result, Some(60));
     }
 
     #[test]
     fn test_parse_retry_after_with_too_many_requests() {
-        let result = parse_retry_after("too many requests");
+        let result = parse_retry_after_from_body("too many requests");
         assert_eq!(result, Some(60));
     }
 
     #[test]
     fn test_parse_retry_after_no_match() {
-        let result = parse_retry_after("some other error");
+        let result = parse_retry_after_from_body("some other error");
         assert_eq!(result, None);
     }
 

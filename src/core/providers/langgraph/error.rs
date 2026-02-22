@@ -2,6 +2,7 @@
 //!
 //! Error mapping for LangGraph Cloud API responses
 
+use crate::core::providers::shared::parse_retry_after_from_body;
 use crate::core::providers::unified_provider::ProviderError;
 use crate::core::traits::error_mapper::trait_def::ErrorMapper;
 
@@ -52,7 +53,7 @@ impl ErrorMapper<ProviderError> for LangGraphErrorMapper {
             }
             429 => {
                 // Rate limiting
-                let retry_after = parse_retry_after(response_body);
+                let retry_after = parse_retry_after_from_body(response_body);
                 ProviderError::rate_limit(PROVIDER_NAME, retry_after)
             }
             500..=599 => ProviderError::provider_unavailable(
@@ -87,17 +88,6 @@ fn parse_error_message(response_body: &str) -> Option<String> {
     None
 }
 
-/// Parse retry-after from response body or headers
-fn parse_retry_after(response_body: &str) -> Option<u64> {
-    // Try to extract retry-after from JSON response
-    if let Ok(json) = serde_json::from_str::<serde_json::Value>(response_body) {
-        if let Some(retry_after) = json.get("retry_after").and_then(|v| v.as_u64()) {
-            return Some(retry_after);
-        }
-    }
-    // Default to 60 seconds for rate limiting
-    Some(60)
-}
 
 #[cfg(test)]
 mod tests {
@@ -178,13 +168,13 @@ mod tests {
 
     #[test]
     fn test_parse_retry_after() {
-        let retry = parse_retry_after(r#"{"retry_after": 30}"#);
+        let retry = parse_retry_after_from_body(r#"{"retry_after": 30}"#);
         assert_eq!(retry, Some(30));
     }
 
     #[test]
     fn test_parse_retry_after_default() {
-        let retry = parse_retry_after("rate limited");
+        let retry = parse_retry_after_from_body("rate limited");
         assert_eq!(retry, Some(60));
     }
 }

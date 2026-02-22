@@ -3,6 +3,7 @@
 //! Error handling for Heroku AI Inference API
 
 use super::config::PROVIDER_NAME;
+use crate::core::providers::shared::parse_retry_after_from_body;
 use crate::core::providers::unified_provider::ProviderError;
 use crate::core::traits::error_mapper::trait_def::ErrorMapper;
 
@@ -30,7 +31,7 @@ impl ErrorMapper<ProviderError> for HerokuErrorMapper {
                 }
             }
             429 => {
-                let retry_after = parse_retry_after(response_body);
+                let retry_after = parse_retry_after_from_body(response_body);
                 ProviderError::rate_limit(PROVIDER_NAME, retry_after)
             }
             400 => {
@@ -72,26 +73,6 @@ fn extract_error_message(response_body: &str) -> Option<String> {
         })
 }
 
-/// Parse retry-after time from response body
-fn parse_retry_after(response_body: &str) -> Option<u64> {
-    // Try to extract retry-after from JSON response
-    if let Ok(json) = serde_json::from_str::<serde_json::Value>(response_body) {
-        if let Some(retry_after) = json
-            .get("error")
-            .and_then(|e| e.get("retry_after"))
-            .and_then(|r| r.as_u64())
-        {
-            return Some(retry_after);
-        }
-    }
-
-    // Default retry after based on common patterns
-    if response_body.contains("rate limit") || response_body.contains("rate_limit") {
-        Some(60) // Default retry after 60 seconds
-    } else {
-        None
-    }
-}
 
 #[cfg(test)]
 mod tests {
@@ -182,25 +163,25 @@ mod tests {
 
     #[test]
     fn test_parse_retry_after_with_rate_limit() {
-        let result = parse_retry_after("rate limit exceeded");
+        let result = parse_retry_after_from_body("rate limit exceeded");
         assert_eq!(result, Some(60));
     }
 
     #[test]
     fn test_parse_retry_after_with_json() {
-        let result = parse_retry_after(r#"{"error": {"retry_after": 120}}"#);
+        let result = parse_retry_after_from_body(r#"{"error": {"retry_after": 120}}"#);
         assert_eq!(result, Some(120));
     }
 
     #[test]
     fn test_parse_retry_after_without_rate_limit() {
-        let result = parse_retry_after("other error");
+        let result = parse_retry_after_from_body("other error");
         assert_eq!(result, None);
     }
 
     #[test]
     fn test_parse_retry_after_empty() {
-        let result = parse_retry_after("");
+        let result = parse_retry_after_from_body("");
         assert_eq!(result, None);
     }
 

@@ -2,6 +2,7 @@
 //!
 //! Error handling
 
+use crate::core::providers::shared::parse_retry_after_from_body;
 use crate::core::providers::unified_provider::ProviderError;
 use crate::core::traits::error_mapper::trait_def::ErrorMapper;
 
@@ -71,45 +72,6 @@ impl ErrorMapper<ProviderError> for AzureAIErrorMapper {
     }
 }
 
-/// Response
-fn parse_retry_after_from_body(response_body: &str) -> Option<u64> {
-    // Response
-    if let Ok(json) = serde_json::from_str::<serde_json::Value>(response_body) {
-        // Azure AI may provide retry_after in the error object
-        if let Some(error) = json.get("error") {
-            if let Some(retry_after) = error.get("retry_after") {
-                if let Some(seconds) = retry_after.as_u64() {
-                    return Some(seconds);
-                }
-            }
-        }
-
-        // Or directly in the top-level object
-        if let Some(retry_after) = json.get("retry_after") {
-            if let Some(seconds) = retry_after.as_u64() {
-                return Some(seconds);
-            }
-        }
-    }
-
-    // Parse common rate limit messages from text
-    let body_lower = response_body.to_lowercase();
-    if body_lower.contains("rate limit") || body_lower.contains("quota") {
-        // Azure AI typically recommends 60 seconds retry interval
-        return Some(60);
-    }
-
-    // If it's a token limit, may need longer time
-    if body_lower.contains("tokens per minute") || body_lower.contains("tpm") {
-        return Some(60);
-    }
-
-    if body_lower.contains("requests per minute") || body_lower.contains("rpm") {
-        return Some(30);
-    }
-
-    None
-}
 
 /// Error
 pub fn is_unsupported_feature_error(response_body: &str) -> bool {

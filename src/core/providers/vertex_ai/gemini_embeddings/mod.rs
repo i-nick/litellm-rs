@@ -206,24 +206,7 @@ impl GeminiEmbeddingHandler {
 
     /// Calculate similarity between two embeddings
     pub fn calculate_cosine_similarity(&self, embedding1: &[f32], embedding2: &[f32]) -> f32 {
-        if embedding1.len() != embedding2.len() {
-            return 0.0;
-        }
-
-        let dot_product: f32 = embedding1
-            .iter()
-            .zip(embedding2.iter())
-            .map(|(a, b)| a * b)
-            .sum();
-
-        let magnitude1: f32 = embedding1.iter().map(|x| x * x).sum::<f32>().sqrt();
-        let magnitude2: f32 = embedding2.iter().map(|x| x * x).sum::<f32>().sqrt();
-
-        if magnitude1 == 0.0 || magnitude2 == 0.0 {
-            return 0.0;
-        }
-
-        dot_product / (magnitude1 * magnitude2)
+        crate::core::providers::shared::cosine_similarity(embedding1, embedding2)
     }
 
     /// Validate embedding request

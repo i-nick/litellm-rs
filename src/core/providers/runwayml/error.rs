@@ -2,6 +2,7 @@
 //!
 //! Error mapping for Runway ML API responses.
 
+use crate::core::providers::shared::parse_retry_after_from_body;
 use crate::core::providers::unified_provider::ProviderError;
 use crate::core::traits::error_mapper::trait_def::ErrorMapper;
 
@@ -49,7 +50,7 @@ impl ErrorMapper<ProviderError> for RunwayMLErrorMapper {
                 format!("Validation error: {}", response_body),
             ),
             429 => {
-                let retry_after = parse_retry_after(response_body);
+                let retry_after = parse_retry_after_from_body(response_body);
                 ProviderError::rate_limit(PROVIDER_NAME, retry_after)
             }
             500..=599 => ProviderError::provider_unavailable(
@@ -61,15 +62,6 @@ impl ErrorMapper<ProviderError> for RunwayMLErrorMapper {
     }
 }
 
-/// Parse retry-after from response body
-fn parse_retry_after(response_body: &str) -> Option<u64> {
-    // Try to extract retry-after from response body
-    if response_body.contains("rate limit") || response_body.contains("too many requests") {
-        Some(60) // Default to 60 seconds
-    } else {
-        None
-    }
-}
 
 // Note: Task-specific error handling is done directly using ProviderError factory methods
 // in provider.rs. See poll_task() for usage of:
@@ -160,13 +152,13 @@ mod tests {
 
     #[test]
     fn test_parse_retry_after_with_rate_limit() {
-        let result = parse_retry_after("rate limit exceeded");
+        let result = parse_retry_after_from_body("rate limit exceeded");
         assert_eq!(result, Some(60));
     }
 
     #[test]
     fn test_parse_retry_after_without_rate_limit() {
-        let result = parse_retry_after("other error");
+        let result = parse_retry_after_from_body("other error");
         assert_eq!(result, None);
     }
 
