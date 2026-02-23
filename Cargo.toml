@@ -87,8 +87,7 @@ azure_identity = { version = "0.31", optional = true }
 azure_core = { version = "0.31", optional = true }
 vaultrs = { version = "0.7", optional = true }
 
-# Vector database client
-qdrant-client = { version = "1.12", optional = true }
+
 
 # Authentication and security
 jsonwebtoken = "9.3"
@@ -106,10 +105,6 @@ base64 = "0.21"
 # Monitoring and tracing
 tracing = "0.1"
 tracing-subscriber = { version = "0.3.20", features = ["env-filter", "json"] }
-tracing-actix-web = { version = "0.7", optional = true }
-opentelemetry = { version = "0.21", optional = true }
-opentelemetry-jaeger = { version = "0.20", optional = true }
-prometheus = { version = "0.14", optional = true }
 sysinfo = { version = "0.32", optional = true }
 
 # Middleware and utilities
@@ -133,8 +128,6 @@ dashmap = "5.5"
 # Development dependencies
 [dev-dependencies]
 tokio-test = "0.4.4"
-mockall = "0.13.1"
-wiremock = "0.6.4"
 criterion = { version = "0.6.0", features = ["html_reports"] }
 tempfile = "3.20.0"
 
@@ -162,7 +155,7 @@ default = ["sqlite", "redis", "metrics", "tracing"]
 # Gateway mode: HTTP server with full middleware stack
 gateway = [
     "dep:actix-web", "dep:actix-cors", "dep:actix-multipart",
-    "dep:tracing-actix-web", "dep:argon2", "dep:aes-gcm", "dep:clap"
+    "dep:argon2", "dep:aes-gcm", "dep:clap"
 ]
 
 # Lite mode: API-only, no storage (use with --no-default-features)
@@ -184,11 +177,11 @@ vault-secrets = ["dep:vaultrs"]
 cloud-secrets = ["aws-secrets", "gcp-secrets", "azure-secrets", "vault-secrets"]
 
 # Monitoring and observability
-metrics = ["dep:prometheus", "dep:sysinfo"]
-tracing = ["dep:opentelemetry", "dep:opentelemetry-jaeger"]
+metrics = ["dep:sysinfo"]
+tracing = []
 
 # Advanced features
-vector-db = ["dep:qdrant-client"]
+vector-db = []
 websockets = []
 analytics = ["metrics"]
 enterprise = ["analytics", "vector-db"]
