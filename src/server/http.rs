@@ -65,9 +65,14 @@ impl HttpServer {
         let pricing = Arc::new(PricingService::new(Some(
             "config/model_prices_extended.json".to_string(),
         )));
-        let _ = pricing.initialize().await;
+        if let Err(e) = pricing.initialize().await {
+            warn!("Pricing service initial load failed: {}", e);
+        } else {
+            info!("Pricing service initial load completed");
+        }
         let pricing_clone: Arc<PricingService> = Arc::clone(&pricing);
         let _pricing_task = pricing_clone.start_auto_refresh_task();
+        info!("Pricing auto-refresh task started");
 
         let runtime_router_config =
             crate::core::router::gateway_config::runtime_router_config_from_gateway(

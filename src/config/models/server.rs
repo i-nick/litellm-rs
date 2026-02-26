@@ -182,7 +182,7 @@ pub struct CorsConfig {
     /// Enable CORS
     #[serde(default = "default_true")]
     pub enabled: bool,
-    /// Allowed origins (empty means allow all)
+    /// Allowed origins (`*` means allow all; empty means no cross-origin origin is allowed)
     #[serde(default)]
     pub allowed_origins: Vec<String>,
     /// Allowed methods
@@ -203,7 +203,7 @@ impl Default for CorsConfig {
     fn default() -> Self {
         Self {
             enabled: true,
-            allowed_origins: vec![], // Empty means restrictive by default
+            allowed_origins: vec![], // Restrictive by default: no cross-origin origin allowed
             allowed_methods: default_cors_methods(),
             allowed_headers: default_cors_headers(),
             max_age: default_cors_max_age(),
@@ -238,7 +238,7 @@ impl CorsConfig {
 
     /// Check if CORS allows all origins (insecure)
     pub fn allows_all_origins(&self) -> bool {
-        self.allowed_origins.is_empty() || self.allowed_origins.contains(&"*".to_string())
+        self.allowed_origins.iter().any(|origin| origin == "*")
     }
 
     /// Validate CORS configuration
@@ -587,7 +587,7 @@ mod tests {
     #[test]
     fn test_cors_config_allows_all_origins_empty() {
         let config = CorsConfig::default();
-        assert!(config.allows_all_origins());
+        assert!(!config.allows_all_origins());
     }
 
     #[test]
@@ -620,7 +620,7 @@ mod tests {
     fn test_cors_config_validate_all_origins_with_credentials() {
         let config = CorsConfig {
             enabled: true,
-            allowed_origins: vec![],
+            allowed_origins: vec!["*".to_string()],
             allow_credentials: true,
             ..CorsConfig::default()
         };

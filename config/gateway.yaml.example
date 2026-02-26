@@ -11,7 +11,7 @@ server:
   dev_mode: false
   cors:
     enabled: true
-    # IMPORTANT: empty list currently means allow all origins.
+    # IMPORTANT: empty list is restrictive (no cross-origin allowed).
     # Set explicit origins in production.
     allowed_origins:
       - "https://your-app.example.com"
