@@ -61,6 +61,10 @@ impl Default for BaseConfig {
 }
 
 impl BaseConfig {
+    fn normalize_provider_name(provider: &str) -> String {
+        provider.trim().to_lowercase()
+    }
+
     fn catalog_default_base_url(provider: &str) -> Option<String> {
         crate::core::providers::registry::get_definition(provider)
             .map(|definition| definition.base_url.to_string())
@@ -118,23 +122,24 @@ impl BaseConfig {
 
     /// Default
     pub fn for_provider(provider: &str) -> Self {
-        let mut config = Self::from_env(provider);
+        let normalized_provider = Self::normalize_provider_name(provider);
+        let mut config = Self::from_env(&normalized_provider);
 
         // Default
         if config.api_base.is_none() {
             config.api_base = Some(
-                Self::catalog_default_base_url(provider)
-                    .unwrap_or_else(|| Self::legacy_default_base_url(provider).to_string()),
+                Self::catalog_default_base_url(&normalized_provider)
+                    .unwrap_or_else(|| Self::legacy_default_base_url(&normalized_provider).to_string()),
             );
         }
 
         // Default
-        if provider == "anthropic" && config.api_version.is_none() {
+        if normalized_provider == "anthropic" && config.api_version.is_none() {
             config.api_version = Some("2023-06-01".to_string());
         }
 
         // Azure requires API version
-        if provider == "azure" && config.api_version.is_none() {
+        if normalized_provider == "azure" && config.api_version.is_none() {
             config.api_version = Some("2024-02-01".to_string());
         }
 
@@ -622,6 +627,21 @@ mod tests {
         assert_eq!(
             unknown.api_base,
             Some("https://api.openai.com/v1".to_string())
+        );
+    }
+
+    #[test]
+    fn test_provider_name_normalization_for_defaults() {
+        let mixed_case = BaseConfig::for_provider(" OpenAI ");
+        assert_eq!(
+            mixed_case.api_base,
+            Some("https://api.openai.com/v1".to_string())
+        );
+
+        let tier1_mixed_case = BaseConfig::for_provider(" Anyscale ");
+        assert_eq!(
+            tier1_mixed_case.api_base,
+            Some("https://api.endpoints.anyscale.com/v1".to_string())
         );
     }
 
