@@ -99,6 +99,14 @@ impl BaseConfig {
         }
     }
 
+    fn default_api_version(provider: &str) -> Option<&'static str> {
+        match provider {
+            "anthropic" => Some("2023-06-01"),
+            "azure" => Some("2024-02-01"),
+            _ => None,
+        }
+    }
+
     /// Configuration
     pub fn from_env(provider: &str) -> Self {
         let provider_upper = provider.to_uppercase();
@@ -133,14 +141,11 @@ impl BaseConfig {
             );
         }
 
-        // Default
-        if normalized_provider == "anthropic" && config.api_version.is_none() {
-            config.api_version = Some("2023-06-01".to_string());
-        }
-
-        // Azure requires API version
-        if normalized_provider == "azure" && config.api_version.is_none() {
-            config.api_version = Some("2024-02-01".to_string());
+        // Default API version for specific providers
+        if config.api_version.is_none() {
+            if let Some(default_version) = Self::default_api_version(&normalized_provider) {
+                config.api_version = Some(default_version.to_string());
+            }
         }
 
         config
@@ -643,6 +648,18 @@ mod tests {
             tier1_mixed_case.api_base,
             Some("https://api.endpoints.anyscale.com/v1".to_string())
         );
+    }
+
+    #[test]
+    fn test_default_api_version_assignment() {
+        let anthropic = BaseConfig::for_provider("anthropic");
+        assert_eq!(anthropic.api_version, Some("2023-06-01".to_string()));
+
+        let azure = BaseConfig::for_provider("azure");
+        assert_eq!(azure.api_version, Some("2024-02-01".to_string()));
+
+        let openai = BaseConfig::for_provider("openai");
+        assert!(openai.api_version.is_none());
     }
 
     #[test]
