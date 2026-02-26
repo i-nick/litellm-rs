@@ -54,13 +54,23 @@ pub async fn run_server() -> Result<()> {
             info!("✅ Configuration file loaded successfully");
             config
         }
-        Err(e) => {
+        Err(file_error) => {
             info!(
-                "⚠️  Configuration file loading failed, using default config: {}",
-                e
+                "⚠️  Failed to load {}: {}. Trying environment variables.",
+                config_path, file_error
             );
-            info!("💡 Please ensure config/gateway.yaml exists with correct API keys");
-            Config::default()
+            match Config::from_env() {
+                Ok(config) => {
+                    info!("✅ Loaded configuration from environment variables");
+                    config
+                }
+                Err(env_error) => {
+                    return Err(GatewayError::Config(format!(
+                        "Failed to load configuration from file ({}) and environment ({}).",
+                        file_error, env_error
+                    )));
+                }
+            }
         }
     };
 
