@@ -32,16 +32,36 @@ pub async fn completions(
         &req,
         request.into_inner(),
         "Text completion",
-        |request, context| handle_completion_via_pool(&state.router, request, context),
+        |request, context| handle_completion_with_state(state.get_ref(), request, context),
     )
     .await
+}
+
+/// Handle completion with app state (supports unified router)
+pub async fn handle_completion_with_state(
+    state: &AppState,
+    request: CompletionRequest,
+    context: RequestContext,
+) -> Result<CompletionResponse, GatewayError> {
+    handle_completion_internal(&state.router, state.unified_router.as_deref(), request, context)
+        .await
 }
 
 /// Handle completion via provider pool
 ///
 /// Converts legacy text completion request to chat completion format
+#[allow(dead_code)] // Compatibility path for direct pool-based invocations/tests.
 pub async fn handle_completion_via_pool(
     pool: &ProviderRegistry,
+    request: CompletionRequest,
+    context: RequestContext,
+) -> Result<CompletionResponse, GatewayError> {
+    handle_completion_internal(pool, None, request, context).await
+}
+
+async fn handle_completion_internal(
+    pool: &ProviderRegistry,
+    unified_router: Option<&crate::core::router::UnifiedRouter>,
     request: CompletionRequest,
     context: RequestContext,
 ) -> Result<CompletionResponse, GatewayError> {
@@ -51,8 +71,12 @@ pub async fn handle_completion_via_pool(
         ));
     }
 
-    let selection =
-        select_provider_for_model(pool, &request.model, ProviderCapability::ChatCompletion)?;
+    let selection = select_provider_for_model(
+        pool,
+        unified_router,
+        &request.model,
+        ProviderCapability::ChatCompletion,
+    )?;
 
     let logit_bias = request.logit_bias.map(|bias| {
         bias.into_iter()

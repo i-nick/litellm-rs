@@ -69,7 +69,36 @@ impl HttpServer {
         let pricing_clone: Arc<PricingService> = Arc::clone(&pricing);
         let _pricing_task = pricing_clone.start_auto_refresh_task();
 
-        let state = AppState::new(config.clone(), auth, router, storage, pricing);
+        let runtime_router_config =
+            crate::core::router::gateway_config::runtime_router_config_from_gateway(
+                &config.gateway.router,
+            );
+
+        let unified_router = match crate::core::router::UnifiedRouter::from_gateway_config(
+            &config.gateway.providers,
+            Some(runtime_router_config),
+        )
+        .await
+        {
+            Ok(router) => Some(router),
+            Err(e) => {
+                warn!("Failed to initialize unified router from config: {}", e);
+                None
+            }
+        };
+
+        let state = if let Some(unified_router) = unified_router {
+            AppState::new_with_unified_router(
+                config.clone(),
+                auth,
+                router,
+                unified_router,
+                storage,
+                pricing,
+            )
+        } else {
+            AppState::new(config.clone(), auth, router, storage, pricing)
+        };
 
         Ok(Self {
             config: config.gateway.server.clone(),

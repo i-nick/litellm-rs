@@ -28,14 +28,33 @@ pub async fn embeddings(
         &req,
         request.into_inner(),
         "Embedding",
-        |request, context| handle_embedding_via_pool(&state.router, request, context),
+        |request, context| handle_embedding_with_state(state.get_ref(), request, context),
     )
     .await
 }
 
+/// Handle embedding with app state (supports unified router when available)
+pub async fn handle_embedding_with_state(
+    state: &AppState,
+    request: EmbeddingRequest,
+    context: RequestContext,
+) -> Result<EmbeddingResponse, GatewayError> {
+    handle_embedding_internal(&state.router, state.unified_router.as_deref(), request, context).await
+}
+
 /// Handle embedding via provider pool
+#[allow(dead_code)] // Compatibility path for direct pool-based invocations/tests.
 pub async fn handle_embedding_via_pool(
     pool: &ProviderRegistry,
+    request: EmbeddingRequest,
+    context: RequestContext,
+) -> Result<EmbeddingResponse, GatewayError> {
+    handle_embedding_internal(pool, None, request, context).await
+}
+
+async fn handle_embedding_internal(
+    pool: &ProviderRegistry,
+    unified_router: Option<&crate::core::router::UnifiedRouter>,
     request: EmbeddingRequest,
     context: RequestContext,
 ) -> Result<EmbeddingResponse, GatewayError> {
@@ -56,8 +75,12 @@ pub async fn handle_embedding_via_pool(
         }
     };
 
-    let selection =
-        select_provider_for_model(pool, &request.model, ProviderCapability::Embeddings)?;
+    let selection = select_provider_for_model(
+        pool,
+        unified_router,
+        &request.model,
+        ProviderCapability::Embeddings,
+    )?;
 
     let core_request = CoreEmbeddingRequest {
         model: selection.model,

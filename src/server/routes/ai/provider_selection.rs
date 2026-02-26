@@ -1,16 +1,19 @@
 //! Provider selection helpers for AI routes
 
 use crate::core::providers::{Provider, ProviderRegistry};
+use crate::core::router::{RouterError, UnifiedRouter};
 use crate::core::types::model::ProviderCapability;
 use crate::utils::error::gateway_error::GatewayError;
+use std::borrow::Cow;
 
 pub struct ProviderSelection<'a> {
-    pub provider: &'a Provider,
+    pub provider: Cow<'a, Provider>,
     pub model: String,
 }
 
 pub fn select_provider_for_model<'a>(
     pool: &'a ProviderRegistry,
+    unified_router: Option<&UnifiedRouter>,
     model: &str,
     capability: ProviderCapability,
 ) -> Result<ProviderSelection<'a>, GatewayError> {
@@ -30,10 +33,14 @@ pub fn select_provider_for_model<'a>(
                 )));
             }
             return Ok(ProviderSelection {
-                provider,
+                provider: Cow::Borrowed(provider),
                 model: actual.to_string(),
             });
         }
+    }
+
+    if let Some(router) = unified_router {
+        return select_provider_from_unified_router(router, model, capability);
     }
 
     let mut candidates: Vec<&Provider> = pool
@@ -44,7 +51,7 @@ pub fn select_provider_for_model<'a>(
 
     if candidates.len() == 1 {
         return Ok(ProviderSelection {
-            provider: candidates.remove(0),
+            provider: Cow::Borrowed(candidates.remove(0)),
             model: model.to_string(),
         });
     }
@@ -56,7 +63,7 @@ pub fn select_provider_for_model<'a>(
 
     if capable.len() == 1 {
         return Ok(ProviderSelection {
-            provider: capable.remove(0),
+            provider: Cow::Borrowed(capable.remove(0)),
             model: model.to_string(),
         });
     }
@@ -75,11 +82,12 @@ pub fn select_provider_for_model<'a>(
 
 pub fn select_provider_for_optional_model<'a>(
     pool: &'a ProviderRegistry,
+    unified_router: Option<&UnifiedRouter>,
     model: Option<&str>,
     capability: ProviderCapability,
-) -> Result<(&'a Provider, Option<String>), GatewayError> {
+) -> Result<(Cow<'a, Provider>, Option<String>), GatewayError> {
     if let Some(model) = model {
-        let selection = select_provider_for_model(pool, model, capability)?;
+        let selection = select_provider_for_model(pool, unified_router, model, capability)?;
         return Ok((selection.provider, Some(selection.model)));
     }
 
@@ -89,7 +97,7 @@ pub fn select_provider_for_optional_model<'a>(
         .collect();
 
     if capable.len() == 1 {
-        return Ok((capable.remove(0), None));
+        return Ok((Cow::Borrowed(capable.remove(0)), None));
     }
 
     if capable.is_empty() {
@@ -106,4 +114,52 @@ pub fn select_provider_for_optional_model<'a>(
 
 fn provider_supports_capability(provider: &Provider, capability: &ProviderCapability) -> bool {
     provider.capabilities().iter().any(|cap| cap == capability)
+}
+
+fn select_provider_from_unified_router<'a>(
+    router: &UnifiedRouter,
+    model: &str,
+    capability: ProviderCapability,
+) -> Result<ProviderSelection<'a>, GatewayError> {
+    let deployment_id = router.select_deployment(model).map_err(map_router_error)?;
+
+    let deployment = router
+        .get_deployment(&deployment_id)
+        .ok_or_else(|| GatewayError::internal("Selected deployment not found"))?;
+
+    let provider = deployment.provider.clone();
+    let selected_model = deployment.model.clone();
+    drop(deployment);
+
+    // select_deployment increments active_requests; release immediately because
+    // route handlers invoke providers directly (without Router::execute* wrapper).
+    router.release_deployment(&deployment_id);
+
+    if !provider_supports_capability(&provider, &capability) {
+        return Err(GatewayError::validation(format!(
+            "Selected deployment does not support {:?}",
+            capability
+        )));
+    }
+
+    Ok(ProviderSelection {
+        provider: Cow::Owned(provider),
+        model: selected_model,
+    })
+}
+
+fn map_router_error(error: RouterError) -> GatewayError {
+    match error {
+        RouterError::ModelNotFound(model) => {
+            GatewayError::validation(format!("Model not found in router: {}", model))
+        }
+        RouterError::NoAvailableDeployment(model)
+        | RouterError::AllDeploymentsInCooldown(model)
+        | RouterError::RateLimitExceeded(model) => {
+            GatewayError::service_unavailable(format!("No available deployment for {}", model))
+        }
+        RouterError::DeploymentNotFound(deployment_id) => {
+            GatewayError::internal(format!("Router deployment not found: {}", deployment_id))
+        }
+    }
 }

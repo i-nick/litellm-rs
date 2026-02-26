@@ -54,7 +54,7 @@ pub async fn chat_completions(
         handle_streaming_chat_completion(state.get_ref(), request.into_inner(), context).await
     } else {
         // Handle non-streaming request
-        match handle_chat_completion_via_pool(&state.router, request.into_inner(), context).await {
+        match handle_chat_completion_with_state(state.get_ref(), request.into_inner(), context).await {
             Ok(response) => Ok(HttpResponse::Ok().json(response)),
             Err(e) => {
                 error!("Chat completion error: {}", e);
@@ -77,6 +77,7 @@ async fn handle_streaming_chat_completion(
 
     let selection = match select_provider_for_model(
         &state.router,
+        state.unified_router.as_deref(),
         &request.model,
         ProviderCapability::ChatCompletionStream,
     ) {
@@ -137,13 +138,36 @@ async fn handle_streaming_chat_completion(
 }
 
 /// Handle chat completion via provider pool
+#[allow(dead_code)] // Compatibility path for direct pool-based invocations/tests.
 pub async fn handle_chat_completion_via_pool(
     pool: &ProviderRegistry,
     request: ChatCompletionRequest,
     context: RequestContext,
 ) -> Result<ChatCompletionResponse, GatewayError> {
-    let selection =
-        select_provider_for_model(pool, &request.model, ProviderCapability::ChatCompletion)?;
+    handle_chat_completion_internal(pool, None, request, context).await
+}
+
+/// Handle chat completion with app state (supports unified router)
+pub async fn handle_chat_completion_with_state(
+    state: &AppState,
+    request: ChatCompletionRequest,
+    context: RequestContext,
+) -> Result<ChatCompletionResponse, GatewayError> {
+    handle_chat_completion_internal(&state.router, state.unified_router.as_deref(), request, context).await
+}
+
+async fn handle_chat_completion_internal(
+    pool: &ProviderRegistry,
+    unified_router: Option<&crate::core::router::UnifiedRouter>,
+    request: ChatCompletionRequest,
+    context: RequestContext,
+) -> Result<ChatCompletionResponse, GatewayError> {
+    let selection = select_provider_for_model(
+        pool,
+        unified_router,
+        &request.model,
+        ProviderCapability::ChatCompletion,
+    )?;
 
     let core_request = build_core_chat_request(request, selection.model.clone(), false)?;
     let core_response = selection

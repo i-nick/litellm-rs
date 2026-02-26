@@ -7,8 +7,33 @@ use super::config::RouterConfig;
 use super::deployment::{Deployment, DeploymentConfig};
 use super::error::RouterError;
 use super::unified::Router;
+use crate::config::models::router::{GatewayRouterConfig, RoutingStrategyConfig};
 use crate::config::models::provider::ProviderConfig;
-use crate::core::providers::{Provider, ProviderType};
+use crate::core::providers::{Provider, create_provider};
+
+/// Build runtime router config from gateway YAML router config.
+pub fn runtime_router_config_from_gateway(config: &GatewayRouterConfig) -> RouterConfig {
+    let routing_strategy = match &config.strategy {
+        RoutingStrategyConfig::RoundRobin => super::config::RoutingStrategy::RoundRobin,
+        RoutingStrategyConfig::LeastLatency => super::config::RoutingStrategy::LatencyBased,
+        RoutingStrategyConfig::LeastCost => super::config::RoutingStrategy::CostBased,
+        RoutingStrategyConfig::Random
+        | RoutingStrategyConfig::Weighted { .. }
+        | RoutingStrategyConfig::Priority { .. }
+        | RoutingStrategyConfig::ABTest { .. }
+        | RoutingStrategyConfig::Custom { .. } => super::config::RoutingStrategy::SimpleShuffle,
+    };
+
+    RouterConfig {
+        routing_strategy,
+        // Gateway circuit-breaker thresholds are the closest semantic mapping here.
+        allowed_fails: config.circuit_breaker.failure_threshold,
+        cooldown_time_secs: config.circuit_breaker.recovery_timeout,
+        // Keep other defaults until the gateway/router schemas are fully unified.
+        enable_pre_call_checks: config.load_balancer.health_check_enabled,
+        ..RouterConfig::default()
+    }
+}
 
 impl Router {
     /// Create a Router from gateway configuration
@@ -27,35 +52,8 @@ impl Router {
                 continue;
             }
 
-            // Parse provider type
-            let provider_type: ProviderType = provider_config.provider_type.as_str().into();
-
-            // Build config JSON from provider settings
-            let mut settings = provider_config.settings.clone();
-
-            // Add api_key from the config if not in settings
-            if !settings.contains_key("api_key") && !provider_config.api_key.is_empty() {
-                settings.insert(
-                    "api_key".to_string(),
-                    serde_json::Value::String(provider_config.api_key.clone()),
-                );
-            }
-
-            // Add base_url if present
-            if let Some(ref base_url) = provider_config.base_url {
-                settings.insert(
-                    "base_url".to_string(),
-                    serde_json::Value::String(base_url.clone()),
-                );
-            }
-
-            // Create provider instance
-            let provider = Provider::from_config_async(
-                provider_type.clone(),
-                serde_json::Value::Object(settings.into_iter().collect()),
-            )
-            .await
-            .map_err(|e| {
+            // Create provider instance via the single canonical factory.
+            let provider = create_provider(provider_config.clone()).await.map_err(|e| {
                 RouterError::DeploymentNotFound(format!(
                     "Failed to create provider {}: {}",
                     provider_config.name, e
@@ -125,7 +123,7 @@ fn create_deployment_from_config(
         } else {
             None
         },
-        weight: config.weight as u32,
+        weight: (config.weight.max(1.0)).round() as u32,
         timeout_secs: config.timeout,
         priority: 0,
     };
@@ -138,4 +136,50 @@ fn create_deployment_from_config(
     )
     .with_config(deployment_config)
     .with_tags(config.tags.clone())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::config::models::router::{
+        CircuitBreakerConfig, GatewayRouterConfig, LoadBalancerConfig, RoutingStrategyConfig,
+    };
+
+    #[test]
+    fn test_runtime_router_config_from_gateway_round_robin() {
+        let gateway = GatewayRouterConfig::default();
+        let runtime = runtime_router_config_from_gateway(&gateway);
+        assert_eq!(runtime.routing_strategy, super::super::config::RoutingStrategy::RoundRobin);
+    }
+
+    #[test]
+    fn test_runtime_router_config_from_gateway_strategy_mapping() {
+        let gateway = GatewayRouterConfig {
+            strategy: RoutingStrategyConfig::LeastLatency,
+            circuit_breaker: CircuitBreakerConfig::default(),
+            load_balancer: LoadBalancerConfig::default(),
+        };
+        let runtime = runtime_router_config_from_gateway(&gateway);
+        assert_eq!(
+            runtime.routing_strategy,
+            super::super::config::RoutingStrategy::LatencyBased
+        );
+    }
+
+    #[test]
+    fn test_runtime_router_config_from_gateway_circuit_breaker_mapping() {
+        let gateway = GatewayRouterConfig {
+            strategy: RoutingStrategyConfig::RoundRobin,
+            circuit_breaker: CircuitBreakerConfig {
+                failure_threshold: 8,
+                recovery_timeout: 45,
+                min_requests: 10,
+                success_threshold: 3,
+            },
+            load_balancer: LoadBalancerConfig::default(),
+        };
+        let runtime = runtime_router_config_from_gateway(&gateway);
+        assert_eq!(runtime.allowed_fails, 8);
+        assert_eq!(runtime.cooldown_time_secs, 45);
+    }
 }
