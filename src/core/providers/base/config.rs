@@ -66,6 +66,36 @@ impl BaseConfig {
             .map(|definition| definition.base_url.to_string())
     }
 
+    fn legacy_default_base_url(provider: &str) -> &'static str {
+        match provider {
+            "openai" => "https://api.openai.com/v1",
+            "anthropic" => "https://api.anthropic.com",
+            "azure" => "https://{instance}.openai.azure.com",
+            "mistral" => "https://api.mistral.ai/v1",
+            "vertex_ai" => "https://generativelanguage.googleapis.com",
+            "ai21" => "https://api.ai21.com/studio/v1",
+            "cerebras" => "https://api.cerebras.ai/v1",
+            "gigachat" => "https://gigachat.devices.sberbank.ru/api/v1",
+            "nlp_cloud" => "https://api.nlpcloud.io/v1",
+            "voyage" => "https://api.voyageai.com/v1",
+            "github" => "https://models.inference.ai.azure.com",
+            "deepgram" => "https://api.deepgram.com/v1",
+            "elevenlabs" => "https://api.elevenlabs.io",
+            "clarifai" => "https://api.clarifai.com/v2",
+            "replicate" => "https://api.replicate.com/v1",
+            "huggingface" => "https://api-inference.huggingface.co",
+            "cohere" => "https://api.cohere.ai/v1",
+            "datarobot" => "https://app.datarobot.com/api/v2",
+            "empower" => "https://api.empower.dev/v1",
+            "exa_ai" => "https://api.exa.ai/v1",
+            "firecrawl" => "https://api.firecrawl.dev/v1",
+            "aiml" => "https://api.aimlapi.com/v1",
+            "deepl" => "https://api-free.deepl.com/v2",
+            "fal_ai" => "https://fal.run",
+            _ => "https://api.openai.com/v1",
+        }
+    }
+
     /// Configuration
     pub fn from_env(provider: &str) -> Self {
         let provider_upper = provider.to_uppercase();
@@ -93,53 +123,10 @@ impl BaseConfig {
 
         // Default
         if config.api_base.is_none() {
-            config.api_base = Self::catalog_default_base_url(provider).or_else(|| {
-                Some(
-                    match provider {
-                        "openai" => "https://api.openai.com/v1",
-                        "anthropic" => "https://api.anthropic.com",
-                        "azure" => "https://{instance}.openai.azure.com",
-                        "mistral" => "https://api.mistral.ai/v1",
-                        "deepseek" => "https://api.deepseek.com",
-                        "moonshot" => "https://api.moonshot.cn/v1",
-                        "deepinfra" => "https://api.deepinfra.com/v1/openai",
-                        "vertex_ai" => "https://generativelanguage.googleapis.com",
-                        "openrouter" => "https://openrouter.ai/api/v1",
-                        "ai21" => "https://api.ai21.com/studio/v1",
-                        "cerebras" => "https://api.cerebras.ai/v1",
-                        "gigachat" => "https://gigachat.devices.sberbank.ru/api/v1",
-                        "friendliai" => "https://api.friendli.ai/v1",
-                        "nlp_cloud" => "https://api.nlpcloud.io/v1",
-                        "volcengine" => "https://ark.cn-beijing.volces.com/api/v3",
-                        "nebius" => "https://api.studio.nebius.ai/v1",
-                        "nscale" => "https://inference.api.nscale.ai/v1",
-                        "groq" => "https://api.groq.com/openai/v1",
-                        "together" => "https://api.together.xyz/v1",
-                        "fireworks" => "https://api.fireworks.ai/inference/v1",
-                        "xai" => "https://api.x.ai/v1",
-                        "voyage" => "https://api.voyageai.com/v1",
-                        "github" => "https://models.inference.ai.azure.com",
-                        "deepgram" => "https://api.deepgram.com/v1",
-                        "hyperbolic" => "https://api.hyperbolic.xyz/v1",
-                        "elevenlabs" => "https://api.elevenlabs.io",
-                        "clarifai" => "https://api.clarifai.com/v2",
-                        "replicate" => "https://api.replicate.com/v1",
-                        "huggingface" => "https://api-inference.huggingface.co",
-                        "cohere" => "https://api.cohere.ai/v1",
-                        "datarobot" => "https://app.datarobot.com/api/v2",
-                        "empower" => "https://api.empower.dev/v1",
-                        "exa_ai" => "https://api.exa.ai/v1",
-                        "featherless" => "https://api.featherless.ai/v1",
-                        "firecrawl" => "https://api.firecrawl.dev/v1",
-                        "perplexity" => "https://api.perplexity.ai",
-                        "aiml" => "https://api.aimlapi.com/v1",
-                        "deepl" => "https://api-free.deepl.com/v2",
-                        "fal_ai" => "https://fal.run",
-                        _ => "https://api.openai.com/v1", // Default
-                    }
-                    .to_string(),
-                )
-            });
+            config.api_base = Some(
+                Self::catalog_default_base_url(provider)
+                    .unwrap_or_else(|| Self::legacy_default_base_url(provider).to_string()),
+            );
         }
 
         // Default
