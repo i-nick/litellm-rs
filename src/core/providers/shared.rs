@@ -3,9 +3,7 @@
 //! This module contains common functionality that can be reused across all providers,
 //! following the DRY principle and Rust's composition over inheritance pattern.
 
-use serde::{Deserialize, Serialize};
 use serde_json::Value;
-use std::collections::HashMap;
 
 use crate::core::providers::unified_provider::ProviderError;
 use crate::core::types::responses::{FinishReason, Usage};
@@ -60,33 +58,6 @@ impl MessageTransformer {
             "tool_calls" | "function_call" => Some(FinishReason::ToolCalls),
             "content_filter" => Some(FinishReason::ContentFilter),
             _ => None,
-        }
-    }
-}
-
-// ============================================================================
-// Common Request/Response Types
-// ============================================================================
-
-/// Common configuration shared by most providers
-#[derive(Debug, Clone, Deserialize, Serialize)]
-pub struct CommonProviderConfig {
-    pub api_key: String,
-    pub base_url: String,
-    pub timeout: u64,
-    pub max_retries: u32,
-    #[serde(default)]
-    pub custom_headers: HashMap<String, String>,
-}
-
-impl Default for CommonProviderConfig {
-    fn default() -> Self {
-        Self {
-            api_key: String::new(),
-            base_url: String::new(),
-            timeout: 60,
-            max_retries: 3,
-            custom_headers: HashMap::new(),
         }
     }
 }
@@ -474,90 +445,6 @@ mod tests {
     fn test_message_transformer_parse_finish_reason_unknown() {
         assert_eq!(MessageTransformer::parse_finish_reason("unknown"), None);
         assert_eq!(MessageTransformer::parse_finish_reason(""), None);
-    }
-
-    // ==================== CommonProviderConfig Tests ====================
-
-    #[test]
-    fn test_common_provider_config_default() {
-        let config = CommonProviderConfig::default();
-        assert_eq!(config.api_key, "");
-        assert_eq!(config.base_url, "");
-        assert_eq!(config.timeout, 60);
-        assert_eq!(config.max_retries, 3);
-        assert!(config.custom_headers.is_empty());
-    }
-
-    #[test]
-    fn test_common_provider_config_with_values() {
-        let config = CommonProviderConfig {
-            api_key: "test-api-key".to_string(),
-            base_url: "https://api.example.com".to_string(),
-            timeout: 120,
-            max_retries: 5,
-            custom_headers: HashMap::from([("X-Custom".to_string(), "value".to_string())]),
-        };
-
-        assert_eq!(config.api_key, "test-api-key");
-        assert_eq!(config.base_url, "https://api.example.com");
-        assert_eq!(config.timeout, 120);
-        assert_eq!(config.max_retries, 5);
-        assert_eq!(config.custom_headers.len(), 1);
-    }
-
-    #[test]
-    fn test_common_provider_config_serialization() {
-        let config = CommonProviderConfig {
-            api_key: "key123".to_string(),
-            base_url: "https://api.test.com".to_string(),
-            timeout: 30,
-            max_retries: 2,
-            custom_headers: HashMap::new(),
-        };
-
-        let json = serde_json::to_value(&config).unwrap();
-        assert_eq!(json["api_key"], "key123");
-        assert_eq!(json["base_url"], "https://api.test.com");
-        assert_eq!(json["timeout"], 30);
-        assert_eq!(json["max_retries"], 2);
-    }
-
-    #[test]
-    fn test_common_provider_config_deserialization() {
-        let json = r#"{
-            "api_key": "my-key",
-            "base_url": "https://example.com",
-            "timeout": 45,
-            "max_retries": 4
-        }"#;
-
-        let config: CommonProviderConfig = serde_json::from_str(json).unwrap();
-        assert_eq!(config.api_key, "my-key");
-        assert_eq!(config.base_url, "https://example.com");
-        assert_eq!(config.timeout, 45);
-        assert_eq!(config.max_retries, 4);
-    }
-
-    #[test]
-    fn test_common_provider_config_clone() {
-        let config = CommonProviderConfig {
-            api_key: "key".to_string(),
-            base_url: "url".to_string(),
-            timeout: 10,
-            max_retries: 1,
-            custom_headers: HashMap::from([("h".to_string(), "v".to_string())]),
-        };
-        let cloned = config.clone();
-
-        assert_eq!(cloned.api_key, config.api_key);
-        assert_eq!(cloned.custom_headers, config.custom_headers);
-    }
-
-    #[test]
-    fn test_common_provider_config_debug() {
-        let config = CommonProviderConfig::default();
-        let debug_str = format!("{:?}", config);
-        assert!(debug_str.contains("CommonProviderConfig"));
     }
 
     // ==================== RateLimiter Tests ====================

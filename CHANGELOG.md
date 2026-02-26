@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- **Provider Infra**: Removed the unused `CommonProviderConfig` duplicate from `core::providers::shared`, keeping provider base config responsibilities centralized in `core::providers::base` and reducing schema duplication.
+
 ### Added
 - **Provider Tests**: Added B1 batch coverage to validate `aiml_api`, `anyscale`, `bytez`, and `comet_api` selectors and creation paths resolve through Tier-1 catalog to `OpenAILike` providers.
 - **Provider Tests**: Added B2 batch coverage to validate `compactifai`, `aleph_alpha`, `yi`, and `lambda_ai` selector and creation paths resolve through Tier-1 catalog to `OpenAILike` providers.
