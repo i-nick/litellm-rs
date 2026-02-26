@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Changed
+- **Provider Infra**: Centralized endpoint URL construction in `BaseConfig::build_endpoint()` and reused it for chat/embeddings endpoints to remove duplicated formatting logic.
 - **Provider Infra**: Centralized default API version assignment in `BaseConfig::default_api_version()` to remove repeated provider-specific conditionals.
 - **Provider Infra**: `BaseConfig::for_provider` now normalizes provider names (trim + lowercase) before catalog/fallback resolution to prevent casing/spacing drift.
 - **Provider Infra**: Removed legacy alias fallback in `BaseConfig` and kept canonical provider-name defaults only to avoid alias drift.

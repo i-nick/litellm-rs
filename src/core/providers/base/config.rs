@@ -151,6 +151,14 @@ impl BaseConfig {
         config
     }
 
+    fn build_endpoint(&self, path: &str) -> String {
+        format!(
+            "{}/{}",
+            self.api_base.as_deref().unwrap_or_default().trim_end_matches('/'),
+            path.trim_start_matches('/')
+        )
+    }
+
     /// Configuration
     pub fn validate(&self, provider: &str) -> Result<(), String> {
         // Validation
@@ -201,18 +209,12 @@ impl BaseConfig {
 
     /// Get
     pub fn get_chat_endpoint(&self) -> String {
-        format!(
-            "{}/chat/completions",
-            self.api_base.as_ref().unwrap_or(&String::new())
-        )
+        self.build_endpoint("chat/completions")
     }
 
     /// Get
     pub fn get_embeddings_endpoint(&self) -> String {
-        format!(
-            "{}/embeddings",
-            self.api_base.as_ref().unwrap_or(&String::new())
-        )
+        self.build_endpoint("embeddings")
     }
 
     /// Convert to Duration
@@ -660,6 +662,21 @@ mod tests {
 
         let openai = BaseConfig::for_provider("openai");
         assert!(openai.api_version.is_none());
+    }
+
+    #[test]
+    fn test_endpoint_building_trims_slashes() {
+        let mut config = BaseConfig::default();
+        config.api_base = Some("https://api.example.com/v1/".to_string());
+
+        assert_eq!(
+            config.get_chat_endpoint(),
+            "https://api.example.com/v1/chat/completions"
+        );
+        assert_eq!(
+            config.get_embeddings_endpoint(),
+            "https://api.example.com/v1/embeddings"
+        );
     }
 
     #[test]
