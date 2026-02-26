@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Provider Tests**: Added B1 batch coverage to validate `aiml_api`, `anyscale`, `bytez`, and `comet_api` selectors and creation paths resolve through Tier-1 catalog to `OpenAILike` providers.
+
 ## [0.3.0] - 2026-02-05
 
 ### Added

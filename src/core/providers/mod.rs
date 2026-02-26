@@ -1402,6 +1402,59 @@ mod tests {
         assert!(matches!(provider, Provider::OpenAILike(_)));
     }
 
+    #[test]
+    fn test_b1_first_batch_selectors_are_supported() {
+        for selector in ["aiml_api", "anyscale", "bytez", "comet_api"] {
+            assert!(
+                is_provider_selector_supported(selector),
+                "Expected selector '{}' to be supported",
+                selector
+            );
+        }
+    }
+
+    #[tokio::test]
+    async fn test_b1_first_batch_create_provider_from_name() {
+        for provider_name in ["aiml_api", "anyscale", "bytez", "comet_api"] {
+            let config = crate::config::models::provider::ProviderConfig {
+                name: provider_name.to_string(),
+                provider_type: "".to_string(),
+                api_key: "test-key".to_string(),
+                ..Default::default()
+            };
+
+            let provider = create_provider(config)
+                .await
+                .unwrap_or_else(|e| panic!("Expected '{}' to be creatable: {}", provider_name, e));
+            assert!(
+                matches!(provider, Provider::OpenAILike(_)),
+                "Expected '{}' to create OpenAILike provider",
+                provider_name
+            );
+        }
+    }
+
+    #[tokio::test]
+    async fn test_b1_first_batch_create_provider_from_provider_type() {
+        for provider_type in ["aiml_api", "anyscale", "bytez", "comet_api"] {
+            let config = crate::config::models::provider::ProviderConfig {
+                name: "openai".to_string(),
+                provider_type: provider_type.to_string(),
+                api_key: "test-key".to_string(),
+                ..Default::default()
+            };
+
+            let provider = create_provider(config)
+                .await
+                .unwrap_or_else(|e| panic!("Expected '{}' provider_type to be creatable: {}", provider_type, e));
+            assert!(
+                matches!(provider, Provider::OpenAILike(_)),
+                "Expected provider_type '{}' to create OpenAILike provider",
+                provider_type
+            );
+        }
+    }
+
     #[tokio::test]
     async fn test_create_provider_reports_unknown_custom_provider() {
         let config = crate::config::models::provider::ProviderConfig {
