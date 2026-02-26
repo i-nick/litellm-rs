@@ -1508,6 +1508,59 @@ mod tests {
         }
     }
 
+    #[test]
+    fn test_b3_third_batch_selectors_are_supported() {
+        for selector in ["ovhcloud", "maritalk", "siliconflow", "lemonade"] {
+            assert!(
+                is_provider_selector_supported(selector),
+                "Expected selector '{}' to be supported",
+                selector
+            );
+        }
+    }
+
+    #[tokio::test]
+    async fn test_b3_third_batch_create_provider_from_name() {
+        for provider_name in ["ovhcloud", "maritalk", "siliconflow", "lemonade"] {
+            let config = crate::config::models::provider::ProviderConfig {
+                name: provider_name.to_string(),
+                provider_type: "".to_string(),
+                api_key: "test-key".to_string(),
+                ..Default::default()
+            };
+
+            let provider = create_provider(config)
+                .await
+                .unwrap_or_else(|e| panic!("Expected '{}' to be creatable: {}", provider_name, e));
+            assert!(
+                matches!(provider, Provider::OpenAILike(_)),
+                "Expected '{}' to create OpenAILike provider",
+                provider_name
+            );
+        }
+    }
+
+    #[tokio::test]
+    async fn test_b3_third_batch_create_provider_from_provider_type() {
+        for provider_type in ["ovhcloud", "maritalk", "siliconflow", "lemonade"] {
+            let config = crate::config::models::provider::ProviderConfig {
+                name: "openai".to_string(),
+                provider_type: provider_type.to_string(),
+                api_key: "test-key".to_string(),
+                ..Default::default()
+            };
+
+            let provider = create_provider(config)
+                .await
+                .unwrap_or_else(|e| panic!("Expected '{}' provider_type to be creatable: {}", provider_type, e));
+            assert!(
+                matches!(provider, Provider::OpenAILike(_)),
+                "Expected provider_type '{}' to create OpenAILike provider",
+                provider_type
+            );
+        }
+    }
+
     #[tokio::test]
     async fn test_create_provider_reports_unknown_custom_provider() {
         let config = crate::config::models::provider::ProviderConfig {
