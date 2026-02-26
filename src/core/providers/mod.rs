@@ -152,6 +152,29 @@ pub use contextual_error::ContextualError;
 pub use provider_registry::ProviderRegistry;
 pub use unified_provider::{ProviderError, UnifiedProviderError}; // Both for compatibility
 
+/// Returns true if a provider selector can be instantiated by the current runtime.
+///
+/// The selector is resolved using the same precedence as `create_provider`:
+/// 1. Tier-1 data-driven catalog names
+/// 2. Built-in factory provider types
+pub fn is_provider_selector_supported(selector: &str) -> bool {
+    let normalized = selector.trim().to_lowercase();
+    if normalized.is_empty() {
+        return false;
+    }
+
+    if registry::get_definition(&normalized).is_some() {
+        return true;
+    }
+
+    let provider_type = ProviderType::from(normalized.as_str());
+    if matches!(provider_type, ProviderType::Custom(_)) {
+        return false;
+    }
+
+    Provider::factory_supported_provider_types().contains(&provider_type)
+}
+
 /// Model pricing information
 #[derive(Debug, Clone)]
 pub struct ModelPricing {
@@ -234,7 +257,9 @@ impl From<&str> for ProviderType {
             "nebius" | "nebius-ai" => ProviderType::Nebius,
             "nscale" | "nscale-ai" => ProviderType::Nscale,
             "pydantic_ai" | "pydantic-ai" | "pydantic" => ProviderType::PydanticAI,
-            "openai_compatible" | "openai-compatible" => ProviderType::OpenAICompatible,
+            "openai_compatible" | "openai-compatible" | "openai_like" | "openai-like" => {
+                ProviderType::OpenAICompatible
+            }
             _ => ProviderType::Custom(s.to_string()),
         }
     }
@@ -476,6 +501,7 @@ impl Provider {
             ProviderType::Anthropic,
             ProviderType::Mistral,
             ProviderType::Cloudflare,
+            ProviderType::OpenAICompatible,
         ];
         SUPPORTED
     }
@@ -784,6 +810,78 @@ impl Provider {
                     .await
                     .map_err(|e| ProviderError::initialization("cloudflare", e.to_string()))?;
                 Ok(Provider::Cloudflare(provider))
+            }
+            ProviderType::OpenAICompatible => {
+                use crate::core::providers::openai_like::OpenAILikeConfig;
+                use serde_json::Value;
+
+                let api_base = config
+                    .get("base_url")
+                    .and_then(Value::as_str)
+                    .or_else(|| config.get("api_base").and_then(Value::as_str))
+                    .ok_or_else(|| {
+                        ProviderError::configuration(
+                            "openai_compatible",
+                            "base_url (or api_base) is required",
+                        )
+                    })?;
+
+                let api_key = config.get("api_key").and_then(Value::as_str);
+                let skip_api_key = config
+                    .get("skip_api_key")
+                    .and_then(Value::as_bool)
+                    .unwrap_or(api_key.is_none());
+
+                let mut oai_like = if let Some(api_key) = api_key {
+                    OpenAILikeConfig::with_api_key(api_base, api_key)
+                } else {
+                    OpenAILikeConfig::new(api_base).with_skip_api_key(skip_api_key)
+                };
+
+                if let Some(name) = config.get("provider_name").and_then(Value::as_str) {
+                    oai_like.provider_name = name.to_string();
+                } else {
+                    oai_like.provider_name = "openai_compatible".to_string();
+                }
+
+                if let Some(timeout) = config.get("timeout").and_then(Value::as_u64) {
+                    oai_like.base.timeout = timeout;
+                }
+                if let Some(max_retries) = config.get("max_retries").and_then(Value::as_u64) {
+                    oai_like.base.max_retries = max_retries as u32;
+                }
+                if let Some(prefix) = config.get("model_prefix").and_then(Value::as_str) {
+                    oai_like.model_prefix = Some(prefix.to_string());
+                }
+                if let Some(default_model) = config.get("default_model").and_then(Value::as_str) {
+                    oai_like.default_model = Some(default_model.to_string());
+                }
+                if let Some(pass_through) = config.get("pass_through_params").and_then(Value::as_bool) {
+                    oai_like.pass_through_params = pass_through;
+                }
+
+                if let Some(base_headers) = config.get("headers").and_then(Value::as_object) {
+                    for (key, value) in base_headers {
+                        if let Some(value) = value.as_str() {
+                            oai_like.base.headers.insert(key.clone(), value.to_string());
+                        }
+                    }
+                }
+
+                if let Some(custom_headers) = config.get("custom_headers").and_then(Value::as_object) {
+                    for (key, value) in custom_headers {
+                        if let Some(value) = value.as_str() {
+                            oai_like.custom_headers.insert(key.clone(), value.to_string());
+                        }
+                    }
+                }
+
+                let provider = openai_like::OpenAILikeProvider::new(oai_like)
+                    .await
+                    .map_err(|e| {
+                        ProviderError::initialization("openai_compatible", e.to_string())
+                    })?;
+                Ok(Provider::OpenAILike(provider))
             }
             _ => Err(ProviderError::not_implemented(
                 "unknown",
@@ -1226,6 +1324,26 @@ mod tests {
         }
     }
 
+    #[test]
+    fn test_provider_selector_support_detection() {
+        assert!(is_provider_selector_supported("openai"));
+        assert!(is_provider_selector_supported("openai_compatible"));
+        assert!(is_provider_selector_supported("groq")); // Tier-1 catalog
+        assert!(!is_provider_selector_supported("totally_unknown_provider"));
+    }
+
+    #[test]
+    fn test_provider_type_openai_like_aliases() {
+        assert_eq!(
+            ProviderType::from("openai_like"),
+            ProviderType::OpenAICompatible
+        );
+        assert_eq!(
+            ProviderType::from("openai-like"),
+            ProviderType::OpenAICompatible
+        );
+    }
+
     #[tokio::test]
     async fn test_create_provider_prefers_provider_type_over_name() {
         // provider_type takes precedence over name.
@@ -1306,5 +1424,24 @@ mod tests {
             "Expected custom provider name in error, got {}",
             err
         );
+    }
+
+    #[tokio::test]
+    async fn test_create_provider_openai_compatible_factory() {
+        let mut config = crate::config::models::provider::ProviderConfig {
+            name: "local-openai-like".to_string(),
+            provider_type: "openai_compatible".to_string(),
+            api_key: "".to_string(),
+            base_url: Some("http://localhost:11434/v1".to_string()),
+            ..Default::default()
+        };
+        config
+            .settings
+            .insert("skip_api_key".to_string(), serde_json::Value::Bool(true));
+
+        let provider = create_provider(config)
+            .await
+            .expect("openai_compatible provider should be creatable");
+        assert!(matches!(provider, Provider::OpenAILike(_)));
     }
 }

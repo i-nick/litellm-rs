@@ -586,6 +586,15 @@ mod tests {
     }
 
     #[test]
+    fn test_gateway_config_validate_unsupported_provider_type() {
+        let mut config = create_valid_config();
+        config.providers[0].provider_type = "unsupported_provider".to_string();
+        let result = config.validate();
+        assert!(result.is_err());
+        assert!(result.unwrap_err().contains("not supported"));
+    }
+
+    #[test]
     fn test_gateway_config_validate_duplicate_provider_names() {
         let mut config = create_valid_config();
         config.providers.push(create_test_provider("test-provider"));

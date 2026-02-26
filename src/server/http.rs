@@ -77,33 +77,26 @@ impl HttpServer {
         let runtime_router_config =
             crate::core::router::gateway_config::runtime_router_config_from_gateway(
                 &config.gateway.router,
-            );
+            )
+            .map_err(GatewayError::Config)?;
 
-        let unified_router = match crate::core::router::UnifiedRouter::from_gateway_config(
+        let unified_router = crate::core::router::UnifiedRouter::from_gateway_config(
             &config.gateway.providers,
             Some(runtime_router_config),
         )
         .await
-        {
-            Ok(router) => Some(router),
-            Err(e) => {
-                warn!("Failed to initialize unified router from config: {}", e);
-                None
-            }
-        };
+        .map_err(|e| {
+            GatewayError::Config(format!("Failed to initialize unified router from config: {}", e))
+        })?;
 
-        let state = if let Some(unified_router) = unified_router {
-            AppState::new_with_unified_router(
-                config.clone(),
-                auth,
-                router,
-                unified_router,
-                storage,
-                pricing,
-            )
-        } else {
-            AppState::new(config.clone(), auth, router, storage, pricing)
-        };
+        let state = AppState::new_with_unified_router(
+            config.clone(),
+            auth,
+            router,
+            unified_router,
+            storage,
+            pricing,
+        );
 
         Ok(Self {
             config: config.gateway.server.clone(),

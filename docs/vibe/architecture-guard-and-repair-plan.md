@@ -106,3 +106,13 @@
 - `cargo test config::models::gateway::tests::test_gateway_config_validate_success --lib -- --exact`
 - `cargo test config::models::server::tests::test_cors_config_allows_all_origins_empty --lib -- --exact`
 - `cargo test config::models::server::tests::test_cors_config_validate_all_origins_with_credentials --lib -- --exact`
+
+## 继续修复记录（本轮追加）
+- 收敛 `provider_type` 声明与工厂覆盖不一致：
+  - 增加 `is_provider_selector_supported(...)` 用于配置期 fail-fast 校验。
+  - `ProviderConfig` 校验阶段直接阻断不可实例化 provider_type。
+  - 为 `openai_compatible` / `openai_like` 增加工厂分支，支持通过统一配置创建 OpenAI-compatible provider。
+- 收敛路由策略静默降级：
+  - `runtime_router_config_from_gateway(...)` 改为 `Result`。
+  - 对 `weighted / priority / ab_test / custom` 明确返回不支持错误，避免静默降级到 `SimpleShuffle`。
+  - 服务器启动阶段将该错误作为配置错误返回，禁止“错误配置继续运行”。

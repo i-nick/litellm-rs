@@ -113,9 +113,13 @@ impl Validate for ProviderConfig {
             return Err(format!("Provider {} type cannot be empty", self.name));
         }
 
-        // Note: We support 100+ provider types dynamically, so we don't validate
-        // against a hardcoded list. Provider type validation happens at runtime
-        // when the provider is instantiated.
+        let provider_selector = self.provider_type.as_str();
+        if !crate::core::providers::is_provider_selector_supported(provider_selector) {
+            return Err(format!(
+                "Provider {} type '{}' is not supported by current runtime factory/catalog",
+                self.name, self.provider_type
+            ));
+        }
 
         if self.api_key.is_empty() {
             return Err(format!("Provider {} API key cannot be empty", self.name));
