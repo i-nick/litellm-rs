@@ -66,7 +66,8 @@ impl BaseConfig {
     }
 
     fn provider_env_key(provider: &str, suffix: &str) -> String {
-        format!("{}_{}", provider.to_uppercase(), suffix)
+        let normalized_provider = Self::normalize_provider_name(provider);
+        format!("{}_{}", normalized_provider.to_uppercase(), suffix)
     }
 
     fn env_value(provider: &str, suffix: &str) -> Option<String> {
@@ -117,20 +118,18 @@ impl BaseConfig {
 
     /// Configuration
     pub fn from_env(provider: &str) -> Self {
-        let normalized_provider = Self::normalize_provider_name(provider);
-
         Self {
-            api_key: Self::env_value(&normalized_provider, "API_KEY"),
-            api_base: Self::env_value(&normalized_provider, "API_BASE"),
-            timeout: Self::env_value(&normalized_provider, "TIMEOUT")
+            api_key: Self::env_value(provider, "API_KEY"),
+            api_base: Self::env_value(provider, "API_BASE"),
+            timeout: Self::env_value(provider, "TIMEOUT")
                 .and_then(|t| t.parse().ok())
                 .unwrap_or(default_timeout()),
-            max_retries: Self::env_value(&normalized_provider, "MAX_RETRIES")
+            max_retries: Self::env_value(provider, "MAX_RETRIES")
                 .and_then(|r| r.parse().ok())
                 .unwrap_or(default_max_retries()),
             headers: HashMap::new(),
-            organization: Self::env_value(&normalized_provider, "ORGANIZATION"),
-            api_version: Self::env_value(&normalized_provider, "API_VERSION"),
+            organization: Self::env_value(provider, "ORGANIZATION"),
+            api_version: Self::env_value(provider, "API_VERSION"),
         }
     }
 
