@@ -1,6 +1,7 @@
 //! Error types for Sagemaker provider.
 
 pub use crate::core::providers::unified_provider::ProviderError;
+use crate::core::providers::base::HttpErrorMapper;
 use crate::core::traits::error_mapper::trait_def::ErrorMapper;
 
 /// Sagemaker error type (alias to unified ProviderError)
@@ -18,7 +19,7 @@ impl ErrorMapper<ProviderError> for SagemakerErrorMapper {
             404 | 424 => ProviderError::model_not_found("sagemaker", response_body),
             429 => ProviderError::rate_limit("sagemaker", None),
             502 | 503 => ProviderError::provider_unavailable("sagemaker", response_body),
-            _ => ProviderError::api_error("sagemaker", status_code, response_body),
+            _ => HttpErrorMapper::map_status_code("sagemaker", status_code, response_body),
         }
     }
 }

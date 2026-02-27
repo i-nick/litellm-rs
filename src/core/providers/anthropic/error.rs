@@ -2,6 +2,7 @@
 //!
 //! Error handling
 
+use crate::core::providers::base::HttpErrorMapper;
 use crate::core::providers::shared::parse_retry_after_from_body;
 use crate::core::providers::unified_provider::ProviderError;
 
@@ -28,7 +29,7 @@ impl AnthropicErrorMapper {
             500..=599 => {
                 ProviderError::api_error("anthropic", status, format!("Server error: {}", body))
             }
-            _ => ProviderError::api_error("anthropic", status, body),
+            _ => HttpErrorMapper::map_status_code("anthropic", status, body),
         }
     }
 

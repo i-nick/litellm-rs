@@ -9,8 +9,8 @@ use std::collections::HashMap;
 use std::pin::Pin;
 use tracing::{debug, warn};
 
-use crate::core::providers::base_provider::{
-    BaseHttpClient, BaseProviderConfig, HeaderBuilder, HttpErrorMapper,
+use crate::core::providers::base::{
+    BaseHttpClient, BaseConfig, HttpErrorMapper, apply_headers, header, header_static,
 };
 use crate::core::traits::{
     error_mapper::trait_def::ErrorMapper, provider::ProviderConfig,
@@ -85,12 +85,12 @@ impl HuggingFaceProvider {
             .map_err(|e| HuggingFaceError::configuration("huggingface", e))?;
 
         // Create base HTTP client
-        let base_config = BaseProviderConfig {
+        let base_config = BaseConfig {
             api_key: Some(config.api_key.clone()),
             api_base: config.api_base.clone(),
-            timeout: Some(config.timeout_seconds),
-            max_retries: Some(config.max_retries),
-            headers: None,
+            timeout: config.timeout_seconds,
+            max_retries: config.max_retries,
+            headers: HashMap::new(),
             organization: None,
             api_version: None,
         };
@@ -189,17 +189,12 @@ impl HuggingFaceProvider {
     ) -> Result<HashMap<String, Value>, HuggingFaceError> {
         let url = format!("{}/api/models/{}", HF_HUB_URL, model);
 
-        let headers = HeaderBuilder::new()
-            .with_bearer_token(&self.config.api_key)
-            .with_header("Accept", "application/json")
-            .build_reqwest()
-            .map_err(|e| HuggingFaceError::huggingface_invalid_request(e.to_string()))?;
+        let headers = vec![
+            header("Authorization", format!("Bearer {}", self.config.api_key)),
+            header("Accept", "application/json".to_string()),
+        ];
 
-        let response = self
-            .base_client
-            .inner()
-            .get(&url)
-            .headers(headers)
+        let response = apply_headers(self.base_client.inner().get(&url), headers)
             .query(&[("expand", "inferenceProviderMapping")])
             .send()
             .await
@@ -403,18 +398,12 @@ impl LLMProvider for HuggingFaceProvider {
         debug!("HuggingFace request URL: {}", url);
 
         // Build headers
-        let headers = HeaderBuilder::new()
-            .with_bearer_token(&self.config.api_key)
-            .with_content_type("application/json")
-            .build_reqwest()
-            .map_err(|e| HuggingFaceError::huggingface_invalid_request(e.to_string()))?;
+        let headers = vec![
+            header("Authorization", format!("Bearer {}", self.config.api_key)),
+            header_static("Content-Type", "application/json"),
+        ];
 
-        // Execute request
-        let response = self
-            .base_client
-            .inner()
-            .post(&url)
-            .headers(headers)
+        let response = apply_headers(self.base_client.inner().post(&url), headers)
             .json(&body)
             .send()
             .await
@@ -465,18 +454,12 @@ impl LLMProvider for HuggingFaceProvider {
         let url = self.config.get_chat_url(provider.as_deref(), &model_id);
 
         // Build headers
-        let headers = HeaderBuilder::new()
-            .with_bearer_token(&self.config.api_key)
-            .with_content_type("application/json")
-            .build_reqwest()
-            .map_err(|e| HuggingFaceError::huggingface_invalid_request(e.to_string()))?;
+        let headers = vec![
+            header("Authorization", format!("Bearer {}", self.config.api_key)),
+            header_static("Content-Type", "application/json"),
+        ];
 
-        // Execute request
-        let response = self
-            .base_client
-            .inner()
-            .post(&url)
-            .headers(headers)
+        let response = apply_headers(self.base_client.inner().post(&url), headers)
             .json(&body)
             .send()
             .await
@@ -542,18 +525,12 @@ impl LLMProvider for HuggingFaceProvider {
         let url = self.config.get_embeddings_url(task, &request.model);
 
         // Build headers
-        let headers = HeaderBuilder::new()
-            .with_bearer_token(&self.config.api_key)
-            .with_content_type("application/json")
-            .build_reqwest()
-            .map_err(|e| HuggingFaceError::huggingface_invalid_request(e.to_string()))?;
+        let headers = vec![
+            header("Authorization", format!("Bearer {}", self.config.api_key)),
+            header_static("Content-Type", "application/json"),
+        ];
 
-        // Execute request
-        let response = self
-            .base_client
-            .inner()
-            .post(&url)
-            .headers(headers)
+        let response = apply_headers(self.base_client.inner().post(&url), headers)
             .json(&body)
             .send()
             .await
@@ -584,37 +561,29 @@ impl LLMProvider for HuggingFaceProvider {
         // Try a simple models endpoint request
         let url = format!("{}/api/models", HF_HUB_URL);
 
-        let headers = HeaderBuilder::new()
-            .with_bearer_token(&self.config.api_key)
-            .with_header("Accept", "application/json")
-            .build_reqwest();
-
-        match headers {
-            Ok(headers) => {
-                match self
-                    .base_client
-                    .inner()
-                    .get(&url)
-                    .headers(headers)
-                    .query(&[("limit", "1")])
-                    .send()
-                    .await
-                {
-                    Ok(response) if response.status().is_success() => HealthStatus::Healthy,
-                    Ok(response) => {
-                        debug!(
-                            "HuggingFace health check failed: status={}",
-                            response.status()
-                        );
-                        HealthStatus::Unhealthy
-                    }
-                    Err(e) => {
-                        debug!("HuggingFace health check error: {}", e);
-                        HealthStatus::Unhealthy
-                    }
-                }
+        match apply_headers(
+            self.base_client.inner().get(&url),
+            vec![
+                header("Authorization", format!("Bearer {}", self.config.api_key)),
+                header("Accept", "application/json".to_string()),
+            ],
+        )
+        .query(&[("limit", "1")])
+        .send()
+        .await
+        {
+            Ok(response) if response.status().is_success() => HealthStatus::Healthy,
+            Ok(response) => {
+                debug!(
+                    "HuggingFace health check failed: status={}",
+                    response.status()
+                );
+                HealthStatus::Unhealthy
             }
-            Err(_) => HealthStatus::Unhealthy,
+            Err(e) => {
+                debug!("HuggingFace health check error: {}", e);
+                HealthStatus::Unhealthy
+            }
         }
     }
 

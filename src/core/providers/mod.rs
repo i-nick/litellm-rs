@@ -127,7 +127,6 @@ pub mod thinking; // Thinking/reasoning provider trait (modular)
 pub mod transform; // Request/Response transformation engine // Request/Response context and metadata
 
 // Registry and unified provider
-pub mod base_provider;
 pub mod contextual_error;
 pub mod provider_error_conversions;
 pub mod provider_registry;

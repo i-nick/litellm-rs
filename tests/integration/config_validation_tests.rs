@@ -185,12 +185,12 @@ mod tests {
     /// Test CORS allows all origins detection
     #[test]
     fn test_cors_allows_all_origins() {
-        // Empty origins means allow all
+        // Empty origins does not imply wildcard
         let config_empty = CorsConfig {
             allowed_origins: vec![],
             ..Default::default()
         };
-        assert!(config_empty.allows_all_origins());
+        assert!(!config_empty.allows_all_origins());
 
         // Explicit wildcard
         let config_wildcard = CorsConfig {

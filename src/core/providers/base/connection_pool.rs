@@ -250,10 +250,6 @@ impl Default for GlobalPoolManager {
     }
 }
 
-// Re-export for backwards compatibility
-pub use ConnectionPool as LockFreePool;
-pub use GlobalPoolManager as ConnectionGuard;
-
 #[cfg(test)]
 mod tests {
     use super::*;

@@ -2,6 +2,7 @@
 //!
 //! Simplified error handling for Azure OpenAI Service using ProviderError directly
 
+use crate::core::providers::base::HttpErrorMapper;
 use crate::core::providers::unified_provider::ProviderError;
 use crate::core::traits::error_mapper::trait_def::ErrorMapper;
 
@@ -24,7 +25,7 @@ impl ErrorMapper<ProviderError> for AzureErrorMapper {
                 status_code,
                 format!("Server error: {}", response_body),
             ),
-            _ => ProviderError::api_error("azure", status_code, response_body),
+            _ => HttpErrorMapper::map_status_code("azure", status_code, response_body),
         }
     }
 

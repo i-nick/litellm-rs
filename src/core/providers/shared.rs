@@ -6,7 +6,7 @@
 use serde_json::Value;
 
 use crate::core::providers::unified_provider::ProviderError;
-use crate::core::types::responses::{FinishReason, Usage};
+use crate::core::types::responses::FinishReason;
 use crate::core::types::{message::MessageContent, message::MessageRole};
 
 // ============================================================================
@@ -141,31 +141,6 @@ impl ResponseValidator {
 }
 
 // ============================================================================
-// Cost Calculation Utilities
-// ============================================================================
-
-#[derive(Debug, Clone)]
-pub struct TokenCostCalculator {
-    input_cost_per_1k: f64,
-    output_cost_per_1k: f64,
-}
-
-impl TokenCostCalculator {
-    pub fn new(input_cost_per_1k: f64, output_cost_per_1k: f64) -> Self {
-        Self {
-            input_cost_per_1k,
-            output_cost_per_1k,
-        }
-    }
-
-    pub fn calculate_cost(&self, usage: &Usage) -> f64 {
-        let input_cost = (usage.prompt_tokens as f64 / 1000.0) * self.input_cost_per_1k;
-        let output_cost = (usage.completion_tokens as f64 / 1000.0) * self.output_cost_per_1k;
-        input_cost + output_cost
-    }
-}
-
-// ============================================================================
 // Retry-After Parsing
 // ============================================================================
 
@@ -250,6 +225,7 @@ pub fn normalize_vector(vector: &mut [f32]) {
 pub mod test_utils {
     use super::*;
     use crate::core::types::chat::ChatMessage;
+    use crate::core::types::responses::Usage;
 
     /// Create a mock ChatMessage for testing
     pub fn mock_message(role: MessageRole, content: &str) -> ChatMessage {
@@ -545,108 +521,6 @@ mod tests {
 
         let result = ResponseValidator::validate_chat_response(&response, "test");
         assert!(result.is_err());
-    }
-
-    // ==================== TokenCostCalculator Tests ====================
-
-    #[test]
-    fn test_token_cost_calculator_new() {
-        let calculator = TokenCostCalculator::new(0.01, 0.02);
-        assert_eq!(calculator.input_cost_per_1k, 0.01);
-        assert_eq!(calculator.output_cost_per_1k, 0.02);
-    }
-
-    #[test]
-    fn test_token_cost_calculator_calculate_cost() {
-        let calculator = TokenCostCalculator::new(0.01, 0.02);
-        let usage = Usage {
-            prompt_tokens: 1000,
-            completion_tokens: 500,
-            total_tokens: 1500,
-            completion_tokens_details: None,
-            prompt_tokens_details: None,
-            thinking_usage: None,
-        };
-        let cost = calculator.calculate_cost(&usage);
-        // (1000/1000 * 0.01) + (500/1000 * 0.02) = 0.01 + 0.01 = 0.02
-        assert!((cost - 0.02).abs() < 0.0001);
-    }
-
-    #[test]
-    fn test_token_cost_calculator_zero_tokens() {
-        let calculator = TokenCostCalculator::new(0.01, 0.02);
-        let usage = Usage {
-            prompt_tokens: 0,
-            completion_tokens: 0,
-            total_tokens: 0,
-            completion_tokens_details: None,
-            prompt_tokens_details: None,
-            thinking_usage: None,
-        };
-        let cost = calculator.calculate_cost(&usage);
-        assert!((cost - 0.0).abs() < 0.0001);
-    }
-
-    #[test]
-    fn test_token_cost_calculator_only_input() {
-        let calculator = TokenCostCalculator::new(0.01, 0.02);
-        let usage = Usage {
-            prompt_tokens: 1000,
-            completion_tokens: 0,
-            total_tokens: 1000,
-            completion_tokens_details: None,
-            prompt_tokens_details: None,
-            thinking_usage: None,
-        };
-        let cost = calculator.calculate_cost(&usage);
-        assert!((cost - 0.01).abs() < 0.0001);
-    }
-
-    #[test]
-    fn test_token_cost_calculator_only_output() {
-        let calculator = TokenCostCalculator::new(0.01, 0.02);
-        let usage = Usage {
-            prompt_tokens: 0,
-            completion_tokens: 1000,
-            total_tokens: 1000,
-            completion_tokens_details: None,
-            prompt_tokens_details: None,
-            thinking_usage: None,
-        };
-        let cost = calculator.calculate_cost(&usage);
-        assert!((cost - 0.02).abs() < 0.0001);
-    }
-
-    #[test]
-    fn test_token_cost_calculator_large_tokens() {
-        let calculator = TokenCostCalculator::new(0.003, 0.015);
-        let usage = Usage {
-            prompt_tokens: 100000,
-            completion_tokens: 50000,
-            total_tokens: 150000,
-            completion_tokens_details: None,
-            prompt_tokens_details: None,
-            thinking_usage: None,
-        };
-        let cost = calculator.calculate_cost(&usage);
-        // (100 * 0.003) + (50 * 0.015) = 0.3 + 0.75 = 1.05
-        assert!((cost - 1.05).abs() < 0.001);
-    }
-
-    #[test]
-    fn test_token_cost_calculator_clone() {
-        let calculator = TokenCostCalculator::new(0.01, 0.02);
-        let cloned = calculator.clone();
-
-        assert_eq!(cloned.input_cost_per_1k, calculator.input_cost_per_1k);
-        assert_eq!(cloned.output_cost_per_1k, calculator.output_cost_per_1k);
-    }
-
-    #[test]
-    fn test_token_cost_calculator_debug() {
-        let calculator = TokenCostCalculator::new(0.01, 0.02);
-        let debug_str = format!("{:?}", calculator);
-        assert!(debug_str.contains("TokenCostCalculator"));
     }
 
     // ==================== Test Utilities Tests ====================

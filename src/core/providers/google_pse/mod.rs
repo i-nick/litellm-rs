@@ -10,9 +10,9 @@ use std::collections::HashMap;
 use std::pin::Pin;
 use tracing::debug;
 
-use crate::core::providers::base_provider::{
-    BaseHttpClient, BaseProviderConfig, CostCalculator, HeaderBuilder, HttpErrorMapper,
-    OpenAIRequestTransformer, UrlBuilder,
+use crate::core::providers::base::{
+    BaseHttpClient, BaseConfig, HttpErrorMapper, OpenAIRequestTransformer, UrlBuilder,
+    apply_headers, get_pricing_db, header_static,
 };
 use crate::core::providers::unified_provider::ProviderError;
 use crate::core::traits::{
@@ -141,12 +141,12 @@ impl GooglePSEProvider {
             .validate()
             .map_err(|e| ProviderError::configuration("google_pse", e))?;
 
-        let base_config = BaseProviderConfig {
+        let base_config = BaseConfig {
             api_key: Some(config.api_key.clone()),
             api_base: Some(config.api_base.clone()),
-            timeout: Some(config.timeout_seconds),
-            max_retries: Some(config.max_retries),
-            headers: None,
+            timeout: config.timeout_seconds,
+            max_retries: config.max_retries,
+            headers: HashMap::new(),
             organization: None,
             api_version: None,
         };
@@ -271,16 +271,9 @@ impl LLMProvider for GooglePSEProvider {
             .with_query("q", &query)
             .build();
 
-        let headers = HeaderBuilder::new()
-            .with_content_type("application/json")
-            .build_reqwest()
-            .map_err(|e| ProviderError::invalid_request("google_pse", e.to_string()))?;
+        let headers = vec![header_static("Content-Type", "application/json")];
 
-        let response = self
-            .base_client
-            .inner()
-            .get(&url)
-            .headers(headers)
+        let response = apply_headers(self.base_client.inner().get(&url), headers)
             .send()
             .await
             .map_err(|e| ProviderError::network("google_pse", e.to_string()))?;
@@ -288,7 +281,7 @@ impl LLMProvider for GooglePSEProvider {
         if !response.status().is_success() {
             let status = response.status().as_u16();
             let body = response.text().await.unwrap_or_default();
-            return Err(ProviderError::api_error("google_pse", status, body));
+            return Err(HttpErrorMapper::map_status_code("google_pse", status, &body));
         }
 
         let search_response: Value = response
@@ -362,33 +355,19 @@ impl LLMProvider for GooglePSEProvider {
             .with_query("q", "test")
             .build();
 
-        let headers = HeaderBuilder::new().build_reqwest();
-
-        match headers {
-            Ok(headers) => {
-                match self
-                    .base_client
-                    .inner()
-                    .get(&url)
-                    .headers(headers)
-                    .send()
-                    .await
-                {
-                    Ok(response) if response.status().is_success() => HealthStatus::Healthy,
-                    Ok(response) => {
-                        debug!(
-                            "Google PSE health check failed: status={}",
-                            response.status()
-                        );
-                        HealthStatus::Unhealthy
-                    }
-                    Err(e) => {
-                        debug!("Google PSE health check error: {}", e);
-                        HealthStatus::Unhealthy
-                    }
-                }
+        match self.base_client.inner().get(&url).send().await {
+            Ok(response) if response.status().is_success() => HealthStatus::Healthy,
+            Ok(response) => {
+                debug!(
+                    "Google PSE health check failed: status={}",
+                    response.status()
+                );
+                HealthStatus::Unhealthy
             }
-            Err(_) => HealthStatus::Unhealthy,
+            Err(e) => {
+                debug!("Google PSE health check error: {}", e);
+                HealthStatus::Unhealthy
+            }
         }
     }
 
@@ -398,21 +377,13 @@ impl LLMProvider for GooglePSEProvider {
         input_tokens: u32,
         output_tokens: u32,
     ) -> Result<f64, Self::Error> {
-        let model_info = self
-            .models
-            .iter()
-            .find(|m| m.id == model)
-            .ok_or_else(|| ProviderError::model_not_found("google_pse", model.to_string()))?;
-
-        let input_cost_per_1k = model_info.input_cost_per_1k_tokens.unwrap_or(0.0);
-        let output_cost_per_1k = model_info.output_cost_per_1k_tokens.unwrap_or(0.0);
-
-        Ok(CostCalculator::calculate(
-            input_tokens,
-            output_tokens,
-            input_cost_per_1k,
-            output_cost_per_1k,
-        ))
+        let usage = crate::core::providers::base::pricing::Usage {
+            prompt_tokens: input_tokens,
+            completion_tokens: output_tokens,
+            total_tokens: input_tokens + output_tokens,
+            reasoning_tokens: None,
+        };
+        Ok(get_pricing_db().calculate(model, &usage))
     }
 }
 

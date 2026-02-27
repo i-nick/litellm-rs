@@ -2,6 +2,7 @@
 //!
 //! Error handling
 
+use crate::core::providers::base::HttpErrorMapper;
 use crate::core::providers::shared::parse_retry_after_from_body;
 use crate::core::providers::unified_provider::ProviderError;
 use crate::core::traits::error_mapper::trait_def::ErrorMapper;
@@ -33,7 +34,7 @@ impl GeminiErrorMapper {
             500..=599 => {
                 ProviderError::api_error("gemini", status, format!("Server error: {}", body))
             }
-            _ => ProviderError::api_error("gemini", status, body),
+            _ => HttpErrorMapper::map_status_code("gemini", status, body),
         }
     }
 

@@ -12,7 +12,9 @@ use super::config::CodestralConfig;
 use super::error::CodestralError;
 use super::model_info::{get_available_models, get_model_info};
 use crate::ProviderError;
-use crate::core::providers::base::{GlobalPoolManager, HeaderPair, HttpMethod, header};
+use crate::core::providers::base::{
+    GlobalPoolManager, HeaderPair, HttpErrorMapper, HttpMethod, header,
+};
 use crate::core::traits::{
     provider::ProviderConfig as _, provider::llm_provider::trait_definition::LLMProvider,
 };
@@ -286,10 +288,10 @@ impl LLMProvider for CodestralProvider {
 
         if !response.status().is_success() {
             let status = response.status().as_u16();
-            return Err(ProviderError::api_error(
+            return Err(HttpErrorMapper::map_status_code(
                 "codestral",
                 status,
-                format!("Stream request failed: {}", status),
+                &format!("Stream request failed: {}", status),
             ));
         }
 
@@ -310,10 +312,10 @@ impl LLMProvider for CodestralProvider {
                             *buffer = chunks;
                             Some(Ok(buffer.clone()))
                         }
-                        Err(e) => Some(Err(ProviderError::api_error(
+                        Err(e) => Some(Err(HttpErrorMapper::map_status_code(
                             "codestral",
                             500,
-                            e.to_string(),
+                            &e.to_string(),
                         ))),
                     },
                     Err(e) => Some(Err(ProviderError::network("codestral", e.to_string()))),

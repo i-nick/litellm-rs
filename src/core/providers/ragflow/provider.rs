@@ -9,7 +9,7 @@ use tracing::debug;
 
 use super::config::RagflowConfig;
 use super::model_info::{get_available_models, get_model_info};
-use crate::core::providers::base::{GlobalPoolManager, HttpMethod, header};
+use crate::core::providers::base::{GlobalPoolManager, HttpErrorMapper, HttpMethod, header};
 use crate::core::providers::unified_provider::ProviderError;
 use crate::core::traits::{
     provider::ProviderConfig as _, provider::llm_provider::trait_definition::LLMProvider,
@@ -122,11 +122,7 @@ impl RagflowProvider {
                 401 => ProviderError::authentication("ragflow", "Invalid API key"),
                 404 => ProviderError::model_not_found("ragflow", "Model not found"),
                 429 => ProviderError::rate_limit("ragflow", None),
-                _ => ProviderError::api_error(
-                    "ragflow",
-                    status.as_u16(),
-                    format!("API error {}: {}", status, error_body),
-                ),
+                _ => HttpErrorMapper::map_status_code("ragflow", status.as_u16(), &error_body),
             });
         }
 

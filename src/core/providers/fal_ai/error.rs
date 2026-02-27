@@ -2,6 +2,7 @@
 //!
 //! Error mapper and error handling for Fal AI provider
 
+use crate::core::providers::base::HttpErrorMapper;
 use crate::core::providers::unified_provider::ProviderError;
 use crate::core::traits::error_mapper::trait_def::ErrorMapper;
 use serde_json::Value;
@@ -27,10 +28,10 @@ impl ErrorMapper<ProviderError> for FalAIErrorMapper {
             500..=599 => {
                 ProviderError::api_error("fal_ai", status, format!("Server error: {}", body))
             }
-            _ => ProviderError::api_error(
+            _ => HttpErrorMapper::map_status_code(
                 "fal_ai",
                 status,
-                format!("HTTP error {}: {}", status, body),
+                &format!("HTTP error {}: {}", status, body),
             ),
         }
     }

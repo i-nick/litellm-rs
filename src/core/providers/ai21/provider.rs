@@ -7,7 +7,9 @@ use serde_json::Value;
 use std::collections::HashMap;
 use std::pin::Pin;
 
-use crate::core::providers::base::{HeaderPair, HttpMethod, get_pricing_db, header, header_owned};
+use crate::core::providers::base::{
+    HeaderPair, HttpErrorMapper, HttpMethod, get_pricing_db, header, header_owned,
+};
 use crate::core::providers::unified_provider::ProviderError;
 use crate::core::types::{
     chat::ChatRequest,
@@ -103,12 +105,12 @@ crate::define_pooled_http_provider_with_hooks!(
                         ProviderError::authentication(PROVIDER_NAME, message)
                     }
                     "rate_limit_exceeded" => ProviderError::rate_limit(PROVIDER_NAME, None),
-                    _ => ProviderError::api_error(PROVIDER_NAME, status, message),
+                    _ => HttpErrorMapper::map_status_code(PROVIDER_NAME, status, message),
                 };
             }
         }
 
-        ProviderError::api_error(PROVIDER_NAME, status, error_text)
+        HttpErrorMapper::map_status_code(PROVIDER_NAME, status, &error_text)
     },
     health_check: |provider: &AI21Provider| {
         let has_key = provider
@@ -155,10 +157,10 @@ crate::define_pooled_http_provider_with_hooks!(
                     .text()
                     .await
                     .unwrap_or_else(|_| "Unknown error".to_string());
-                return Err(ProviderError::api_error(
+                return Err(HttpErrorMapper::map_status_code(
                     PROVIDER_NAME,
                     status.as_u16(),
-                    error_text,
+                    &error_text,
                 ));
             }
 

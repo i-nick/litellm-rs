@@ -1,5 +1,6 @@
 //! Error types for Gradient AI provider.
 
+pub use crate::core::providers::base::HttpErrorMapper;
 pub use crate::core::providers::unified_provider::ProviderError;
 
 /// Gradient AI error type (alias to unified ProviderError)
@@ -35,7 +36,7 @@ impl crate::core::traits::error_mapper::trait_def::ErrorMapper<GradientAIError>
             500 => ProviderError::api_error("gradient_ai", 500, "Internal server error"),
             502 => ProviderError::provider_unavailable("gradient_ai", "Bad gateway"),
             503 => ProviderError::provider_unavailable("gradient_ai", "Service unavailable"),
-            _ => ProviderError::api_error("gradient_ai", status_code, message),
+            _ => HttpErrorMapper::map_status_code("gradient_ai", status_code, &message),
         }
     }
 }

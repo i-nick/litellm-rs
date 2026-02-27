@@ -12,7 +12,7 @@ use super::config::BedrockConfig;
 use super::error::{BedrockError, BedrockErrorMapper};
 use super::sigv4::SigV4Signer;
 use super::utils::{AwsAuth, validate_region};
-use crate::core::providers::base_provider::{BaseHttpClient, BaseProviderConfig};
+use crate::core::providers::base::{BaseHttpClient, BaseConfig};
 use crate::core::providers::unified_provider::ProviderError;
 use crate::core::traits::error_mapper::trait_def::ErrorMapper;
 
@@ -32,12 +32,12 @@ impl BedrockClient {
         validate_region(&config.aws_region)?;
 
         // Create base HTTP client
-        let base_config = BaseProviderConfig {
+        let base_config = BaseConfig {
             api_key: None,  // Bedrock uses AWS credentials
             api_base: None, // Dynamic based on region and model
-            timeout: Some(config.timeout_seconds),
-            max_retries: Some(config.max_retries),
-            headers: None,
+            timeout: config.timeout_seconds,
+            max_retries: config.max_retries,
+            headers: HashMap::new(),
             organization: None,
             api_version: None,
         };

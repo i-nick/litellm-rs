@@ -12,7 +12,7 @@ use tracing::debug;
 
 use super::config::GitHubConfig;
 use super::model_info::{get_available_models, get_model_info};
-use crate::core::providers::base::{GlobalPoolManager, HttpMethod, header};
+use crate::core::providers::base::{GlobalPoolManager, HttpErrorMapper, HttpMethod, header};
 use crate::core::providers::unified_provider::ProviderError;
 use crate::core::traits::{
     provider::ProviderConfig as _, provider::llm_provider::trait_definition::LLMProvider,
@@ -139,7 +139,7 @@ impl GitHubProvider {
                 429 => ProviderError::rate_limit("github", None),
                 400 => ProviderError::invalid_request("github", body_str.to_string()),
                 500..=599 => ProviderError::provider_unavailable("github", body_str.to_string()),
-                _ => ProviderError::api_error("github", status_code, body_str.to_string()),
+                _ => HttpErrorMapper::map_status_code("github", status_code, &body_str),
             });
         }
 
@@ -291,7 +291,7 @@ impl LLMProvider for GitHubProvider {
                 429 => ProviderError::rate_limit("github", None),
                 400 => ProviderError::invalid_request("github", body_str.clone()),
                 500..=599 => ProviderError::provider_unavailable("github", body_str.clone()),
-                _ => ProviderError::api_error("github", status, body_str),
+                _ => HttpErrorMapper::map_status_code("github", status, &body_str),
             });
         }
 

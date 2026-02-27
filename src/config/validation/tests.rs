@@ -72,11 +72,9 @@ fn test_provider_config_validation() {
 
     assert!(config.validate().is_ok());
 
-    // Note: Provider type is not validated against a hardcoded list anymore
-    // since we support 100+ provider types dynamically. Validation happens
-    // at runtime when the provider is instantiated.
+    // Unknown provider selectors are rejected by runtime factory/catalog validation.
     config.provider_type = "custom_provider".to_string();
-    assert!(config.validate().is_ok());
+    assert!(config.validate().is_err());
 
     config.provider_type = "openai".to_string();
     config.weight = 0.0;
@@ -85,18 +83,8 @@ fn test_provider_config_validation() {
 
 #[test]
 fn test_provider_config_all_types() {
-    // Supported types from config_validators.rs
-    let provider_types = [
-        "openai",
-        "anthropic",
-        "azure",
-        "google",
-        "bedrock",
-        "cohere",
-        "huggingface",
-        "ollama",
-        "custom",
-    ];
+    // Supported types should match what runtime factory/catalog can instantiate.
+    let provider_types = ["openai", "anthropic", "mistral", "cloudflare", "groq"];
 
     for provider_type in provider_types {
         let config = ProviderConfig {

@@ -17,7 +17,7 @@ use tracing::debug;
 
 use super::config::{PROVIDER_NAME, WandbConfig};
 use super::logger::{LLMCallLog, WandbLogger};
-use crate::core::providers::base_provider::HttpErrorMapper;
+use crate::core::providers::base::HttpErrorMapper;
 use crate::core::providers::unified_provider::ProviderError;
 use crate::core::traits::{
     error_mapper::trait_def::ErrorMapper, provider::ProviderConfig,

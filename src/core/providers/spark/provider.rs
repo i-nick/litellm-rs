@@ -8,7 +8,7 @@ use serde_json::Value;
 use std::collections::HashMap;
 use std::pin::Pin;
 
-use crate::core::providers::base_provider::{BaseHttpClient, BaseProviderConfig};
+use crate::core::providers::base::{BaseHttpClient, BaseConfig, HttpErrorMapper};
 use crate::core::providers::unified_provider::ProviderError;
 use crate::core::traits::{
     error_mapper::trait_def::ErrorMapper, provider::ProviderConfig,
@@ -43,12 +43,12 @@ impl SparkProvider {
             .validate()
             .map_err(|e| ProviderError::configuration("spark", e))?;
 
-        let base_config = BaseProviderConfig {
+        let base_config = BaseConfig {
             api_key: config.api_key.clone(),
             api_base: Some(config.api_base.clone()),
-            timeout: Some(config.request_timeout),
-            max_retries: Some(config.max_retries),
-            headers: None,
+            timeout: config.request_timeout,
+            max_retries: config.max_retries,
+            headers: HashMap::new(),
             organization: None,
             api_version: None,
         };
@@ -79,7 +79,7 @@ impl SparkProvider {
         })?;
 
         // Common validation: empty messages + max_tokens
-        crate::core::providers::base_provider::validate_chat_request_common(
+        crate::core::providers::base::validate_chat_request_common(
             "spark",
             request,
             model_spec.limits.max_output_tokens,
@@ -104,31 +104,7 @@ pub struct SparkErrorMapper;
 
 impl ErrorMapper<ProviderError> for SparkErrorMapper {
     fn map_http_error(&self, status_code: u16, response_body: &str) -> ProviderError {
-        match status_code {
-            401 => ProviderError::authentication(
-                "spark",
-                format!("Invalid credentials: {}", response_body),
-            ),
-            403 => ProviderError::authentication(
-                "spark",
-                format!("Permission denied: {}", response_body),
-            ),
-            404 => ProviderError::model_not_found(
-                "spark",
-                format!("Model not found: {}", response_body),
-            ),
-            429 => ProviderError::rate_limit("spark", None),
-            500..=599 => ProviderError::api_error(
-                "spark",
-                status_code,
-                format!("Server error: {}", response_body),
-            ),
-            _ => ProviderError::api_error(
-                "spark",
-                status_code,
-                format!("HTTP {}: {}", status_code, response_body),
-            ),
-        }
+        HttpErrorMapper::map_status_code("spark", status_code, response_body)
     }
 }
 

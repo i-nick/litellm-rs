@@ -158,6 +158,7 @@ pub struct CancelRunResponse {
     pub object: String,
 }
 
+use crate::core::providers::base::HttpErrorMapper;
 use crate::core::providers::unified_provider::ProviderError;
 
 /// AssistantError is a type alias for ProviderError (unified error handling)
@@ -284,10 +285,10 @@ impl BaseAssistantHandler for AzureAssistantHandler {
             .map_err(|e| ProviderError::network("azure", e.to_string()))?;
 
         if !response.status().is_success() {
-            return Err(ProviderError::api_error(
+            return Err(HttpErrorMapper::map_status_code(
                 "azure",
                 response.status().as_u16(),
-                response.text().await.unwrap_or_default(),
+                &response.text().await.unwrap_or_default(),
             ));
         }
 
@@ -361,10 +362,10 @@ impl BaseAssistantHandler for AzureAssistantHandler {
             .map_err(|e| ProviderError::network("azure", e.to_string()))?;
 
         if !response.status().is_success() {
-            return Err(ProviderError::api_error(
+            return Err(HttpErrorMapper::map_status_code(
                 "azure",
                 response.status().as_u16(),
-                response.text().await.unwrap_or_default(),
+                &response.text().await.unwrap_or_default(),
             ));
         }
 
@@ -416,10 +417,10 @@ impl BaseAssistantHandler for AzureAssistantHandler {
             .map_err(|e| ProviderError::network("azure", e.to_string()))?;
 
         if !response.status().is_success() {
-            return Err(ProviderError::api_error(
+            return Err(HttpErrorMapper::map_status_code(
                 "azure",
                 response.status().as_u16(),
-                response.text().await.unwrap_or_default(),
+                &response.text().await.unwrap_or_default(),
             ));
         }
 
@@ -473,10 +474,10 @@ impl BaseAssistantHandler for AzureAssistantHandler {
             .map_err(|e| ProviderError::network("azure", e.to_string()))?;
 
         if !response.status().is_success() {
-            return Err(ProviderError::api_error(
+            return Err(HttpErrorMapper::map_status_code(
                 "azure",
                 response.status().as_u16(),
-                response.text().await.unwrap_or_default(),
+                &response.text().await.unwrap_or_default(),
             ));
         }
 
@@ -528,10 +529,10 @@ impl BaseAssistantHandler for AzureAssistantHandler {
             .map_err(|e| ProviderError::network("azure", e.to_string()))?;
 
         if !response.status().is_success() {
-            return Err(ProviderError::api_error(
+            return Err(HttpErrorMapper::map_status_code(
                 "azure",
                 response.status().as_u16(),
-                response.text().await.unwrap_or_default(),
+                &response.text().await.unwrap_or_default(),
             ));
         }
 
@@ -580,10 +581,10 @@ impl BaseAssistantHandler for AzureAssistantHandler {
             .map_err(|e| ProviderError::network("azure",e.to_string()))?;
 
         if !response.status().is_success() {
-            return Err(ProviderError::api_error(
+            return Err(HttpErrorMapper::map_status_code(
                 "azure",
                 response.status().as_u16(),
-                response.text().await.unwrap_or_default(),
+                &response.text().await.unwrap_or_default(),
             ));
         }
 

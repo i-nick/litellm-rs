@@ -3,6 +3,7 @@
 //! Error handling for Heroku AI Inference API
 
 use super::config::PROVIDER_NAME;
+use crate::core::providers::base::HttpErrorMapper;
 use crate::core::providers::shared::parse_retry_after_from_body;
 use crate::core::providers::unified_provider::ProviderError;
 use crate::core::traits::error_mapper::trait_def::ErrorMapper;
@@ -40,8 +41,8 @@ impl ErrorMapper<ProviderError> for HerokuErrorMapper {
                     .unwrap_or_else(|| response_body.to_string());
                 ProviderError::invalid_request(PROVIDER_NAME, message)
             }
-            500..=599 => ProviderError::api_error(PROVIDER_NAME, status_code, response_body),
-            _ => ProviderError::api_error(PROVIDER_NAME, status_code, response_body),
+            500..=599 => HttpErrorMapper::map_status_code(PROVIDER_NAME, status_code, response_body),
+            _ => HttpErrorMapper::map_status_code(PROVIDER_NAME, status_code, response_body),
         }
     }
 }

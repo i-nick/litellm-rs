@@ -9,7 +9,7 @@ use tracing::debug;
 
 use super::config::PetalsConfig;
 use super::model_info::{get_available_models, get_model_info};
-use crate::core::providers::base::{GlobalPoolManager, HttpMethod, header};
+use crate::core::providers::base::{GlobalPoolManager, HttpErrorMapper, HttpMethod, header};
 use crate::core::providers::unified_provider::ProviderError;
 use crate::core::traits::{
     provider::ProviderConfig as _, provider::llm_provider::trait_definition::LLMProvider,
@@ -122,11 +122,7 @@ impl PetalsProvider {
                 404 => ProviderError::model_not_found("petals", "Model not found"),
                 429 => ProviderError::rate_limit("petals", None),
                 503 => ProviderError::provider_unavailable("petals", "Service unavailable"),
-                _ => ProviderError::api_error(
-                    "petals",
-                    status.as_u16(),
-                    format!("API error {}: {}", status, error_body),
-                ),
+                _ => HttpErrorMapper::map_status_code("petals", status.as_u16(), &error_body),
             });
         }
 

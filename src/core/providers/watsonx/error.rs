@@ -2,7 +2,7 @@
 //!
 //! This module provides Watsonx-specific error handling using the unified ProviderError type.
 
-use crate::core::providers::base_provider::HttpErrorMapper;
+use crate::core::providers::base::HttpErrorMapper;
 use crate::core::providers::unified_provider::ProviderError;
 use crate::core::traits::error_mapper::trait_def::ErrorMapper;
 use serde_json::Value;
@@ -50,7 +50,7 @@ impl ErrorMapper<WatsonxError> for WatsonxErrorMapper {
             500 => ProviderError::api_error(PROVIDER_NAME, 500, "Internal server error"),
             502 => ProviderError::provider_unavailable(PROVIDER_NAME, "Bad gateway"),
             503 => ProviderError::provider_unavailable(PROVIDER_NAME, "Service unavailable"),
-            _ => ProviderError::api_error(PROVIDER_NAME, status_code, message),
+            _ => HttpErrorMapper::map_status_code(PROVIDER_NAME, status_code, &message),
         }
     }
 

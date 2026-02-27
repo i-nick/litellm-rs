@@ -19,6 +19,7 @@ use crate::core::{
         responses::{ChatResponse, EmbeddingResponse, ImageGenerationResponse},
     },
 };
+use crate::core::providers::base::HttpErrorMapper;
 use crate::utils::net::http::create_custom_client;
 use std::collections::HashMap;
 
@@ -217,10 +218,10 @@ impl VertexAIProvider {
             let status = response.status();
             let error_text = response.text().await.unwrap_or_default();
 
-            return Err(ProviderError::api_error(
+            return Err(HttpErrorMapper::map_status_code(
                 "vertex_ai",
                 status.as_u16(),
-                error_text,
+                &error_text,
             ));
         }
 

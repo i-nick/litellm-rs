@@ -2,6 +2,7 @@
 //!
 //! Handles error conversion from Deepgram API responses to unified provider errors.
 
+use crate::core::providers::base::HttpErrorMapper;
 use crate::core::providers::unified_provider::ProviderError;
 use crate::core::traits::error_mapper::trait_def::ErrorMapper;
 
@@ -26,7 +27,7 @@ impl ErrorMapper<ProviderError> for DeepgramErrorMapper {
             500 => ProviderError::api_error("deepgram", 500, "Internal server error"),
             502 => ProviderError::api_error("deepgram", 502, "Bad gateway"),
             503 => ProviderError::api_error("deepgram", 503, "Service unavailable"),
-            _ => ProviderError::api_error("deepgram", status_code, message),
+            _ => HttpErrorMapper::map_status_code("deepgram", status_code, &message),
         }
     }
 }

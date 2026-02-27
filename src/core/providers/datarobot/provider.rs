@@ -5,7 +5,9 @@ use serde_json::Value;
 use std::collections::HashMap;
 use std::pin::Pin;
 
-use crate::core::providers::base::{HeaderPair, HttpMethod, get_pricing_db, header, header_owned};
+use crate::core::providers::base::{
+    HeaderPair, HttpErrorMapper, HttpMethod, get_pricing_db, header, header_owned,
+};
 use crate::core::providers::unified_provider::ProviderError;
 use crate::core::traits::error_mapper::trait_def::ErrorMapper;
 use crate::core::types::{
@@ -109,10 +111,10 @@ crate::define_pooled_http_provider_with_hooks!(
                     .text()
                     .await
                     .unwrap_or_else(|_| "Unknown error".to_string());
-                return Err(ProviderError::api_error(
+                return Err(HttpErrorMapper::map_status_code(
                     PROVIDER_NAME,
                     status.as_u16(),
-                    error_text,
+                    &error_text,
                 ));
             }
 

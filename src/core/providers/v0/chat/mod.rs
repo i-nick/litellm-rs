@@ -3,6 +3,7 @@
 //! Handles chat completion requests for V0 provider
 
 use super::V0Provider;
+use crate::core::providers::base::HttpErrorMapper;
 use crate::core::providers::unified_provider::ProviderError;
 
 /// Provider name constant for error messages
@@ -232,10 +233,10 @@ impl V0ChatHandler {
                 )),
                 429 => Err(ProviderError::rate_limit(PROVIDER_NAME, None)),
                 404 => Err(ProviderError::model_not_found(PROVIDER_NAME, request.model)),
-                _ => Err(ProviderError::api_error(
+                _ => Err(HttpErrorMapper::map_status_code(
                     PROVIDER_NAME,
                     status.as_u16(),
-                    format!("HTTP {}: {}", status, error_text),
+                    &format!("HTTP {}: {}", status, error_text),
                 )),
             };
         }

@@ -12,6 +12,7 @@ use std::time::Duration;
 use tracing::{debug, error, warn};
 
 use super::LlamaProviderConfig;
+use crate::core::providers::base::HttpErrorMapper;
 use crate::core::providers::unified_provider::ProviderError;
 use crate::core::types::health::HealthStatus;
 use crate::utils::net::http::create_custom_client;
@@ -250,11 +251,7 @@ impl LlamaClient {
             StatusCode::NOT_FOUND => {
                 Err(ProviderError::model_not_found(PROVIDER_NAME, error_message))
             }
-            _ => Err(ProviderError::api_error(
-                PROVIDER_NAME,
-                status.as_u16(),
-                error_message,
-            )),
+            _ => Err(HttpErrorMapper::map_status_code(PROVIDER_NAME, status.as_u16(), &error_message)),
         }
     }
 

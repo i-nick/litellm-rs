@@ -9,7 +9,7 @@ use tracing::debug;
 
 use super::config::NlpCloudConfig;
 use super::model_info::{get_available_models, get_model_info};
-use crate::core::providers::base::{GlobalPoolManager, HttpMethod, header};
+use crate::core::providers::base::{GlobalPoolManager, HttpErrorMapper, HttpMethod, header};
 use crate::core::providers::unified_provider::ProviderError;
 use crate::core::traits::{
     provider::ProviderConfig as _, provider::llm_provider::trait_definition::LLMProvider,
@@ -131,9 +131,9 @@ impl NlpCloudProvider {
             403 => ProviderError::authentication(PROVIDER_NAME, "Access forbidden"),
             404 => ProviderError::model_not_found(PROVIDER_NAME, "Model not found"),
             429 => ProviderError::rate_limit(PROVIDER_NAME, None),
-            500 => ProviderError::api_error(PROVIDER_NAME, 500, "Internal server error"),
+            500 => HttpErrorMapper::map_status_code(PROVIDER_NAME, 500, "Internal server error"),
             503 => ProviderError::provider_unavailable(PROVIDER_NAME, "Service unavailable"),
-            _ => ProviderError::api_error(PROVIDER_NAME, status, body.to_string()),
+            _ => HttpErrorMapper::map_status_code(PROVIDER_NAME, status, body),
         }
     }
 }

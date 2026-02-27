@@ -10,7 +10,9 @@ use std::pin::Pin;
 use std::sync::Arc;
 use std::time::SystemTime;
 
-use crate::core::providers::base::{GlobalPoolManager, HeaderPair, HttpMethod, header};
+use crate::core::providers::base::{
+    GlobalPoolManager, HeaderPair, HttpErrorMapper, HttpMethod, header,
+};
 use crate::core::providers::unified_provider::ProviderError;
 use crate::core::traits::{
     provider::ProviderConfig, provider::llm_provider::trait_definition::LLMProvider,
@@ -291,10 +293,10 @@ impl LLMProvider for FalAIProvider {
 
         if !status.is_success() {
             let error_text = String::from_utf8_lossy(&response_bytes);
-            return Err(ProviderError::api_error(
+            return Err(HttpErrorMapper::map_status_code(
                 "fal_ai",
                 status.as_u16(),
-                error_text.to_string(),
+                &error_text,
             ));
         }
 

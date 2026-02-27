@@ -2,6 +2,7 @@
 //!
 //! Error handling
 
+use crate::core::providers::base::HttpErrorMapper;
 use crate::core::providers::shared::parse_retry_after_from_body;
 use crate::core::providers::unified_provider::ProviderError;
 use crate::core::traits::error_mapper::trait_def::ErrorMapper;
@@ -49,7 +50,7 @@ impl ErrorMapper<ProviderError> for AzureAIErrorMapper {
             502 => ProviderError::api_error("azure_ai", 502, "Bad gateway"),
             503 => ProviderError::provider_unavailable("azure_ai", "Service unavailable"),
             504 => ProviderError::timeout("azure_ai", "Gateway timeout"),
-            _ => ProviderError::api_error("azure_ai", status_code, response_body),
+            _ => HttpErrorMapper::map_status_code("azure_ai", status_code, response_body),
         }
     }
 

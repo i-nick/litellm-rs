@@ -7,6 +7,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
 
 use super::config::{AzureAIConfig, AzureAIEndpointType};
+use crate::core::providers::base::HttpErrorMapper;
 use crate::core::providers::unified_provider::ProviderError;
 use crate::utils::net::http::create_custom_client_with_headers;
 
@@ -74,7 +75,7 @@ impl AzureAIRerankHandler {
                 .text()
                 .await
                 .unwrap_or_else(|_| "Unknown error".to_string());
-            return Err(ProviderError::api_error("azure_ai", status, &error_body));
+            return Err(HttpErrorMapper::map_status_code("azure_ai", status, &error_body));
         }
 
         // Parse response

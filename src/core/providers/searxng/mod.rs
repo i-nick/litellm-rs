@@ -5,9 +5,10 @@
 use async_trait::async_trait;
 use futures::Stream;
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 use std::pin::Pin;
 
-use crate::core::providers::base_provider::{BaseHttpClient, BaseProviderConfig};
+use crate::core::providers::base::{BaseHttpClient, BaseConfig, HttpErrorMapper};
 use crate::core::providers::unified_provider::ProviderError;
 use crate::core::traits::{
     error_mapper::trait_def::ErrorMapper, provider::ProviderConfig,
@@ -82,12 +83,12 @@ pub struct SearXNGProvider {
 impl SearXNGProvider {
     /// Create new SearXNG provider
     pub fn new(config: SearXNGConfig) -> Result<Self, SearXNGError> {
-        let base_config = BaseProviderConfig {
+        let base_config = BaseConfig {
             api_key: config.api_key.clone(),
             api_base: config.api_base.clone(),
-            timeout: Some(config.timeout),
-            max_retries: Some(config.max_retries),
-            headers: None,
+            timeout: config.timeout,
+            max_retries: config.max_retries,
+            headers: HashMap::new(),
             organization: None,
             api_version: None,
         };
@@ -105,27 +106,7 @@ pub struct SearXNGErrorMapper;
 
 impl ErrorMapper<SearXNGError> for SearXNGErrorMapper {
     fn map_http_error(&self, status_code: u16, response_body: &str) -> SearXNGError {
-        match status_code {
-            401 | 403 => ProviderError::authentication(
-                "searxng",
-                format!("Authentication failed: {}", response_body),
-            ),
-            404 => ProviderError::model_not_found(
-                "searxng",
-                format!("Endpoint not found: {}", response_body),
-            ),
-            429 => ProviderError::rate_limit("searxng", None),
-            500..=599 => ProviderError::api_error(
-                "searxng",
-                status_code,
-                format!("Server error: {}", response_body),
-            ),
-            _ => ProviderError::api_error(
-                "searxng",
-                status_code,
-                format!("HTTP {}: {}", status_code, response_body),
-            ),
-        }
+        HttpErrorMapper::map_status_code("searxng", status_code, response_body)
     }
 }
 

@@ -2,6 +2,7 @@
 //!
 //! Uses unified ProviderError with OCI-specific error mapper.
 
+use crate::core::providers::base::HttpErrorMapper;
 use crate::core::providers::unified_provider::ProviderError;
 use crate::core::traits::error_mapper::trait_def::ErrorMapper;
 
@@ -42,7 +43,7 @@ impl ErrorMapper<ProviderError> for OciErrorMapper {
             500 => ProviderError::api_error("oci", 500, "Internal server error"),
             502 => ProviderError::provider_unavailable("oci", "Bad gateway"),
             503 => ProviderError::provider_unavailable("oci", "Service unavailable"),
-            _ => ProviderError::api_error("oci", status_code, message),
+            _ => HttpErrorMapper::map_status_code("oci", status_code, &message),
         }
     }
 }

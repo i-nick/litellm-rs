@@ -2,6 +2,7 @@
 //!
 //! Error mapper and error handling for Amazon Nova provider
 
+use crate::core::providers::base::HttpErrorMapper;
 use crate::core::providers::unified_provider::ProviderError;
 use crate::core::traits::error_mapper::trait_def::ErrorMapper;
 use serde_json::Value;
@@ -35,10 +36,10 @@ impl ErrorMapper<ProviderError> for AmazonNovaErrorMapper {
             500..=599 => {
                 ProviderError::api_error("amazon_nova", status, format!("Server error: {}", body))
             }
-            _ => ProviderError::api_error(
+            _ => HttpErrorMapper::map_status_code(
                 "amazon_nova",
                 status,
-                format!("HTTP error {}: {}", status, body),
+                &format!("HTTP error {}: {}", status, body),
             ),
         }
     }

@@ -6,6 +6,7 @@
 pub mod chat;
 
 use crate::core::{
+    providers::base::HttpErrorMapper,
     providers::unified_provider::ProviderError,
     traits::{
         error_mapper::types::GenericErrorMapper,
@@ -212,10 +213,10 @@ impl V0Provider {
         if response.status().is_success() {
             Ok(())
         } else {
-            Err(ProviderError::api_error(
+            Err(HttpErrorMapper::map_status_code(
                 PROVIDER_NAME,
                 response.status().as_u16(),
-                format!("Health check failed with status: {}", response.status()),
+                &format!("Health check failed with status: {}", response.status()),
             ))
         }
     }

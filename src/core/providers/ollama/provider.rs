@@ -12,7 +12,7 @@ use tracing::debug;
 use super::config::OllamaConfig;
 use super::model_info::{OllamaModelInfo, OllamaShowResponse, OllamaTagsResponse, get_model_info};
 use super::streaming::OllamaStream;
-use crate::core::providers::base::{GlobalPoolManager, HttpMethod, header};
+use crate::core::providers::base::{GlobalPoolManager, HttpErrorMapper, HttpMethod, header};
 use crate::core::providers::unified_provider::ProviderError;
 use crate::core::traits::error_mapper::types::GenericErrorMapper;
 use crate::core::traits::{
@@ -601,10 +601,10 @@ impl LLMProvider for OllamaProvider {
         if !response.status().is_success() {
             let status = response.status().as_u16();
             let body = response.text().await.ok();
-            return Err(ProviderError::api_error(
+            return Err(HttpErrorMapper::map_status_code(
                 "ollama",
                 status,
-                body.unwrap_or_default(),
+                &body.unwrap_or_default(),
             ));
         }
 

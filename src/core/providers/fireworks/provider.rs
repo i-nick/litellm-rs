@@ -14,7 +14,7 @@ use super::model_info::{
     format_model_id, get_available_models, get_model_info, is_reasoning_model,
     supports_function_calling, supports_tool_choice,
 };
-use crate::core::providers::base::{GlobalPoolManager, HttpMethod, header};
+use crate::core::providers::base::{GlobalPoolManager, HttpErrorMapper, HttpMethod, header};
 use crate::core::providers::unified_provider::ProviderError;
 use crate::core::traits::{
     provider::ProviderConfig as _, provider::llm_provider::trait_definition::LLMProvider,
@@ -197,7 +197,7 @@ impl FireworksProvider {
                 429 => ProviderError::rate_limit("fireworks", None),
                 400 => ProviderError::invalid_request("fireworks", body_str.to_string()),
                 500..=599 => ProviderError::provider_unavailable("fireworks", body_str.to_string()),
-                _ => ProviderError::api_error("fireworks", status_code, body_str.to_string()),
+                _ => HttpErrorMapper::map_status_code("fireworks", status_code, &body_str),
             });
         }
 
@@ -471,7 +471,7 @@ impl LLMProvider for FireworksProvider {
                 429 => ProviderError::rate_limit("fireworks", None),
                 400 => ProviderError::invalid_request("fireworks", &body_str),
                 500..=599 => ProviderError::provider_unavailable("fireworks", &body_str),
-                _ => ProviderError::api_error("fireworks", status, body_str),
+                _ => HttpErrorMapper::map_status_code("fireworks", status, &body_str),
             });
         }
 

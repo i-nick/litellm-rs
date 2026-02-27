@@ -5,9 +5,10 @@
 use async_trait::async_trait;
 use futures::Stream;
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 use std::pin::Pin;
 
-use crate::core::providers::base_provider::{BaseHttpClient, BaseProviderConfig};
+use crate::core::providers::base::{BaseHttpClient, BaseConfig, HttpErrorMapper};
 use crate::core::providers::unified_provider::ProviderError;
 use crate::core::traits::{
     error_mapper::trait_def::ErrorMapper, provider::ProviderConfig,
@@ -88,12 +89,12 @@ pub struct QwenProvider {
 impl QwenProvider {
     /// Create new Qwen provider
     pub fn new(config: QwenConfig) -> Result<Self, ProviderError> {
-        let base_config = BaseProviderConfig {
+        let base_config = BaseConfig {
             api_key: config.api_key.clone(),
             api_base: config.api_base.clone(),
-            timeout: Some(config.timeout),
-            max_retries: Some(config.max_retries),
-            headers: None,
+            timeout: config.timeout,
+            max_retries: config.max_retries,
+            headers: HashMap::new(),
             organization: None,
             api_version: None,
         };
@@ -190,31 +191,7 @@ pub struct QwenErrorMapper;
 
 impl ErrorMapper<ProviderError> for QwenErrorMapper {
     fn map_http_error(&self, status_code: u16, response_body: &str) -> ProviderError {
-        match status_code {
-            401 => ProviderError::authentication(
-                PROVIDER_NAME,
-                format!("Invalid API key: {}", response_body),
-            ),
-            403 => ProviderError::authentication(
-                PROVIDER_NAME,
-                format!("Permission denied: {}", response_body),
-            ),
-            404 => ProviderError::model_not_found(
-                PROVIDER_NAME,
-                format!("Model not found: {}", response_body),
-            ),
-            429 => ProviderError::rate_limit(PROVIDER_NAME, None),
-            500..=599 => ProviderError::api_error(
-                PROVIDER_NAME,
-                status_code,
-                format!("Server error: {}", response_body),
-            ),
-            _ => ProviderError::api_error(
-                PROVIDER_NAME,
-                status_code,
-                format!("HTTP {}: {}", status_code, response_body),
-            ),
-        }
+        HttpErrorMapper::map_status_code(PROVIDER_NAME, status_code, response_body)
     }
 }
 

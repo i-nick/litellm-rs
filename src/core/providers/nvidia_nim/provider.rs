@@ -13,7 +13,7 @@ use super::config::NvidiaNimConfig;
 use super::model_info::{
     get_available_models, get_model_info, get_supported_params, supports_tools,
 };
-use crate::core::providers::base::{GlobalPoolManager, HttpMethod, header};
+use crate::core::providers::base::{GlobalPoolManager, HttpErrorMapper, HttpMethod, header};
 use crate::core::providers::unified_provider::ProviderError;
 use crate::core::traits::{
     provider::ProviderConfig as _, provider::llm_provider::trait_definition::LLMProvider,
@@ -135,11 +135,7 @@ impl NvidiaNimProvider {
                 401 => ProviderError::authentication("nvidia_nim", "Invalid API key"),
                 404 => ProviderError::model_not_found("nvidia_nim", "Model not found"),
                 429 => ProviderError::rate_limit_simple("nvidia_nim", "Rate limit exceeded"),
-                _ => ProviderError::api_error(
-                    "nvidia_nim",
-                    status,
-                    format!("HTTP {}: {}", status, body_text),
-                ),
+                _ => HttpErrorMapper::map_status_code("nvidia_nim", status, &body_text),
             });
         }
 
@@ -343,10 +339,10 @@ impl LLMProvider for NvidiaNimProvider {
                 ),
                 401 => ProviderError::authentication("nvidia_nim", "Invalid API key"),
                 429 => ProviderError::rate_limit_simple("nvidia_nim", "Rate limit exceeded"),
-                _ => ProviderError::api_error(
+                _ => HttpErrorMapper::map_status_code(
                     "nvidia_nim",
                     status,
-                    format!("Stream request failed: {}", status),
+                    &format!("Stream request failed: {}", status),
                 ),
             });
         }

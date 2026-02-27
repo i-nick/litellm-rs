@@ -671,8 +671,10 @@ mod tests {
 
     #[test]
     fn test_endpoint_building_trims_slashes() {
-        let mut config = BaseConfig::default();
-        config.api_base = Some("https://api.example.com/v1/".to_string());
+        let config = BaseConfig {
+            api_base: Some("https://api.example.com/v1/".to_string()),
+            ..Default::default()
+        };
 
         assert_eq!(
             config.get_chat_endpoint(),

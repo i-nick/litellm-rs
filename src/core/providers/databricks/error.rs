@@ -2,6 +2,7 @@
 //!
 //! Error mapping for Databricks API responses.
 
+use crate::core::providers::base::HttpErrorMapper;
 use crate::core::providers::shared::parse_retry_after_from_body;
 use crate::core::providers::unified_provider::ProviderError;
 use crate::core::traits::error_mapper::trait_def::ErrorMapper;
@@ -45,7 +46,7 @@ impl ErrorMapper<ProviderError> for DatabricksErrorMapper {
                 "databricks",
                 format!("Databricks server error: {}", response_body),
             ),
-            _ => ProviderError::api_error("databricks", status_code, response_body),
+            _ => HttpErrorMapper::map_status_code("databricks", status_code, response_body),
         }
     }
 }

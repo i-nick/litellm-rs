@@ -9,7 +9,7 @@ use tracing::debug;
 use super::config::DeepgramConfig;
 use super::error::DeepgramErrorMapper;
 use super::stt::{self, DeepgramResponse, OpenAITranscriptionResponse, TranscriptionRequest};
-use crate::core::providers::base::GlobalPoolManager;
+use crate::core::providers::base::{GlobalPoolManager, HttpErrorMapper};
 use crate::core::providers::unified_provider::ProviderError;
 use crate::core::traits::provider::ProviderConfig as _;
 use crate::core::types::health::HealthStatus;
@@ -303,10 +303,10 @@ impl DeepgramProvider {
             429 => ProviderError::rate_limit(PROVIDER_NAME, Some(60)),
             500 => ProviderError::api_error(PROVIDER_NAME, 500, "Internal server error"),
             502 | 503 => ProviderError::api_error(PROVIDER_NAME, status, "Service unavailable"),
-            _ => ProviderError::api_error(
+            _ => HttpErrorMapper::map_status_code(
                 PROVIDER_NAME,
                 status,
-                format!("HTTP error {}: {}", status, message),
+                &format!("HTTP error {}: {}", status, message),
             ),
         }
     }

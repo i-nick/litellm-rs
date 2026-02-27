@@ -75,7 +75,7 @@ impl GeminiProvider {
             .ok_or_else(|| gemini_model_error(format!("Unsupported model: {}", request.model)))?;
 
         // Common validation: empty messages + max_tokens
-        crate::core::providers::base_provider::validate_chat_request_common(
+        crate::core::providers::base::validate_chat_request_common(
             "gemini",
             request,
             model_spec.limits.max_output_tokens,

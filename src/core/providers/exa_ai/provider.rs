@@ -8,7 +8,7 @@ use std::pin::Pin;
 use std::sync::Arc;
 
 use crate::core::providers::base::{
-    GlobalPoolManager, HeaderPair, HttpMethod, get_pricing_db, header, header_owned,
+    GlobalPoolManager, HeaderPair, HttpErrorMapper, HttpMethod, get_pricing_db, header, header_owned,
 };
 use crate::core::providers::unified_provider::ProviderError;
 use crate::core::traits::{
@@ -204,10 +204,10 @@ impl LLMProvider for ExaAiProvider {
                 .text()
                 .await
                 .unwrap_or_else(|_| "Unknown error".to_string());
-            return Err(ProviderError::api_error(
+            return Err(HttpErrorMapper::map_status_code(
                 "exa_ai",
                 status.as_u16(),
-                error_text,
+                &error_text,
             ));
         }
 

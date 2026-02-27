@@ -2,6 +2,7 @@
 //!
 //! Error mapping for LangGraph Cloud API responses
 
+use crate::core::providers::base::HttpErrorMapper;
 use crate::core::providers::shared::parse_retry_after_from_body;
 use crate::core::providers::unified_provider::ProviderError;
 use crate::core::traits::error_mapper::trait_def::ErrorMapper;
@@ -61,7 +62,7 @@ impl ErrorMapper<ProviderError> for LangGraphErrorMapper {
                 parse_error_message(response_body)
                     .unwrap_or_else(|| format!("Server error (status {})", status_code)),
             ),
-            _ => ProviderError::api_error(PROVIDER_NAME, status_code, response_body),
+            _ => HttpErrorMapper::map_status_code(PROVIDER_NAME, status_code, response_body),
         }
     }
 }

@@ -12,7 +12,7 @@ use tokio::sync::RwLock;
 use tracing::{debug, error, warn};
 
 use super::config::{PROVIDER_NAME, WandbConfig};
-use crate::core::providers::base_provider::{BaseHttpClient, BaseProviderConfig, HeaderBuilder};
+use crate::core::providers::base::{BaseHttpClient, BaseConfig, HttpErrorMapper, apply_headers, header, header_static};
 use crate::core::providers::unified_provider::ProviderError;
 use crate::core::traits::provider::ProviderConfig;
 
@@ -291,12 +291,12 @@ impl WandbLogger {
             .validate()
             .map_err(|e| ProviderError::configuration(PROVIDER_NAME, e))?;
 
-        let base_config = BaseProviderConfig {
+        let base_config = BaseConfig {
             api_key: config.get_effective_api_key(),
             api_base: Some(config.api_base.clone()),
-            timeout: Some(config.timeout_seconds),
-            max_retries: Some(config.max_retries),
-            headers: None,
+            timeout: config.timeout_seconds,
+            max_retries: config.max_retries,
+            headers: HashMap::new(),
             organization: None,
             api_version: None,
         };
@@ -527,17 +527,12 @@ impl WandbLogger {
 
         let url = format!("{}/api/v1/runs/{}/logs", self.config.api_base, run_info.id);
 
-        let headers = HeaderBuilder::new()
-            .with_bearer_token(&api_key)
-            .with_content_type("application/json")
-            .build_reqwest()
-            .map_err(|e| ProviderError::invalid_request(PROVIDER_NAME, e.to_string()))?;
+        let headers = vec![
+            header("Authorization", format!("Bearer {}", api_key)),
+            header_static("Content-Type", "application/json"),
+        ];
 
-        let response = self
-            .client
-            .inner()
-            .post(&url)
-            .headers(headers)
+        let response = apply_headers(self.client.inner().post(&url), headers)
             .json(&payload)
             .send()
             .await
@@ -546,7 +541,7 @@ impl WandbLogger {
         if !response.status().is_success() {
             let status = response.status().as_u16();
             let body = response.text().await.unwrap_or_default();
-            return Err(ProviderError::api_error(PROVIDER_NAME, status, body));
+            return Err(HttpErrorMapper::map_status_code(PROVIDER_NAME, status, &body));
         }
 
         Ok(())

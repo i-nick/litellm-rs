@@ -2,6 +2,7 @@
 //!
 //! Comprehensive error types and mapping for AWS Bedrock provider
 
+use crate::core::providers::base::HttpErrorMapper;
 use crate::core::providers::unified_provider::ProviderError;
 use crate::core::traits::error_mapper::trait_def::ErrorMapper;
 use serde_json::Value;
@@ -35,10 +36,10 @@ impl ErrorMapper<BedrockError> for BedrockErrorMapper {
             500 => ProviderError::api_error("bedrock", 500, "Internal server error".to_string()),
             502 => ProviderError::network("bedrock", "Bad gateway".to_string()),
             503 => ProviderError::api_error("bedrock", 503, "Service unavailable".to_string()),
-            _ => ProviderError::api_error(
+            _ => HttpErrorMapper::map_status_code(
                 "bedrock",
                 status_code,
-                format!("HTTP {}: {}", status_code, response_body),
+                &format!("HTTP {}: {}", status_code, response_body),
             ),
         }
     }

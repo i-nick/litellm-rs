@@ -2,6 +2,7 @@
 //!
 //! Handles error conversion from ElevenLabs API responses to unified provider errors.
 
+use crate::core::providers::base::HttpErrorMapper;
 use crate::core::providers::unified_provider::ProviderError;
 use crate::core::traits::error_mapper::trait_def::ErrorMapper;
 
@@ -29,7 +30,7 @@ impl ErrorMapper<ProviderError> for ElevenLabsErrorMapper {
             500 => ProviderError::api_error("elevenlabs", 500, "Internal server error"),
             502 => ProviderError::api_error("elevenlabs", 502, "Bad gateway"),
             503 => ProviderError::api_error("elevenlabs", 503, "Service unavailable"),
-            _ => ProviderError::api_error("elevenlabs", status_code, message),
+            _ => HttpErrorMapper::map_status_code("elevenlabs", status_code, &message),
         }
     }
 }

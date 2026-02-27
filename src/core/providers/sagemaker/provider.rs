@@ -12,7 +12,7 @@ use tracing::debug;
 use super::config::SagemakerConfig;
 use super::error::{SagemakerError, SagemakerErrorMapper};
 use super::sigv4::SagemakerSigV4Signer;
-use crate::core::providers::base::GlobalPoolManager;
+use crate::core::providers::base::{GlobalPoolManager, HttpErrorMapper};
 use crate::core::providers::unified_provider::ProviderError;
 use crate::core::traits::provider::ProviderConfig as _;
 use crate::core::traits::provider::llm_provider::trait_definition::LLMProvider;
@@ -245,7 +245,7 @@ impl LLMProvider for SagemakerProvider {
                 502 | 503 => {
                     ProviderError::api_error("sagemaker", status.as_u16(), body_str.to_string())
                 }
-                _ => ProviderError::api_error("sagemaker", status.as_u16(), body_str.to_string()),
+                _ => HttpErrorMapper::map_status_code("sagemaker", status.as_u16(), &body_str),
             });
         }
 

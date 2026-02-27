@@ -18,6 +18,7 @@ use super::model_info::{
     get_available_models, get_model_info, is_claude_model, supports_reasoning,
 };
 use crate::ProviderError;
+use crate::core::providers::base::HttpErrorMapper;
 use crate::core::traits::provider::llm_provider::trait_definition::LLMProvider;
 use crate::core::types::{
     chat::ChatMessage,
@@ -423,7 +424,7 @@ impl LLMProvider for GitHubCopilotProvider {
                 500..=599 => {
                     ProviderError::provider_unavailable("github_copilot", body_str.to_string())
                 }
-                _ => ProviderError::api_error("github_copilot", status_code, body_str.to_string()),
+                _ => HttpErrorMapper::map_status_code("github_copilot", status_code, &body_str),
             });
         }
 
@@ -485,7 +486,7 @@ impl LLMProvider for GitHubCopilotProvider {
                 500..=599 => {
                     ProviderError::provider_unavailable("github_copilot", body_str.clone())
                 }
-                _ => ProviderError::api_error("github_copilot", status, body_str),
+                _ => HttpErrorMapper::map_status_code("github_copilot", status, &body_str),
             });
         }
 
@@ -545,7 +546,7 @@ impl LLMProvider for GitHubCopilotProvider {
                 500..=599 => {
                     ProviderError::provider_unavailable("github_copilot", body_str.to_string())
                 }
-                _ => ProviderError::api_error("github_copilot", status_code, body_str.to_string()),
+                _ => HttpErrorMapper::map_status_code("github_copilot", status_code, &body_str),
             });
         }
 

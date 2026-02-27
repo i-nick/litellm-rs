@@ -110,10 +110,10 @@ crate::define_http_provider_with_hooks!(
                 "custom_httpx",
                 request.model.as_str(),
             ),
-            _ => crate::core::providers::unified_provider::ProviderError::api_error(
+            _ => crate::core::providers::base::HttpErrorMapper::map_status_code(
                 "custom_httpx",
                 status,
-                error_text,
+                &error_text,
             ),
         }
     },

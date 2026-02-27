@@ -14,7 +14,7 @@ use super::config::TogetherConfig;
 use super::error::{TogetherError, TogetherErrorMapper};
 use super::model_info::{get_available_models, get_model_info, is_function_calling_model};
 use super::rerank::{RerankRequest, RerankResponse};
-use crate::core::providers::base::{GlobalPoolManager, HttpMethod, header};
+use crate::core::providers::base::{GlobalPoolManager, HttpErrorMapper, HttpMethod, header};
 use crate::core::providers::unified_provider::ProviderError;
 use crate::core::traits::{
     provider::ProviderConfig as _, provider::llm_provider::trait_definition::LLMProvider,
@@ -174,11 +174,7 @@ impl TogetherProvider {
                 401 => ProviderError::authentication("together", "Invalid API key"),
                 404 => ProviderError::model_not_found("together", "Model not found"),
                 429 => ProviderError::rate_limit("together", None),
-                _ => ProviderError::api_error(
-                    "together",
-                    status.as_u16(),
-                    format!("API error {}: {}", status, error_body),
-                ),
+                _ => HttpErrorMapper::map_status_code("together", status.as_u16(), &error_body),
             });
         }
 
@@ -216,11 +212,7 @@ impl TogetherProvider {
                 ),
                 401 => ProviderError::authentication("together", "Invalid API key"),
                 429 => ProviderError::rate_limit("together", None),
-                _ => ProviderError::api_error(
-                    "together",
-                    status.as_u16(),
-                    format!("Rerank error {}: {}", status, error_body),
-                ),
+                _ => HttpErrorMapper::map_status_code("together", status.as_u16(), &error_body),
             });
         }
 
@@ -424,10 +416,10 @@ impl LLMProvider for TogetherProvider {
                 ),
                 401 => ProviderError::authentication("together", "Invalid API key"),
                 429 => ProviderError::rate_limit("together", None),
-                _ => ProviderError::api_error(
+                _ => HttpErrorMapper::map_status_code(
                     "together",
-                    500,
-                    format!("Stream request failed: {}", status),
+                    status,
+                    &format!("Stream request failed: {}", status),
                 ),
             });
         }

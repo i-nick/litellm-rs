@@ -34,6 +34,7 @@ pub use chat::{LlamaChatHandler, LlamaChatTransformation};
 pub use common_utils::{LlamaClient, LlamaConfig, LlamaUtils};
 
 // Import unified error system
+use crate::core::providers::base::HttpErrorMapper;
 use crate::core::providers::unified_provider::ProviderError;
 
 // use super::base_llm::{BaseLLMProvider, BaseLLMError};
@@ -94,7 +95,7 @@ impl Default for LlamaProviderConfig {
             organization_id: None,
             timeout: Some(30),
             max_retries: Some(3),
-            headers: None,
+            headers: Some(HashMap::new()),
             supported_models: vec![
                 // LLaMA 4 series (2025 - Latest)
                 "llama4-scout".to_string(),
@@ -536,7 +537,7 @@ pub struct UnifiedErrorMapper;
 
 impl ErrorMapper<ProviderError> for UnifiedErrorMapper {
     fn map_http_error(&self, status_code: u16, response_body: &str) -> ProviderError {
-        ProviderError::api_error("meta", status_code, response_body.to_string())
+        HttpErrorMapper::map_status_code("meta", status_code, response_body)
     }
 
     fn map_json_error(&self, _error_response: &serde_json::Value) -> ProviderError {
