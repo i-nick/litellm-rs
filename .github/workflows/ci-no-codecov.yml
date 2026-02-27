@@ -39,6 +39,12 @@ jobs:
     - name: Run clippy
       run: cargo clippy --all-targets --features "postgres sqlite redis s3 metrics tracing websockets analytics" -- -D warnings
 
+    - name: Provider consistency guards
+      run: |
+        cargo test test_catalog_entries_are_supported_selectors --lib
+        cargo test test_catalog_entries_are_creatable_via_factory --lib
+        cargo test core::router::gateway_config::tests:: --lib
+
     - name: Check documentation
       run: cargo doc --no-deps --features "postgres sqlite redis s3 metrics tracing websockets analytics"
 
