@@ -310,32 +310,6 @@ mod provider_error_tests {
         assert!(!err.is_retryable());
     }
 
-    // ==================== Legacy Method Tests ====================
-
-    #[test]
-    fn test_authentication_legacy() {
-        let err = ProviderError::authentication_legacy("Invalid key");
-        assert_eq!(err.provider(), "unknown");
-    }
-
-    #[test]
-    fn test_rate_limit_legacy() {
-        let err = ProviderError::rate_limit_legacy("Too many requests");
-        assert_eq!(err.provider(), "unknown");
-    }
-
-    #[test]
-    fn test_model_not_found_legacy() {
-        let err = ProviderError::model_not_found_legacy("unknown-model");
-        assert_eq!(err.provider(), "unknown");
-    }
-
-    #[test]
-    fn test_network_legacy() {
-        let err = ProviderError::network_legacy("Connection failed");
-        assert_eq!(err.provider(), "unknown");
-    }
-
     // ==================== Error Type String Tests ====================
 
     #[test]

@@ -95,46 +95,6 @@ impl From<crate::core::cost::types::CostError> for ProviderError {
 
 // Anthropic provider now uses ProviderError directly - no conversion needed
 
-// ==================== Legacy Methods ====================
-// Convenience methods for backward compatibility
-
-impl ProviderError {
-    /// Create authentication error (legacy method)
-    pub fn authentication_legacy(msg: impl Into<String>) -> Self {
-        Self::authentication("unknown", msg)
-    }
-
-    /// Create rate limit error (legacy method)
-    pub fn rate_limit_legacy(msg: impl Into<String>) -> Self {
-        Self::RateLimit {
-            provider: "unknown",
-            message: msg.into(),
-            retry_after: None,
-            rpm_limit: None,
-            tpm_limit: None,
-            current_usage: None,
-        }
-    }
-
-    /// Create model not found error (legacy method)
-    pub fn model_not_found_legacy(msg: impl Into<String>) -> Self {
-        Self::ModelNotFound {
-            provider: "unknown",
-            model: msg.into(),
-        }
-    }
-
-    /// Create network error (legacy method)
-    pub fn network_legacy(msg: impl Into<String>) -> Self {
-        Self::network("unknown", msg)
-    }
-
-    /// Create generic error (legacy method)
-    pub fn generic(err: impl std::error::Error + Send + Sync + 'static) -> Self {
-        Self::network("unknown", err.to_string())
-    }
-}
-
 // ==================== ProviderErrorTrait Implementation ====================
 
 use crate::core::types::errors::ProviderErrorTrait;
