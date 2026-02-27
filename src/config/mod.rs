@@ -150,8 +150,7 @@ providers:
     api_base: "https://api.openai.com/v1"
 
 router:
-  strategy:
-    type: "round_robin"
+  strategy: "round_robin"
   circuit_breaker:
     failure_threshold: 5
     recovery_timeout: 30
