@@ -65,6 +65,14 @@ impl BaseConfig {
         provider.trim().to_lowercase()
     }
 
+    fn provider_env_key(provider: &str, suffix: &str) -> String {
+        format!("{}_{}", provider.to_uppercase(), suffix)
+    }
+
+    fn env_value(provider: &str, suffix: &str) -> Option<String> {
+        std::env::var(Self::provider_env_key(provider, suffix)).ok()
+    }
+
     fn catalog_default_base_url(provider: &str) -> Option<String> {
         crate::core::providers::registry::get_definition(provider)
             .map(|definition| definition.base_url.to_string())
@@ -109,22 +117,20 @@ impl BaseConfig {
 
     /// Configuration
     pub fn from_env(provider: &str) -> Self {
-        let provider_upper = provider.to_uppercase();
+        let normalized_provider = Self::normalize_provider_name(provider);
 
         Self {
-            api_key: std::env::var(format!("{}_API_KEY", provider_upper)).ok(),
-            api_base: std::env::var(format!("{}_API_BASE", provider_upper)).ok(),
-            timeout: std::env::var(format!("{}_TIMEOUT", provider_upper))
-                .ok()
+            api_key: Self::env_value(&normalized_provider, "API_KEY"),
+            api_base: Self::env_value(&normalized_provider, "API_BASE"),
+            timeout: Self::env_value(&normalized_provider, "TIMEOUT")
                 .and_then(|t| t.parse().ok())
                 .unwrap_or(default_timeout()),
-            max_retries: std::env::var(format!("{}_MAX_RETRIES", provider_upper))
-                .ok()
+            max_retries: Self::env_value(&normalized_provider, "MAX_RETRIES")
                 .and_then(|r| r.parse().ok())
                 .unwrap_or(default_max_retries()),
             headers: HashMap::new(),
-            organization: std::env::var(format!("{}_ORGANIZATION", provider_upper)).ok(),
-            api_version: std::env::var(format!("{}_API_VERSION", provider_upper)).ok(),
+            organization: Self::env_value(&normalized_provider, "ORGANIZATION"),
+            api_version: Self::env_value(&normalized_provider, "API_VERSION"),
         }
     }
 
@@ -196,14 +202,14 @@ impl BaseConfig {
     pub fn get_effective_api_key(&self, provider: &str) -> Option<String> {
         self.api_key
             .clone()
-            .or_else(|| std::env::var(format!("{}_API_KEY", provider.to_uppercase())).ok())
+            .or_else(|| Self::env_value(provider, "API_KEY"))
     }
 
     /// Get
     pub fn get_effective_api_base(&self, provider: &str) -> String {
         self.api_base.clone().unwrap_or_else(|| {
-            std::env::var(format!("{}_API_BASE", provider.to_uppercase()))
-                .unwrap_or_else(|_| Self::for_provider(provider).api_base.unwrap_or_default())
+            Self::env_value(provider, "API_BASE")
+                .unwrap_or_else(|| Self::for_provider(provider).api_base.unwrap_or_default())
         })
     }
 
@@ -676,6 +682,18 @@ mod tests {
         assert_eq!(
             config.get_embeddings_endpoint(),
             "https://api.example.com/v1/embeddings"
+        );
+    }
+
+    #[test]
+    fn test_provider_env_key_builder() {
+        assert_eq!(
+            BaseConfig::provider_env_key("openai", "API_KEY"),
+            "OPENAI_API_KEY"
+        );
+        assert_eq!(
+            BaseConfig::provider_env_key("mixed_case", "TIMEOUT"),
+            "MIXED_CASE_TIMEOUT"
         );
     }
 
