@@ -9,7 +9,7 @@ use std::collections::HashMap;
 use tracing::{debug, error};
 
 use super::config::BedrockConfig;
-use super::error::{BedrockError, BedrockErrorMapper};
+use super::error::BedrockErrorMapper;
 use super::sigv4::SigV4Signer;
 use super::utils::{AwsAuth, validate_region};
 use crate::core::providers::base::{BaseHttpClient, BaseConfig};
@@ -27,7 +27,7 @@ pub struct BedrockClient {
 
 impl BedrockClient {
     /// Create a new Bedrock client
-    pub fn new(config: BedrockConfig) -> Result<Self, BedrockError> {
+    pub fn new(config: BedrockConfig) -> Result<Self, ProviderError> {
         // Validate region
         validate_region(&config.aws_region)?;
 
@@ -130,7 +130,7 @@ impl BedrockClient {
         url: &str,
         body: &str,
         method: &str,
-    ) -> Result<reqwest::header::HeaderMap, BedrockError> {
+    ) -> Result<reqwest::header::HeaderMap, ProviderError> {
         let timestamp = chrono::Utc::now();
         let headers = HashMap::new(); // Start with empty headers
 
@@ -161,7 +161,7 @@ impl BedrockClient {
         model_id: &str,
         operation: &str,
         body: &Value,
-    ) -> Result<Response, BedrockError> {
+    ) -> Result<Response, ProviderError> {
         let url = self.build_url(model_id, operation);
         let body_str = serde_json::to_string(body)
             .map_err(|e| ProviderError::serialization("bedrock", e.to_string()))?;
@@ -202,7 +202,7 @@ impl BedrockClient {
         model_id: &str,
         operation: &str,
         body: &Value,
-    ) -> Result<Response, BedrockError> {
+    ) -> Result<Response, ProviderError> {
         let url = self.build_url(model_id, operation);
         let body_str = serde_json::to_string(body)
             .map_err(|e| ProviderError::serialization("bedrock", e.to_string()))?;
@@ -237,7 +237,7 @@ impl BedrockClient {
     }
 
     /// Send a GET request (for operations like listing models)
-    pub async fn send_get_request(&self, operation: &str) -> Result<Response, BedrockError> {
+    pub async fn send_get_request(&self, operation: &str) -> Result<Response, ProviderError> {
         let url = self.build_url("", operation); // Empty model_id for non-model operations
         let body = ""; // Empty body for GET
 
@@ -270,7 +270,7 @@ impl BedrockClient {
     }
 
     /// Health check by listing foundation models
-    pub async fn health_check(&self) -> Result<bool, BedrockError> {
+    pub async fn health_check(&self) -> Result<bool, ProviderError> {
         match self.send_get_request("list-foundation-models").await {
             Ok(_) => Ok(true),
             Err(_) => Ok(false),

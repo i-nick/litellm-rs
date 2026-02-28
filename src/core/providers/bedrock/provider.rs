@@ -11,7 +11,7 @@ use tracing::debug;
 
 use super::client::BedrockClient;
 use super::config::BedrockConfig;
-use super::error::{BedrockError, BedrockErrorMapper};
+use super::error::BedrockErrorMapper;
 use super::model_config::get_model_config;
 use super::transformation;
 use super::utils::{CostCalculator, validate_region};
@@ -49,7 +49,7 @@ pub struct BedrockProvider {
 
 impl BedrockProvider {
     /// Create a new Bedrock provider instance
-    pub async fn new(config: BedrockConfig) -> Result<Self, BedrockError> {
+    pub async fn new(config: BedrockConfig) -> Result<Self, ProviderError> {
         // Validate configuration
         config
             .validate()
@@ -99,7 +99,7 @@ impl BedrockProvider {
     pub async fn generate_image(
         &self,
         request: &crate::core::types::image::ImageGenerationRequest,
-    ) -> Result<crate::core::types::responses::ImageGenerationResponse, BedrockError> {
+    ) -> Result<crate::core::types::responses::ImageGenerationResponse, ProviderError> {
         super::images::execute_image_generation(&self.client, request).await
     }
 
@@ -138,7 +138,7 @@ impl BedrockProvider {
     pub(super) fn messages_to_prompt(
         &self,
         messages: &[ChatMessage],
-    ) -> Result<String, BedrockError> {
+    ) -> Result<String, ProviderError> {
         let mut prompt = String::new();
 
         for message in messages {
@@ -181,7 +181,7 @@ impl BedrockProvider {
 #[async_trait]
 impl LLMProvider for BedrockProvider {
     type Config = BedrockConfig;
-    type Error = BedrockError;
+    type Error = ProviderError;
     type ErrorMapper = BedrockErrorMapper;
 
     fn name(&self) -> &'static str {

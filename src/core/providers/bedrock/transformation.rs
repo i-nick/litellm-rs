@@ -5,7 +5,6 @@
 
 use serde_json::Value;
 
-use super::error::BedrockError;
 use super::model_config::{BedrockModelFamily, get_model_config};
 use crate::core::providers::unified_provider::ProviderError;
 use crate::core::types::responses::{ChatChoice, ChatResponse, FinishReason, Usage};
@@ -28,8 +27,8 @@ pub fn transform_chat_request(
     max_tokens: Option<u32>,
     temperature: Option<f32>,
     top_p: Option<f32>,
-    messages_to_prompt: impl Fn(&[ChatMessage]) -> Result<String, BedrockError>,
-) -> Result<Value, BedrockError> {
+    messages_to_prompt: impl Fn(&[ChatMessage]) -> Result<String, ProviderError>,
+) -> Result<Value, ProviderError> {
     // Get model configuration
     let model_config = get_model_config(model)?;
 
@@ -175,7 +174,7 @@ pub fn transform_chat_request(
 pub fn transform_chat_response(
     raw_response: &[u8],
     model: &str,
-) -> Result<ChatResponse, BedrockError> {
+) -> Result<ChatResponse, ProviderError> {
     let response: Value = serde_json::from_slice(raw_response)
         .map_err(|e| ProviderError::response_parsing("bedrock", e.to_string()))?;
 

@@ -30,7 +30,7 @@ pub mod streaming;
 // Re-export main types for external use
 pub use client::BedrockClient;
 pub use config::BedrockConfig;
-pub use error::{BedrockError, BedrockErrorMapper};
+pub use error::BedrockErrorMapper;
 pub use model_config::{
     BedrockApiType, BedrockModelFamily, ModelConfig, get_all_model_ids, get_model_config,
     model_supports_capability,

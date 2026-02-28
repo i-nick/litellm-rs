@@ -7,15 +7,12 @@ use crate::core::providers::unified_provider::ProviderError;
 use crate::core::traits::error_mapper::trait_def::ErrorMapper;
 use serde_json::Value;
 
-/// Bedrock-specific error type (alias for ProviderError)
-pub type BedrockError = ProviderError;
-
 /// Error mapper for Bedrock provider
 #[derive(Debug, Clone)]
 pub struct BedrockErrorMapper;
 
-impl ErrorMapper<BedrockError> for BedrockErrorMapper {
-    fn map_http_error(&self, status_code: u16, response_body: &str) -> BedrockError {
+impl ErrorMapper<ProviderError> for BedrockErrorMapper {
+    fn map_http_error(&self, status_code: u16, response_body: &str) -> ProviderError {
         match status_code {
             400 => {
                 ProviderError::invalid_request("bedrock", format!("Bad request: {}", response_body))
@@ -44,7 +41,7 @@ impl ErrorMapper<BedrockError> for BedrockErrorMapper {
         }
     }
 
-    fn map_json_error(&self, error_response: &Value) -> BedrockError {
+    fn map_json_error(&self, error_response: &Value) -> ProviderError {
         if let Some(error) = error_response.get("error") {
             let error_code = error
                 .get("code")
@@ -86,15 +83,15 @@ impl ErrorMapper<BedrockError> for BedrockErrorMapper {
         }
     }
 
-    fn map_network_error(&self, error: &dyn std::error::Error) -> BedrockError {
+    fn map_network_error(&self, error: &dyn std::error::Error) -> ProviderError {
         ProviderError::network("bedrock", format!("Network error: {}", error))
     }
 
-    fn map_parsing_error(&self, error: &dyn std::error::Error) -> BedrockError {
+    fn map_parsing_error(&self, error: &dyn std::error::Error) -> ProviderError {
         ProviderError::response_parsing("bedrock", format!("Parsing error: {}", error))
     }
 
-    fn map_timeout_error(&self, timeout_duration: std::time::Duration) -> BedrockError {
+    fn map_timeout_error(&self, timeout_duration: std::time::Duration) -> ProviderError {
         ProviderError::timeout(
             "bedrock",
             format!("Request timed out after {:?}", timeout_duration),
@@ -136,5 +133,5 @@ mod tests {
         assert!(matches!(error, ProviderError::InvalidRequest { .. }));
     }
 
-    // Note: Specific error helper tests removed - BedrockError is now a type alias to ProviderError
+    // Note: Specific error helper tests removed after unifying on ProviderError.
 }
