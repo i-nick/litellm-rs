@@ -124,12 +124,14 @@ impl Model {
 
     /// Convert domain API key model to SeaORM active model
     pub fn from_domain_api_key(api_key: &crate::core::models::ApiKey) -> ActiveModel {
-        let permissions = serde_json::to_string(&api_key.permissions).unwrap_or_else(|_| "[]".into());
+        let permissions =
+            serde_json::to_string(&api_key.permissions).unwrap_or_else(|_| "[]".into());
         let rate_limits = api_key
             .rate_limits
             .as_ref()
             .and_then(|limits| serde_json::to_string(limits).ok());
-        let usage_stats = serde_json::to_string(&api_key.usage_stats).unwrap_or_else(|_| "{}".into());
+        let usage_stats =
+            serde_json::to_string(&api_key.usage_stats).unwrap_or_else(|_| "{}".into());
         let extra = if api_key.metadata.extra.is_empty() {
             None
         } else {

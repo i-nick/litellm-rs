@@ -72,7 +72,9 @@ mod tests {
         );
         assert_eq!(db.backend_type(), DatabaseBackendType::SQLite);
 
-        db.migrate().await.expect("Migration on in-memory DB failed");
+        db.migrate()
+            .await
+            .expect("Migration on in-memory DB failed");
         assert!(db.health_check().await.is_ok());
     }
 
@@ -219,7 +221,10 @@ mod tests {
             .await
             .expect("Failed to refetch api key")
             .expect("API key missing after permissions update");
-        assert_eq!(after_permissions.permissions, vec!["chat:write".to_string()]);
+        assert_eq!(
+            after_permissions.permissions,
+            vec!["chat:write".to_string()]
+        );
 
         db.update_api_key_rate_limits(
             key_id,

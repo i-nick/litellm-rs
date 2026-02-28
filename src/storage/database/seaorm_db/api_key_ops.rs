@@ -213,12 +213,18 @@ impl SeaOrmDatabase {
             .ok_or_else(|| GatewayError::NotFound("API key not found".to_string()))?;
 
         let mut api_key = model.to_domain_api_key();
-        api_key.usage_stats.total_requests = api_key.usage_stats.total_requests.saturating_add(requests);
+        api_key.usage_stats.total_requests =
+            api_key.usage_stats.total_requests.saturating_add(requests);
         api_key.usage_stats.total_tokens = api_key.usage_stats.total_tokens.saturating_add(tokens);
         api_key.usage_stats.total_cost += cost;
-        api_key.usage_stats.requests_today =
-            api_key.usage_stats.requests_today.saturating_add(requests as u32);
-        api_key.usage_stats.tokens_today = api_key.usage_stats.tokens_today.saturating_add(tokens as u32);
+        api_key.usage_stats.requests_today = api_key
+            .usage_stats
+            .requests_today
+            .saturating_add(requests as u32);
+        api_key.usage_stats.tokens_today = api_key
+            .usage_stats
+            .tokens_today
+            .saturating_add(tokens as u32);
         api_key.usage_stats.cost_today += cost;
 
         let usage_stats = serde_json::to_string(&api_key.usage_stats)

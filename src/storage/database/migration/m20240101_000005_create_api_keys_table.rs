@@ -12,21 +12,9 @@ impl MigrationTrait for Migration {
                     .table(ApiKeys::Table)
                     .if_not_exists()
                     .col(ColumnDef::new(ApiKeys::Id).uuid().not_null().primary_key())
-                    .col(
-                        ColumnDef::new(ApiKeys::Name)
-                            .string_len(255)
-                            .not_null(),
-                    )
-                    .col(
-                        ColumnDef::new(ApiKeys::KeyHash)
-                            .string_len(255)
-                            .not_null(),
-                    )
-                    .col(
-                        ColumnDef::new(ApiKeys::KeyPrefix)
-                            .string_len(32)
-                            .not_null(),
-                    )
+                    .col(ColumnDef::new(ApiKeys::Name).string_len(255).not_null())
+                    .col(ColumnDef::new(ApiKeys::KeyHash).string_len(255).not_null())
+                    .col(ColumnDef::new(ApiKeys::KeyPrefix).string_len(32).not_null())
                     .col(ColumnDef::new(ApiKeys::UserId).uuid().null())
                     .col(ColumnDef::new(ApiKeys::TeamId).uuid().null())
                     .col(ColumnDef::new(ApiKeys::Permissions).text().not_null())
