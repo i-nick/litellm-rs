@@ -7,77 +7,117 @@ pub mod base;
 
 // Provider modules - alphabetically ordered
 // Tier 1 providers removed in favor of registry/catalog.rs are commented with their tier.
+#[cfg(feature = "providers-extended")]
 pub mod ai21;
 // aiml_api: Tier 1 → registry/catalog.rs
 // aleph_alpha: Tier 1 → registry/catalog.rs
+#[cfg(feature = "providers-extended")]
 pub mod amazon_nova;
 pub mod anthropic;
 // anyscale: Tier 1 → registry/catalog.rs
+#[cfg(feature = "providers-extra")]
 pub mod azure;
+#[cfg(feature = "providers-extra")]
 pub mod azure_ai;
 // baichuan: Tier 1 → registry/catalog.rs
+#[cfg(feature = "providers-extended")]
 pub mod baseten;
+#[cfg(feature = "providers-extra")]
 pub mod bedrock;
 // bytez: Tier 1 → registry/catalog.rs
 // cerebras: Tier 1 → registry/catalog.rs
+#[cfg(feature = "providers-extended")]
 pub mod clarifai;
 pub mod cloudflare;
+#[cfg(feature = "providers-extended")]
 pub mod codestral;
+#[cfg(feature = "providers-extended")]
 pub mod cohere;
 // comet_api: Tier 1 → registry/catalog.rs
 // compactifai: Tier 1 → registry/catalog.rs
+#[cfg(feature = "providers-extended")]
 pub mod custom_api;
 // dashscope: Tier 1 → registry/catalog.rs
+#[cfg(feature = "providers-extended")]
 pub mod databricks;
+#[cfg(feature = "providers-extended")]
 pub mod datarobot;
+#[cfg(feature = "providers-extended")]
 pub mod deepgram;
 // deepinfra: Tier 1 → registry/catalog.rs
+#[cfg(feature = "providers-extended")]
 pub mod deepl;
 // deepseek: Tier 1 → registry/catalog.rs
 // docker_model_runner: Tier 1 → registry/catalog.rs
+#[cfg(feature = "providers-extended")]
 pub mod elevenlabs;
+#[cfg(feature = "providers-extended")]
 pub mod empower;
+#[cfg(feature = "providers-extended")]
 pub mod exa_ai;
+#[cfg(feature = "providers-extended")]
 pub mod fal_ai;
 // featherless: Tier 1 → registry/catalog.rs
+#[cfg(feature = "providers-extended")]
 pub mod firecrawl;
+#[cfg(feature = "providers-extended")]
 pub mod fireworks;
+#[cfg(feature = "providers-extended")]
 pub mod friendliai;
+#[cfg(feature = "providers-extended")]
 pub mod galadriel;
+#[cfg(feature = "providers-extended")]
 pub mod gemini;
+#[cfg(feature = "providers-extended")]
 pub mod gigachat;
+#[cfg(feature = "providers-extended")]
 pub mod github;
+#[cfg(feature = "providers-extended")]
 pub mod github_copilot;
+#[cfg(feature = "providers-extended")]
 pub mod google_pse;
+#[cfg(feature = "providers-extended")]
 pub mod gradient_ai;
 // groq: Tier 1 → registry/catalog.rs
+#[cfg(feature = "providers-extended")]
 pub mod heroku;
 // hosted_vllm: Tier 1 → registry/catalog.rs
+#[cfg(feature = "providers-extended")]
 pub mod huggingface;
 // hyperbolic: Tier 1 → registry/catalog.rs
 // infinity: Tier 1 → registry/catalog.rs
+#[cfg(feature = "providers-extended")]
 pub mod jina;
 // lambda_ai: Tier 1 → registry/catalog.rs
+#[cfg(feature = "providers-extended")]
 pub mod langgraph;
 // lemonade: Tier 1 → registry/catalog.rs
 // linkup: Tier 1 → registry/catalog.rs
 // llamafile: Tier 1 → registry/catalog.rs
 // lm_studio: Tier 1 → registry/catalog.rs
+#[cfg(feature = "providers-extended")]
 pub mod manus;
 // maritalk: Tier 1 → registry/catalog.rs
+#[cfg(feature = "providers-extra")]
 pub mod meta_llama;
+#[cfg(feature = "providers-extended")]
 pub mod milvus;
 // minimax: Tier 1 → registry/catalog.rs
 pub mod mistral;
 // moonshot: Tier 1 → registry/catalog.rs
+#[cfg(feature = "providers-extended")]
 pub mod morph;
 // nanogpt: Tier 1 → registry/catalog.rs
 // nebius: Tier 1 → registry/catalog.rs
+#[cfg(feature = "providers-extended")]
 pub mod nlp_cloud;
 // novita: Tier 1 → registry/catalog.rs
 // nscale: Tier 1 → registry/catalog.rs
+#[cfg(feature = "providers-extended")]
 pub mod nvidia_nim;
+#[cfg(feature = "providers-extended")]
 pub mod oci;
+#[cfg(feature = "providers-extended")]
 pub mod ollama;
 // oobabooga: Tier 1 → registry/catalog.rs
 pub mod openai;
@@ -85,39 +125,67 @@ pub mod openai_like;
 // openrouter: Tier 1 → registry/catalog.rs
 // ovhcloud: Tier 1 → registry/catalog.rs
 // perplexity: Tier 1 → registry/catalog.rs
+#[cfg(feature = "providers-extended")]
 pub mod petals;
+#[cfg(feature = "providers-extended")]
 pub mod pg_vector;
 // poe: Tier 1 → registry/catalog.rs
+#[cfg(feature = "providers-extended")]
 pub mod predibase;
+#[cfg(feature = "providers-extended")]
 pub mod qwen;
+#[cfg(feature = "providers-extended")]
 pub mod ragflow;
+#[cfg(feature = "providers-extended")]
 pub mod recraft;
+#[cfg(feature = "providers-extended")]
 pub mod replicate;
+#[cfg(feature = "providers-extended")]
 pub mod runwayml;
+#[cfg(feature = "providers-extended")]
 pub mod sagemaker;
+#[cfg(feature = "providers-extended")]
 pub mod sambanova;
+#[cfg(feature = "providers-extended")]
 pub mod sap_ai;
+#[cfg(feature = "providers-extended")]
 pub mod searxng;
 // siliconflow: Tier 1 → registry/catalog.rs
+#[cfg(feature = "providers-extended")]
 pub mod snowflake;
+#[cfg(feature = "providers-extended")]
 pub mod spark;
+#[cfg(feature = "providers-extended")]
 pub mod stability;
+#[cfg(feature = "providers-extended")]
 pub mod tavily;
+#[cfg(feature = "providers-extended")]
 pub mod together;
+#[cfg(feature = "providers-extended")]
 pub mod topaz;
+#[cfg(feature = "providers-extended")]
 pub mod triton;
+#[cfg(feature = "providers-extra")]
 pub mod v0;
+#[cfg(feature = "providers-extended")]
 pub mod vercel_ai;
+#[cfg(feature = "providers-extra")]
 pub mod vertex_ai;
 // vllm: Tier 1 → registry/catalog.rs
+#[cfg(feature = "providers-extended")]
 pub mod volcengine;
+#[cfg(feature = "providers-extended")]
 pub mod voyage;
+#[cfg(feature = "providers-extended")]
 pub mod wandb;
+#[cfg(feature = "providers-extended")]
 pub mod watsonx;
 // xai: Tier 1 → registry/catalog.rs
+#[cfg(feature = "providers-extended")]
 pub mod xiaomi_mimo;
 // xinference: Tier 1 → registry/catalog.rs
 // yi: Tier 1 → registry/catalog.rs
+#[cfg(feature = "providers-extended")]
 pub mod zhipu;
 
 // Shared utilities and architecture
@@ -313,12 +381,18 @@ macro_rules! dispatch_provider {
         match $self {
             Provider::OpenAI(p) => p.$method(),
             Provider::Anthropic(p) => p.$method(),
+            #[cfg(feature = "providers-extra")]
             Provider::Azure(p) => p.$method(),
+            #[cfg(feature = "providers-extra")]
             Provider::Bedrock(p) => p.$method(),
             Provider::Mistral(p) => p.$method(),
+            #[cfg(feature = "providers-extra")]
             Provider::MetaLlama(p) => p.$method(),
+            #[cfg(feature = "providers-extra")]
             Provider::VertexAI(p) => p.$method(),
+            #[cfg(feature = "providers-extra")]
             Provider::V0(p) => p.$method(),
+            #[cfg(feature = "providers-extra")]
             Provider::AzureAI(p) => p.$method(),
             Provider::Cloudflare(p) => p.$method(),
             Provider::OpenAILike(p) => p.$method(),
@@ -329,12 +403,18 @@ macro_rules! dispatch_provider {
         match $self {
             Provider::OpenAI(p) => p.$method($($arg),+),
             Provider::Anthropic(p) => p.$method($($arg),+),
+            #[cfg(feature = "providers-extra")]
             Provider::Azure(p) => p.$method($($arg),+),
+            #[cfg(feature = "providers-extra")]
             Provider::Bedrock(p) => p.$method($($arg),+),
             Provider::Mistral(p) => p.$method($($arg),+),
+            #[cfg(feature = "providers-extra")]
             Provider::MetaLlama(p) => p.$method($($arg),+),
+            #[cfg(feature = "providers-extra")]
             Provider::VertexAI(p) => p.$method($($arg),+),
+            #[cfg(feature = "providers-extra")]
             Provider::V0(p) => p.$method($($arg),+),
+            #[cfg(feature = "providers-extra")]
             Provider::AzureAI(p) => p.$method($($arg),+),
             Provider::Cloudflare(p) => p.$method($($arg),+),
             Provider::OpenAILike(p) => p.$method($($arg),+),
@@ -348,12 +428,18 @@ macro_rules! dispatch_provider_async {
         match $self {
             Provider::OpenAI(p) => LLMProvider::$method(p, $($arg),*).await.map_err(ProviderError::from),
             Provider::Anthropic(p) => LLMProvider::$method(p, $($arg),*).await.map_err(ProviderError::from),
+            #[cfg(feature = "providers-extra")]
             Provider::Azure(p) => LLMProvider::$method(p, $($arg),*).await.map_err(ProviderError::from),
+            #[cfg(feature = "providers-extra")]
             Provider::Bedrock(p) => LLMProvider::$method(p, $($arg),*).await.map_err(ProviderError::from),
             Provider::Mistral(p) => LLMProvider::$method(p, $($arg),*).await.map_err(ProviderError::from),
+            #[cfg(feature = "providers-extra")]
             Provider::MetaLlama(p) => LLMProvider::$method(p, $($arg),*).await.map_err(ProviderError::from),
+            #[cfg(feature = "providers-extra")]
             Provider::VertexAI(p) => LLMProvider::$method(p, $($arg),*).await.map_err(ProviderError::from),
+            #[cfg(feature = "providers-extra")]
             Provider::V0(p) => LLMProvider::$method(p, $($arg),*).await.map_err(ProviderError::from),
+            #[cfg(feature = "providers-extra")]
             Provider::AzureAI(p) => LLMProvider::$method(p, $($arg),*).await.map_err(ProviderError::from),
             Provider::Cloudflare(p) => LLMProvider::$method(p, $($arg),*).await.map_err(ProviderError::from),
             Provider::OpenAILike(p) => LLMProvider::$method(p, $($arg),*).await.map_err(ProviderError::from),
@@ -367,12 +453,18 @@ macro_rules! dispatch_provider_value {
         match $self {
             Provider::OpenAI(p) => LLMProvider::$method(p),
             Provider::Anthropic(p) => LLMProvider::$method(p),
+            #[cfg(feature = "providers-extra")]
             Provider::Azure(p) => LLMProvider::$method(p),
+            #[cfg(feature = "providers-extra")]
             Provider::Bedrock(p) => LLMProvider::$method(p),
             Provider::Mistral(p) => LLMProvider::$method(p),
+            #[cfg(feature = "providers-extra")]
             Provider::MetaLlama(p) => LLMProvider::$method(p),
+            #[cfg(feature = "providers-extra")]
             Provider::VertexAI(p) => LLMProvider::$method(p),
+            #[cfg(feature = "providers-extra")]
             Provider::V0(p) => LLMProvider::$method(p),
+            #[cfg(feature = "providers-extra")]
             Provider::AzureAI(p) => LLMProvider::$method(p),
             Provider::Cloudflare(p) => LLMProvider::$method(p),
             Provider::OpenAILike(p) => LLMProvider::$method(p),
@@ -383,12 +475,18 @@ macro_rules! dispatch_provider_value {
         match $self {
             Provider::OpenAI(p) => LLMProvider::$method(p, $($arg),+),
             Provider::Anthropic(p) => LLMProvider::$method(p, $($arg),+),
+            #[cfg(feature = "providers-extra")]
             Provider::Azure(p) => LLMProvider::$method(p, $($arg),+),
+            #[cfg(feature = "providers-extra")]
             Provider::Bedrock(p) => LLMProvider::$method(p, $($arg),+),
             Provider::Mistral(p) => LLMProvider::$method(p, $($arg),+),
+            #[cfg(feature = "providers-extra")]
             Provider::MetaLlama(p) => LLMProvider::$method(p, $($arg),+),
+            #[cfg(feature = "providers-extra")]
             Provider::VertexAI(p) => LLMProvider::$method(p, $($arg),+),
+            #[cfg(feature = "providers-extra")]
             Provider::V0(p) => LLMProvider::$method(p, $($arg),+),
+            #[cfg(feature = "providers-extra")]
             Provider::AzureAI(p) => LLMProvider::$method(p, $($arg),+),
             Provider::Cloudflare(p) => LLMProvider::$method(p, $($arg),+),
             Provider::OpenAILike(p) => LLMProvider::$method(p, $($arg),+),
@@ -422,12 +520,18 @@ macro_rules! dispatch_provider_async_direct {
         match $self {
             Provider::OpenAI(p) => LLMProvider::$method(p).await,
             Provider::Anthropic(p) => LLMProvider::$method(p).await,
+            #[cfg(feature = "providers-extra")]
             Provider::Azure(p) => LLMProvider::$method(p).await,
+            #[cfg(feature = "providers-extra")]
             Provider::Bedrock(p) => LLMProvider::$method(p).await,
             Provider::Mistral(p) => LLMProvider::$method(p).await,
+            #[cfg(feature = "providers-extra")]
             Provider::MetaLlama(p) => LLMProvider::$method(p).await,
+            #[cfg(feature = "providers-extra")]
             Provider::VertexAI(p) => LLMProvider::$method(p).await,
+            #[cfg(feature = "providers-extra")]
             Provider::V0(p) => LLMProvider::$method(p).await,
+            #[cfg(feature = "providers-extra")]
             Provider::AzureAI(p) => LLMProvider::$method(p).await,
             Provider::Cloudflare(p) => LLMProvider::$method(p).await,
             Provider::OpenAILike(p) => LLMProvider::$method(p).await,
@@ -443,12 +547,18 @@ macro_rules! dispatch_provider_async_direct {
 pub enum Provider {
     OpenAI(openai::OpenAIProvider),
     Anthropic(anthropic::AnthropicProvider),
+    #[cfg(feature = "providers-extra")]
     Azure(azure::AzureOpenAIProvider),
+    #[cfg(feature = "providers-extra")]
     Bedrock(bedrock::BedrockProvider),
     Mistral(mistral::MistralProvider),
+    #[cfg(feature = "providers-extra")]
     MetaLlama(meta_llama::LlamaProvider),
+    #[cfg(feature = "providers-extra")]
     VertexAI(vertex_ai::VertexAIProvider),
+    #[cfg(feature = "providers-extra")]
     V0(v0::V0Provider),
+    #[cfg(feature = "providers-extra")]
     AzureAI(azure_ai::AzureAIProvider),
     Cloudflare(cloudflare::CloudflareProvider),
     /// Tier 1: data-driven OpenAI-compatible providers (groq, together, fireworks, etc.)
@@ -461,12 +571,18 @@ impl Provider {
         match self {
             Provider::OpenAI(_) => "openai",
             Provider::Anthropic(_) => "anthropic",
+            #[cfg(feature = "providers-extra")]
             Provider::Azure(_) => "azure",
+            #[cfg(feature = "providers-extra")]
             Provider::Bedrock(_) => "bedrock",
             Provider::Mistral(_) => "mistral",
+            #[cfg(feature = "providers-extra")]
             Provider::MetaLlama(_) => "meta_llama",
+            #[cfg(feature = "providers-extra")]
             Provider::VertexAI(_) => "vertex_ai",
+            #[cfg(feature = "providers-extra")]
             Provider::V0(_) => "v0",
+            #[cfg(feature = "providers-extra")]
             Provider::AzureAI(_) => "azure_ai",
             Provider::Cloudflare(_) => "cloudflare",
             Provider::OpenAILike(p) => {
@@ -481,12 +597,18 @@ impl Provider {
         match self {
             Provider::OpenAI(_) => ProviderType::OpenAI,
             Provider::Anthropic(_) => ProviderType::Anthropic,
+            #[cfg(feature = "providers-extra")]
             Provider::Azure(_) => ProviderType::Azure,
+            #[cfg(feature = "providers-extra")]
             Provider::Bedrock(_) => ProviderType::Bedrock,
             Provider::Mistral(_) => ProviderType::Mistral,
+            #[cfg(feature = "providers-extra")]
             Provider::MetaLlama(_) => ProviderType::MetaLlama,
+            #[cfg(feature = "providers-extra")]
             Provider::VertexAI(_) => ProviderType::VertexAI,
+            #[cfg(feature = "providers-extra")]
             Provider::V0(_) => ProviderType::V0,
+            #[cfg(feature = "providers-extra")]
             Provider::AzureAI(_) => ProviderType::AzureAI,
             Provider::Cloudflare(_) => ProviderType::Cloudflare,
             Provider::OpenAILike(_) => ProviderType::OpenAICompatible,
@@ -572,11 +694,7 @@ impl Provider {
         context: RequestContext,
     ) -> Result<
         std::pin::Pin<
-            Box<
-                dyn futures::Stream<Item = Result<ChatChunk, ProviderError>>
-                    + Send
-                    + 'static,
-            >,
+            Box<dyn futures::Stream<Item = Result<ChatChunk, ProviderError>> + Send + 'static>,
         >,
         ProviderError,
     > {
@@ -594,6 +712,7 @@ impl Provider {
 
         match self {
             Provider::OpenAI(p) => LLMProvider::embeddings(p, request, context).await,
+            #[cfg(feature = "providers-extra")]
             Provider::Azure(p) => LLMProvider::embeddings(p, request, context).await,
             _ => Err(ProviderError::not_implemented(
                 "unknown",
@@ -672,10 +791,7 @@ pub async fn create_provider(
         } else {
             Some(api_key.clone())
         };
-        let oai_config = def.to_openai_like_config(
-            effective_key.as_deref(),
-            base_url.as_deref(),
-        );
+        let oai_config = def.to_openai_like_config(effective_key.as_deref(), base_url.as_deref());
         let provider = openai_like::OpenAILikeProvider::new(oai_config)
             .await
             .map_err(|e| ProviderError::initialization(def.name, e.to_string()))?;
@@ -777,7 +893,9 @@ fn build_openai_config_from_factory(
     let mut openai_config = openai::OpenAIConfig::default();
     openai_config.base.api_key = Some(api_key.to_string());
 
-    if let Some(base_url) = config_str(config, "base_url").or_else(|| config_str(config, "api_base")) {
+    if let Some(base_url) =
+        config_str(config, "base_url").or_else(|| config_str(config, "api_base"))
+    {
         openai_config.base.api_base = Some(base_url.to_string());
     }
     if let Some(timeout) = config_u64(config, "timeout") {
@@ -818,7 +936,9 @@ fn build_anthropic_config_from_factory(
     let api_key = macros::require_config_str(config, "api_key", "anthropic")?;
     let mut anthropic_config = anthropic::AnthropicConfig::default().with_api_key(api_key);
 
-    if let Some(base_url) = config_str(config, "base_url").or_else(|| config_str(config, "api_base")) {
+    if let Some(base_url) =
+        config_str(config, "base_url").or_else(|| config_str(config, "api_base"))
+    {
         anthropic_config.base_url = base_url.to_string();
     }
     if let Some(api_version) = config_str(config, "api_version") {
@@ -836,12 +956,17 @@ fn build_anthropic_config_from_factory(
     if let Some(retry_delay_base) = config_u64(config, "retry_delay_base") {
         anthropic_config.retry_delay_base = retry_delay_base;
     }
-    if let Some(proxy_url) = config_str(config, "proxy_url").or_else(|| config_str(config, "proxy")) {
+    if let Some(proxy_url) = config_str(config, "proxy_url").or_else(|| config_str(config, "proxy"))
+    {
         anthropic_config.proxy_url = Some(proxy_url.to_string());
     }
 
     merge_string_headers(&mut anthropic_config.custom_headers, config, "headers");
-    merge_string_headers(&mut anthropic_config.custom_headers, config, "custom_headers");
+    merge_string_headers(
+        &mut anthropic_config.custom_headers,
+        config,
+        "custom_headers",
+    );
 
     if let Some(enable_multimodal) = config_bool(config, "enable_multimodal") {
         anthropic_config.enable_multimodal = enable_multimodal;
@@ -868,7 +993,9 @@ fn build_mistral_config_from_factory(
         ..Default::default()
     };
 
-    if let Some(base_url) = config_str(config, "base_url").or_else(|| config_str(config, "api_base")) {
+    if let Some(base_url) =
+        config_str(config, "base_url").or_else(|| config_str(config, "api_base"))
+    {
         mistral_config.api_base = base_url.to_string();
     }
     if let Some(timeout) = config_u64(config, "timeout") {
@@ -897,7 +1024,9 @@ fn build_cloudflare_config_from_factory(
         ..Default::default()
     };
 
-    if let Some(base_url) = config_str(config, "base_url").or_else(|| config_str(config, "api_base")) {
+    if let Some(base_url) =
+        config_str(config, "base_url").or_else(|| config_str(config, "api_base"))
+    {
         cf_config.api_base = Some(base_url.to_string());
     }
     if let Some(timeout) = config_u64(config, "timeout") {
@@ -1460,7 +1589,11 @@ mod tests {
         assert_eq!(openai_config.organization.as_deref(), Some("org-test"));
         assert_eq!(openai_config.project.as_deref(), Some("proj-test"));
         assert_eq!(
-            openai_config.base.headers.get("x-team-id").map(String::as_str),
+            openai_config
+                .base
+                .headers
+                .get("x-team-id")
+                .map(String::as_str),
             Some("team-1")
         );
         assert_eq!(
@@ -1569,7 +1702,10 @@ mod tests {
             .unwrap_or_else(|err| panic!("cloudflare config should parse: {err}"));
         assert_eq!(cf_config.account_id.as_deref(), Some("acct-xyz"));
         assert_eq!(cf_config.api_token.as_deref(), Some("token-xyz"));
-        assert_eq!(cf_config.api_base.as_deref(), Some("https://cf.example.test"));
+        assert_eq!(
+            cf_config.api_base.as_deref(),
+            Some("https://cf.example.test")
+        );
         assert_eq!(cf_config.timeout, 77);
         assert_eq!(cf_config.max_retries, 5);
         assert!(cf_config.debug);
@@ -1630,7 +1766,11 @@ mod tests {
         assert_eq!(oai_like.base.organization.as_deref(), Some("org-like"));
         assert_eq!(oai_like.base.api_version.as_deref(), Some("2024-12-01"));
         assert_eq!(
-            oai_like.base.headers.get("x-base-header").map(String::as_str),
+            oai_like
+                .base
+                .headers
+                .get("x-base-header")
+                .map(String::as_str),
             Some("base")
         );
         assert_eq!(
@@ -1725,9 +1865,9 @@ mod tests {
                 ..Default::default()
             };
 
-            let provider = create_provider(config)
-                .await
-                .unwrap_or_else(|e| panic!("Catalog provider '{}' should be creatable: {}", name, e));
+            let provider = create_provider(config).await.unwrap_or_else(|e| {
+                panic!("Catalog provider '{}' should be creatable: {}", name, e)
+            });
 
             assert!(
                 matches!(provider, Provider::OpenAILike(_)),
@@ -1849,9 +1989,12 @@ mod tests {
                 ..Default::default()
             };
 
-            let provider = create_provider(config)
-                .await
-                .unwrap_or_else(|e| panic!("Expected '{}' provider_type to be creatable: {}", provider_type, e));
+            let provider = create_provider(config).await.unwrap_or_else(|e| {
+                panic!(
+                    "Expected '{}' provider_type to be creatable: {}",
+                    provider_type, e
+                )
+            });
             assert!(
                 matches!(provider, Provider::OpenAILike(_)),
                 "Expected provider_type '{}' to create OpenAILike provider",
@@ -1902,9 +2045,12 @@ mod tests {
                 ..Default::default()
             };
 
-            let provider = create_provider(config)
-                .await
-                .unwrap_or_else(|e| panic!("Expected '{}' provider_type to be creatable: {}", provider_type, e));
+            let provider = create_provider(config).await.unwrap_or_else(|e| {
+                panic!(
+                    "Expected '{}' provider_type to be creatable: {}",
+                    provider_type, e
+                )
+            });
             assert!(
                 matches!(provider, Provider::OpenAILike(_)),
                 "Expected provider_type '{}' to create OpenAILike provider",
@@ -1955,9 +2101,12 @@ mod tests {
                 ..Default::default()
             };
 
-            let provider = create_provider(config)
-                .await
-                .unwrap_or_else(|e| panic!("Expected '{}' provider_type to be creatable: {}", provider_type, e));
+            let provider = create_provider(config).await.unwrap_or_else(|e| {
+                panic!(
+                    "Expected '{}' provider_type to be creatable: {}",
+                    provider_type, e
+                )
+            });
             assert!(
                 matches!(provider, Provider::OpenAILike(_)),
                 "Expected provider_type '{}' to create OpenAILike provider",

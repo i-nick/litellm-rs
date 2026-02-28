@@ -425,6 +425,22 @@ fn load_config(
     Ok(config)
 }
 
+fn init_logging(log_level: tracing::Level) {
+    #[cfg(feature = "tracing")]
+    {
+        tracing_subscriber::fmt()
+            .with_max_level(log_level)
+            .with_target(false)
+            .with_thread_ids(true)
+            .init();
+    }
+
+    #[cfg(not(feature = "tracing"))]
+    {
+        let _ = log_level;
+    }
+}
+
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     // Configuration
@@ -444,11 +460,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         _ => tracing::Level::INFO,
     };
 
-    tracing_subscriber::fmt()
-        .with_max_level(log_level)
-        .with_target(false)
-        .with_thread_ids(true)
-        .init();
+    init_logging(log_level);
 
     info!("🚀 Starting configuration-driven LiteLLM Gateway");
     info!("📄 Config file: {}", config_path);

@@ -47,7 +47,7 @@ required-features = ["gateway"]
 actix-web = { version = "4.9", features = ["rustls-0_23"], optional = true }
 actix-cors = { version = "0.7", optional = true }
 actix-multipart = { version = "0.7", optional = true }
-tokio = { version = "1.35", features = ["full"] }
+tokio = { version = "1.35", features = ["rt-multi-thread", "macros", "sync", "time", "fs", "io-util", "signal"] }
 tokio-stream = "0.1"
 futures = "0.3"
 async-trait = "0.1"
@@ -104,7 +104,7 @@ base64 = "0.21"
 
 # Monitoring and tracing
 tracing = "0.1"
-tracing-subscriber = { version = "0.3.20", features = ["env-filter", "json"] }
+tracing-subscriber = { version = "0.3.20", features = ["env-filter", "json"], optional = true }
 sysinfo = { version = "0.32", optional = true }
 
 # Middleware and utilities
@@ -150,7 +150,7 @@ opt-level = 0
 # Feature flags
 [features]
 # Default: full gateway with SQLite storage
-default = ["sqlite", "redis", "metrics", "tracing"]
+default = ["sqlite", "redis", "metrics", "tracing", "providers-extra", "providers-extended"]
 
 # Gateway mode: HTTP server with full middleware stack
 gateway = [
@@ -161,6 +161,12 @@ gateway = [
 # Lite mode: API-only, no storage (use with --no-default-features)
 # Example: cargo build --no-default-features --features "metrics,tracing"
 lite = ["metrics", "tracing"]
+
+# Provider compilation tiers (for reducing build size when using --no-default-features)
+# - providers-extra: additional built-in provider implementations used by enum variants
+# - providers-extended: direct provider modules not wired into the unified enum/factory path
+providers-extra = []
+providers-extended = []
 
 # Storage backends (implies gateway since auth/server/monitoring require it)
 storage = ["dep:sea-orm", "dep:sea-orm-migration", "gateway"]
@@ -178,7 +184,7 @@ cloud-secrets = ["aws-secrets", "gcp-secrets", "azure-secrets", "vault-secrets"]
 
 # Monitoring and observability
 metrics = ["dep:sysinfo"]
-tracing = []
+tracing = ["dep:tracing-subscriber"]
 
 # Advanced features
 vector-db = []
@@ -187,13 +193,13 @@ analytics = ["metrics"]
 enterprise = ["analytics", "vector-db"]
 
 # Full feature set
-full = ["gateway", "postgres", "redis", "s3", "metrics", "tracing", "vector-db", "websockets", "analytics", "cloud-secrets"]
+full = ["gateway", "postgres", "redis", "s3", "metrics", "tracing", "vector-db", "websockets", "analytics", "cloud-secrets", "providers-extra", "providers-extended"]
 
 # Metadata
 [package.metadata.docs.rs]
 # Exclude vector-db feature because qdrant-client fails on docs.rs read-only filesystem
 all-features = false
-features = ["gateway", "postgres", "sqlite", "redis", "s3", "metrics", "tracing", "websockets", "analytics"]
+features = ["gateway", "postgres", "sqlite", "redis", "s3", "metrics", "tracing", "websockets", "analytics", "providers-extra", "providers-extended"]
 rustdoc-args = ["--cfg", "docsrs"]
 
 [package.metadata.playground]

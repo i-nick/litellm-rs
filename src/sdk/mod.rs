@@ -23,7 +23,10 @@ pub const VERSION: &str = env!("CARGO_PKG_VERSION");
 
 /// Initialize the SDK with default logging
 pub fn init() {
-    tracing_subscriber::fmt::init();
+    #[cfg(feature = "tracing")]
+    {
+        tracing_subscriber::fmt::init();
+    }
 }
 
 #[cfg(test)]

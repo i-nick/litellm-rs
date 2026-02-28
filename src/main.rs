@@ -6,16 +6,23 @@
 
 use litellm_rs::server;
 use std::process::ExitCode;
+#[cfg(feature = "tracing")]
 use tracing::Level;
+
+fn init_logging() {
+    #[cfg(feature = "tracing")]
+    {
+        tracing_subscriber::fmt()
+            .with_max_level(Level::INFO)
+            .with_target(false)
+            .with_thread_ids(false)
+            .init();
+    }
+}
 
 #[tokio::main]
 async fn main() -> ExitCode {
-    // Initialize logging system
-    tracing_subscriber::fmt()
-        .with_max_level(Level::INFO)
-        .with_target(false)
-        .with_thread_ids(false)
-        .init();
+    init_logging();
 
     // Start server (auto-loads config/gateway.yaml)
     match server::builder::run_server().await {

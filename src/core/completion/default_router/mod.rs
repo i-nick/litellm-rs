@@ -91,7 +91,9 @@ impl DefaultRouter {
         if let Ok(api_key) = std::env::var("OPENROUTER_API_KEY") {
             if let Some(def) = crate::core::providers::registry::get_definition("openrouter") {
                 let config = def.to_openai_like_config(Some(&api_key), None);
-                if let Ok(provider) = crate::core::providers::openai_like::OpenAILikeProvider::new(config).await {
+                if let Ok(provider) =
+                    crate::core::providers::openai_like::OpenAILikeProvider::new(config).await
+                {
                     provider_registry.register(Provider::OpenAILike(provider));
                 }
             }
@@ -110,26 +112,29 @@ impl DefaultRouter {
         }
 
         // Add VertexAI provider if service account is available
-        if std::env::var("GOOGLE_APPLICATION_CREDENTIALS").is_ok() {
-            use crate::core::providers::vertex_ai::{
-                VertexAIProvider, VertexAIProviderConfig, VertexCredentials,
-            };
+        #[cfg(feature = "providers-extra")]
+        {
+            if std::env::var("GOOGLE_APPLICATION_CREDENTIALS").is_ok() {
+                use crate::core::providers::vertex_ai::{
+                    VertexAIProvider, VertexAIProviderConfig, VertexCredentials,
+                };
 
-            let config = VertexAIProviderConfig {
-                project_id: std::env::var("GOOGLE_PROJECT_ID")
-                    .unwrap_or_else(|_| "default-project".to_string()),
-                location: std::env::var("GOOGLE_LOCATION")
-                    .unwrap_or_else(|_| "us-central1".to_string()),
-                api_version: "v1".to_string(),
-                credentials: VertexCredentials::ApplicationDefault,
-                api_base: None,
-                timeout_seconds: 60,
-                max_retries: 3,
-                enable_experimental: false,
-            };
+                let config = VertexAIProviderConfig {
+                    project_id: std::env::var("GOOGLE_PROJECT_ID")
+                        .unwrap_or_else(|_| "default-project".to_string()),
+                    location: std::env::var("GOOGLE_LOCATION")
+                        .unwrap_or_else(|_| "us-central1".to_string()),
+                    api_version: "v1".to_string(),
+                    credentials: VertexCredentials::ApplicationDefault,
+                    api_base: None,
+                    timeout_seconds: 60,
+                    max_retries: 3,
+                    enable_experimental: false,
+                };
 
-            if let Ok(vertex_provider) = VertexAIProvider::new(config).await {
-                provider_registry.register(Provider::VertexAI(vertex_provider));
+                if let Ok(vertex_provider) = VertexAIProvider::new(config).await {
+                    provider_registry.register(Provider::VertexAI(vertex_provider));
+                }
             }
         }
 
@@ -137,7 +142,9 @@ impl DefaultRouter {
         if let Ok(api_key) = std::env::var("DEEPSEEK_API_KEY") {
             if let Some(def) = crate::core::providers::registry::get_definition("deepseek") {
                 let config = def.to_openai_like_config(Some(&api_key), None);
-                if let Ok(provider) = crate::core::providers::openai_like::OpenAILikeProvider::new(config).await {
+                if let Ok(provider) =
+                    crate::core::providers::openai_like::OpenAILikeProvider::new(config).await
+                {
                     provider_registry.register(Provider::OpenAILike(provider));
                 }
             }
@@ -147,34 +154,39 @@ impl DefaultRouter {
         if let Ok(api_key) = std::env::var("GROQ_API_KEY") {
             if let Some(def) = crate::core::providers::registry::get_definition("groq") {
                 let config = def.to_openai_like_config(Some(&api_key), None);
-                if let Ok(provider) = crate::core::providers::openai_like::OpenAILikeProvider::new(config).await {
+                if let Ok(provider) =
+                    crate::core::providers::openai_like::OpenAILikeProvider::new(config).await
+                {
                     provider_registry.register(Provider::OpenAILike(provider));
                 }
             }
         }
 
         // Add Bedrock provider if AWS credentials are available
-        if let (Ok(access_key), Ok(secret_key)) = (
-            std::env::var("AWS_ACCESS_KEY_ID"),
-            std::env::var("AWS_SECRET_ACCESS_KEY"),
-        ) {
-            use crate::core::providers::bedrock::{BedrockConfig, BedrockProvider};
+        #[cfg(feature = "providers-extra")]
+        {
+            if let (Ok(access_key), Ok(secret_key)) = (
+                std::env::var("AWS_ACCESS_KEY_ID"),
+                std::env::var("AWS_SECRET_ACCESS_KEY"),
+            ) {
+                use crate::core::providers::bedrock::{BedrockConfig, BedrockProvider};
 
-            let region = std::env::var("AWS_REGION")
-                .or_else(|_| std::env::var("AWS_DEFAULT_REGION"))
-                .unwrap_or_else(|_| "us-east-1".to_string());
+                let region = std::env::var("AWS_REGION")
+                    .or_else(|_| std::env::var("AWS_DEFAULT_REGION"))
+                    .unwrap_or_else(|_| "us-east-1".to_string());
 
-            let config = BedrockConfig {
-                aws_access_key_id: access_key,
-                aws_secret_access_key: secret_key,
-                aws_session_token: std::env::var("AWS_SESSION_TOKEN").ok(),
-                aws_region: region,
-                timeout_seconds: 30,
-                max_retries: 3,
-            };
+                let config = BedrockConfig {
+                    aws_access_key_id: access_key,
+                    aws_secret_access_key: secret_key,
+                    aws_session_token: std::env::var("AWS_SESSION_TOKEN").ok(),
+                    aws_region: region,
+                    timeout_seconds: 30,
+                    max_retries: 3,
+                };
 
-            if let Ok(bedrock_provider) = BedrockProvider::new(config).await {
-                provider_registry.register(Provider::Bedrock(bedrock_provider));
+                if let Ok(bedrock_provider) = BedrockProvider::new(config).await {
+                    provider_registry.register(Provider::Bedrock(bedrock_provider));
+                }
             }
         }
 

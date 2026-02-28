@@ -228,6 +228,7 @@ impl DefaultRouter {
     }
 
     /// Create dynamic Azure AI provider
+    #[cfg(feature = "providers-extra")]
     async fn create_dynamic_azure_ai(
         &self,
         model: &str,
@@ -270,5 +271,21 @@ impl DefaultRouter {
             })?;
 
         convert_from_chat_completion_response(response)
+    }
+
+    /// Create dynamic Azure AI provider (stub when providers-extra is disabled)
+    #[cfg(not(feature = "providers-extra"))]
+    async fn create_dynamic_azure_ai(
+        &self,
+        model: &str,
+        api_key: &str,
+        api_base: &str,
+        chat_request: &ChatRequest,
+        context: RequestContext,
+    ) -> Result<CompletionResponse> {
+        let _ = (model, api_key, api_base, chat_request, context);
+        Err(GatewayError::not_implemented(
+            "dynamic azure_ai requires the `providers-extra` feature",
+        ))
     }
 }

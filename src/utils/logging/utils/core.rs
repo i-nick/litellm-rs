@@ -2,7 +2,9 @@ use super::types::{LogEntry, LogLevel};
 use crate::core::providers::unified_provider::ProviderError;
 use std::collections::HashMap;
 use std::env;
-use tracing::{Level, debug, error, info, warn};
+#[cfg(feature = "tracing")]
+use tracing::Level;
+use tracing::{debug, error, info, warn};
 use uuid::Uuid;
 
 pub struct LoggingUtils;
@@ -48,13 +50,21 @@ impl LoggingUtils {
     pub fn init_logger(log_level: Option<LogLevel>) -> Result<(), ProviderError> {
         let level = log_level.unwrap_or(LogLevel::Info);
 
-        tracing_subscriber::fmt()
-            .with_max_level(Level::from(level))
-            .with_target(false)
-            .with_thread_ids(true)
-            .with_file(true)
-            .with_line_number(true)
-            .init();
+        #[cfg(feature = "tracing")]
+        {
+            tracing_subscriber::fmt()
+                .with_max_level(Level::from(level))
+                .with_target(false)
+                .with_thread_ids(true)
+                .with_file(true)
+                .with_line_number(true)
+                .init();
+        }
+
+        #[cfg(not(feature = "tracing"))]
+        {
+            let _ = level;
+        }
 
         Ok(())
     }
