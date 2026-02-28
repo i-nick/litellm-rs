@@ -33,7 +33,7 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
       - name: Install cargo-edit
-        run: cargo install cargo-edit --features vendored-openssl
+        run: cargo install cargo-edit --locked
 
       - name: Analyze commits and determine version bump
         id: version
