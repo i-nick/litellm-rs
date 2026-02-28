@@ -1,13 +1,13 @@
 //! Backup code generation and hashing
 
-use rand::Rng;
+use rand::RngExt;
 use sha2::{Digest, Sha256};
 
 /// Generate a secure backup code
 pub fn generate_backup_code() -> String {
-    let mut rng = rand::thread_rng();
+    let mut rng = rand::rng();
     let code: String = (0..8)
-        .map(|_| rng.gen_range(0..10).to_string())
+        .map(|_| rng.random_range(0..10).to_string())
         .collect::<Vec<_>>()
         .chunks(4)
         .map(|chunk| chunk.join(""))

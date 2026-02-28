@@ -49,7 +49,7 @@ pub(super) fn get_memory_usage() -> u64 {
 #[cfg(feature = "metrics")]
 pub(super) fn get_disk_usage() -> u64 {
     let mut disks = DISKS.lock();
-    disks.refresh_list();
+    disks.refresh(true);
     disks
         .iter()
         .map(|d| d.total_space() - d.available_space())
@@ -64,7 +64,7 @@ pub(super) fn get_disk_usage() -> u64 {
 #[cfg(feature = "metrics")]
 pub(super) fn get_network_bytes_in() -> u64 {
     let mut networks = NETWORKS.lock();
-    networks.refresh();
+    networks.refresh(true);
     networks.values().map(|data| data.total_received()).sum()
 }
 
@@ -76,7 +76,7 @@ pub(super) fn get_network_bytes_in() -> u64 {
 #[cfg(feature = "metrics")]
 pub(super) fn get_network_bytes_out() -> u64 {
     let mut networks = NETWORKS.lock();
-    networks.refresh();
+    networks.refresh(true);
     networks.values().map(|data| data.total_transmitted()).sum()
 }
 

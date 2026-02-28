@@ -5,7 +5,7 @@
 
 use super::deployment::{Deployment, DeploymentId};
 use dashmap::DashMap;
-use rand::Rng;
+use rand::RngExt;
 use std::sync::atomic::{AtomicUsize, Ordering::Relaxed};
 
 // Note: StrategySelector trait was removed as dead code — only free functions are used.
@@ -35,14 +35,14 @@ pub fn weighted_random<'a>(
 
     if total_weight == 0 {
         // All weights are 0, fall back to uniform random
-        let mut rng = rand::thread_rng();
-        let index = rng.gen_range(0..candidate_ids.len());
+        let mut rng = rand::rng();
+        let index = rng.random_range(0..candidate_ids.len());
         return Some(&candidate_ids[index]);
     }
 
     // Generate random point in [0, total_weight)
-    let mut rng = rand::thread_rng();
-    let mut point = rng.gen_range(0..total_weight);
+    let mut rng = rand::rng();
+    let mut point = rng.random_range(0..total_weight);
 
     // Find the deployment corresponding to this point
     for id in candidate_ids {
@@ -101,8 +101,8 @@ pub fn least_busy<'a>(
     if tied.len() == 1 {
         Some(tied[0])
     } else {
-        let mut rng = rand::thread_rng();
-        let index = rng.gen_range(0..tied.len());
+        let mut rng = rand::rng();
+        let index = rng.random_range(0..tied.len());
         Some(tied[index])
     }
 }

@@ -68,6 +68,7 @@
 
 #![allow(missing_docs)]
 #![warn(clippy::all)]
+#![allow(clippy::collapsible_if)]
 
 // Public module exports
 #[cfg(feature = "gateway")]

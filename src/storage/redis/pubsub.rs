@@ -37,7 +37,7 @@ impl RedisPool {
     pub async fn subscribe(&self, _channels: &[String]) -> Result<Subscription> {
         // TODO: Fix when Redis API is updated to compatible version
         Err(GatewayError::Redis(redis::RedisError::from((
-            redis::ErrorKind::IoError,
+            redis::ErrorKind::Io,
             "PubSub temporarily disabled due to API compatibility",
         ))))
     }
@@ -49,7 +49,7 @@ impl Subscription {
     pub async fn next_message(&mut self) -> Result<redis::Msg> {
         // TODO: Fix when Redis API is updated to compatible version
         Err(GatewayError::Redis(redis::RedisError::from((
-            redis::ErrorKind::IoError,
+            redis::ErrorKind::Io,
             "PubSub temporarily disabled due to API compatibility",
         ))))
     }
