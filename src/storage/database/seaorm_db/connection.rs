@@ -12,6 +12,11 @@ use super::types::{DatabaseBackendType, SeaOrmDatabase};
 impl SeaOrmDatabase {
     /// Create a new database connection with automatic SQLite fallback
     pub async fn new(config: &DatabaseConfig) -> Result<Self> {
+        if !config.enabled {
+            info!("Database disabled in config. Using in-memory SQLite backend");
+            return Self::in_memory_sqlite(config.connection_timeout).await;
+        }
+
         // Try primary database connection first
         match Self::try_connect(&config.url, config).await {
             Ok(db) => {
@@ -37,6 +42,25 @@ impl SeaOrmDatabase {
                 }
             }
         }
+    }
+
+    async fn in_memory_sqlite(connection_timeout_secs: u64) -> Result<Self> {
+        let mut opt = ConnectOptions::new("sqlite::memory:".to_string());
+        opt.max_connections(1)
+            .min_connections(1)
+            .connect_timeout(Duration::from_secs(connection_timeout_secs.max(1)))
+            .acquire_timeout(Duration::from_secs(30))
+            .idle_timeout(Duration::from_secs(600))
+            .max_lifetime(Duration::from_secs(3600))
+            .sqlx_logging(false);
+
+        let db = Database::connect(opt)
+            .await
+            .map_err(GatewayError::Database)?;
+        Ok(Self {
+            db,
+            backend_type: DatabaseBackendType::SQLite,
+        })
     }
 
     /// Try to connect to a database

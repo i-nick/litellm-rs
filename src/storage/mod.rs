@@ -44,7 +44,11 @@ impl StorageLayer {
         debug!("Creating Redis connection pool");
         let redis = match redis::RedisPool::new(&config.redis).await {
             Ok(pool) => {
-                info!("Redis connection established");
+                if pool.is_noop() {
+                    info!("Redis caching is disabled (no-op mode)");
+                } else {
+                    info!("Redis connection established");
+                }
                 Arc::new(pool)
             }
             Err(e) => {

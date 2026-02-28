@@ -8,7 +8,7 @@ mod tests {
     use litellm_rs::config::models::storage::DatabaseConfig;
     use litellm_rs::core::models::user::types::User;
     use litellm_rs::core::models::{ApiKey, Metadata, RateLimits, UsageStats};
-    use litellm_rs::storage::database::Database;
+    use litellm_rs::storage::database::{Database, DatabaseBackendType};
     use uuid::Uuid;
 
     /// Test basic database connection and health check
@@ -55,6 +55,25 @@ mod tests {
             .expect("Failed to create database");
         let result = db.migrate().await;
         assert!(result.is_ok(), "Migration failed: {:?}", result.err());
+    }
+
+    #[tokio::test]
+    async fn test_database_disabled_uses_in_memory_sqlite() {
+        let config = DatabaseConfig {
+            url: "postgresql://unreachable-host:5432/unreachable-db".to_string(),
+            max_connections: 10,
+            connection_timeout: 1,
+            ssl: false,
+            enabled: false,
+        };
+
+        let db = Database::new(&config).await.expect(
+            "When database is disabled, runtime should use in-memory SQLite instead of external DB",
+        );
+        assert_eq!(db.backend_type(), DatabaseBackendType::SQLite);
+
+        db.migrate().await.expect("Migration on in-memory DB failed");
+        assert!(db.health_check().await.is_ok());
     }
 
     /// Test database user operations (find_user_by_email, etc.)

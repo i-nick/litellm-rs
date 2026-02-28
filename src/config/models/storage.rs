@@ -75,6 +75,9 @@ impl DatabaseConfig {
         if other.ssl {
             self.ssl = other.ssl;
         }
+        if other.enabled {
+            self.enabled = true;
+        }
         self
     }
 }
@@ -124,6 +127,9 @@ impl RedisConfig {
         }
         if other.cluster {
             self.cluster = other.cluster;
+        }
+        if !other.enabled {
+            self.enabled = false;
         }
         self
     }
@@ -215,6 +221,20 @@ mod tests {
     }
 
     #[test]
+    fn test_database_config_merge_enabled_true() {
+        let base = DatabaseConfig::default();
+        let other = DatabaseConfig {
+            url: "postgresql://localhost/litellm".to_string(),
+            max_connections: default_max_connections(),
+            connection_timeout: default_connection_timeout(),
+            ssl: false,
+            enabled: true,
+        };
+        let merged = base.merge(other);
+        assert!(merged.enabled);
+    }
+
+    #[test]
     fn test_database_config_clone() {
         let config = DatabaseConfig::default();
         let cloned = config.clone();
@@ -295,6 +315,20 @@ mod tests {
         };
         let merged = base.merge(other);
         assert!(merged.cluster);
+    }
+
+    #[test]
+    fn test_redis_config_merge_enabled_false() {
+        let base = RedisConfig::default();
+        let other = RedisConfig {
+            url: "redis://localhost:6379".to_string(),
+            enabled: false,
+            max_connections: default_redis_max_connections(),
+            connection_timeout: default_connection_timeout(),
+            cluster: false,
+        };
+        let merged = base.merge(other);
+        assert!(!merged.enabled);
     }
 
     #[test]

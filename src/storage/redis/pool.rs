@@ -28,6 +28,16 @@ pub struct RedisConnection {
 impl RedisPool {
     /// Create a new Redis pool
     pub async fn new(config: &RedisConfig) -> Result<Self> {
+        if !config.enabled {
+            info!("Redis disabled in config; using no-op Redis pool");
+            return Ok(Self {
+                client: None,
+                connection_manager: None,
+                config: config.clone(),
+                noop_mode: true,
+            });
+        }
+
         info!("Creating Redis connection pool");
         debug!("Redis URL: {}", Self::sanitize_url(&config.url));
 

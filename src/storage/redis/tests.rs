@@ -26,3 +26,19 @@ async fn test_redis_pool_creation() {
     assert_eq!(config.url, "redis://localhost:6379");
     assert_eq!(config.max_connections, 10);
 }
+
+#[tokio::test]
+async fn test_redis_pool_disabled_is_noop() {
+    let config = RedisConfig {
+        url: "redis://127.0.0.1:1".to_string(),
+        enabled: false,
+        max_connections: 10,
+        connection_timeout: 1,
+        cluster: false,
+    };
+
+    let pool = RedisPool::new(&config)
+        .await
+        .expect("Disabled redis config should create no-op pool");
+    assert!(pool.is_noop());
+}
