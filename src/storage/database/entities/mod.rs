@@ -1,3 +1,5 @@
+/// API key entity module
+pub mod api_key;
 /// Batch entity module
 pub mod batch;
 /// Password reset token entity module
@@ -7,6 +9,7 @@ pub mod user;
 /// User session entity module
 pub mod user_session;
 
+pub use api_key::Entity as ApiKey;
 pub use batch::Entity as Batch;
 pub use password_reset_token::Entity as PasswordResetToken;
 pub use user::Entity as User;

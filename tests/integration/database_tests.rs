@@ -6,7 +6,10 @@
 #[cfg(test)]
 mod tests {
     use litellm_rs::config::models::storage::DatabaseConfig;
+    use litellm_rs::core::models::user::types::User;
+    use litellm_rs::core::models::{ApiKey, Metadata, RateLimits, UsageStats};
     use litellm_rs::storage::database::Database;
+    use uuid::Uuid;
 
     /// Test basic database connection and health check
     #[tokio::test]
@@ -116,5 +119,205 @@ mod tests {
 
         // Just verify we can get stats (size is always >= 0 as usize)
         let _ = stats.size;
+    }
+
+    #[tokio::test]
+    async fn test_api_key_crud_flow() {
+        let config = DatabaseConfig {
+            url: "sqlite::memory:".to_string(),
+            max_connections: 1,
+            connection_timeout: 5,
+            ssl: false,
+            enabled: true,
+        };
+
+        let db = Database::new(&config)
+            .await
+            .expect("Failed to create database");
+        db.migrate().await.expect("Migration failed");
+
+        let mut user = User::new(
+            "api-key-test-user".to_string(),
+            "api-key-test@example.com".to_string(),
+            "hashed-password".to_string(),
+        );
+        user.metadata.id = Uuid::new_v4();
+        db.create_user(&user).await.expect("Failed to create user");
+        let user_id = user.id();
+        let team_id = Uuid::new_v4();
+        let key_id = Uuid::new_v4();
+        let now = chrono::Utc::now();
+
+        let api_key = ApiKey {
+            metadata: Metadata {
+                id: key_id,
+                created_at: now,
+                updated_at: now,
+                version: 1,
+                extra: std::collections::HashMap::new(),
+            },
+            name: "integration-key".to_string(),
+            key_hash: "hash-integration-key".to_string(),
+            key_prefix: "gw-int".to_string(),
+            user_id: Some(user_id),
+            team_id: Some(team_id),
+            permissions: vec!["chat:read".to_string()],
+            rate_limits: None,
+            expires_at: Some(now + chrono::Duration::days(7)),
+            is_active: true,
+            last_used_at: None,
+            usage_stats: UsageStats {
+                last_reset: now,
+                ..UsageStats::default()
+            },
+        };
+
+        let created = db
+            .create_api_key(&api_key)
+            .await
+            .expect("Failed to create api key");
+        assert_eq!(created.metadata.id, key_id);
+
+        let by_hash = db
+            .find_api_key_by_hash(&api_key.key_hash)
+            .await
+            .expect("Failed to find api key by hash")
+            .expect("API key not found by hash");
+        assert_eq!(by_hash.metadata.id, key_id);
+
+        let by_id = db
+            .find_api_key_by_id(key_id)
+            .await
+            .expect("Failed to find api key by id")
+            .expect("API key not found by id");
+        assert_eq!(by_id.name, "integration-key");
+
+        db.update_api_key_permissions(key_id, &["chat:write".to_string()])
+            .await
+            .expect("Failed to update permissions");
+        let after_permissions = db
+            .find_api_key_by_id(key_id)
+            .await
+            .expect("Failed to refetch api key")
+            .expect("API key missing after permissions update");
+        assert_eq!(after_permissions.permissions, vec!["chat:write".to_string()]);
+
+        db.update_api_key_rate_limits(
+            key_id,
+            &RateLimits {
+                rpm: Some(60),
+                tpm: Some(10000),
+                rpd: None,
+                tpd: None,
+                concurrent: Some(2),
+            },
+        )
+        .await
+        .expect("Failed to update rate limits");
+        let after_limits = db
+            .find_api_key_by_id(key_id)
+            .await
+            .expect("Failed to refetch api key")
+            .expect("API key missing after rate limit update");
+        assert_eq!(after_limits.rate_limits.and_then(|r| r.rpm), Some(60));
+
+        db.update_api_key_usage(key_id, 3, 123, 0.42)
+            .await
+            .expect("Failed to update usage");
+        let after_usage = db
+            .find_api_key_by_id(key_id)
+            .await
+            .expect("Failed to refetch api key")
+            .expect("API key missing after usage update");
+        assert_eq!(after_usage.usage_stats.total_requests, 3);
+        assert_eq!(after_usage.usage_stats.total_tokens, 123);
+
+        db.update_api_key_last_used(key_id)
+            .await
+            .expect("Failed to update last used");
+        let after_last_used = db
+            .find_api_key_by_id(key_id)
+            .await
+            .expect("Failed to refetch api key")
+            .expect("API key missing after last_used update");
+        assert!(after_last_used.last_used_at.is_some());
+
+        db.deactivate_api_key(key_id)
+            .await
+            .expect("Failed to deactivate key");
+        let deactivated = db
+            .find_api_key_by_id(key_id)
+            .await
+            .expect("Failed to refetch api key")
+            .expect("API key missing after deactivate");
+        assert!(!deactivated.is_active);
+
+        let user_keys = db
+            .list_api_keys_by_user(user_id)
+            .await
+            .expect("Failed to list user api keys");
+        assert_eq!(user_keys.len(), 1);
+
+        let team_keys = db
+            .list_api_keys_by_team(team_id)
+            .await
+            .expect("Failed to list team api keys");
+        assert_eq!(team_keys.len(), 1);
+    }
+
+    #[tokio::test]
+    async fn test_api_key_cleanup_expired() {
+        let config = DatabaseConfig {
+            url: "sqlite::memory:".to_string(),
+            max_connections: 1,
+            connection_timeout: 5,
+            ssl: false,
+            enabled: true,
+        };
+
+        let db = Database::new(&config)
+            .await
+            .expect("Failed to create database");
+        db.migrate().await.expect("Migration failed");
+
+        let now = chrono::Utc::now();
+
+        for (id, expires_at) in [
+            (Uuid::new_v4(), Some(now - chrono::Duration::hours(1))),
+            (Uuid::new_v4(), Some(now + chrono::Duration::hours(1))),
+        ] {
+            let api_key = ApiKey {
+                metadata: Metadata {
+                    id,
+                    created_at: now,
+                    updated_at: now,
+                    version: 1,
+                    extra: std::collections::HashMap::new(),
+                },
+                name: format!("cleanup-{}", id),
+                key_hash: format!("hash-{}", id),
+                key_prefix: "gw-clean".to_string(),
+                user_id: None,
+                team_id: None,
+                permissions: vec![],
+                rate_limits: None,
+                expires_at,
+                is_active: true,
+                last_used_at: None,
+                usage_stats: UsageStats {
+                    last_reset: now,
+                    ..UsageStats::default()
+                },
+            };
+            db.create_api_key(&api_key)
+                .await
+                .expect("Failed to create api key");
+        }
+
+        let deleted = db
+            .delete_expired_api_keys()
+            .await
+            .expect("Failed to clean expired keys");
+        assert_eq!(deleted, 1);
     }
 }
