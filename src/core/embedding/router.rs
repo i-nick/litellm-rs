@@ -98,7 +98,7 @@ impl EmbeddingRouter {
         }
 
         // Try to find a registered provider
-        let providers = self.provider_registry.get_all_providers();
+        let providers = self.provider_registry.all();
 
         // Find matching provider from registry
         for provider in providers.iter() {

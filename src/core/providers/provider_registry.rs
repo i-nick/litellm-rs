@@ -94,16 +94,6 @@ impl ProviderRegistry {
         self.providers.values().collect()
     }
 
-    /// Compatibility method for get_provider (alias for get)
-    pub fn get_provider(&self, name: &str) -> Option<&Provider> {
-        self.get(name)
-    }
-
-    /// Compatibility method for get_all_providers (alias for all)
-    pub fn get_all_providers(&self) -> Vec<&Provider> {
-        self.all()
-    }
-
     /// Get provider values iterator (for compatibility with HashMap iteration)
     pub fn values(&self) -> impl Iterator<Item = &Provider> {
         self.providers.values()
@@ -250,9 +240,9 @@ mod tests {
     }
 
     #[test]
-    fn test_get_all_providers_empty() {
+    fn test_all_alias_behavior_empty() {
         let registry = ProviderRegistry::new();
-        let all = registry.get_all_providers();
+        let all = registry.all();
         assert!(all.is_empty());
     }
 

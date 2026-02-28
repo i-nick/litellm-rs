@@ -59,7 +59,7 @@ pub async fn get_models_from_pool(pool: &ProviderRegistry) -> Result<Vec<Model>,
     let mut all_models = Vec::new();
 
     // Get models from all providers
-    let providers = pool.get_all_providers();
+    let providers = pool.all();
     for provider in providers {
         let models = provider.list_models();
         for model_info in models {
