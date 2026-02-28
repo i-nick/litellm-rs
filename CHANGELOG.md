@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-02-28
+
+
+
+
 ### Changed
 - **Provider Infra**: `BaseConfig::for_provider()` now delegates environment loading with the original provider input while keeping normalized default resolution in one place, removing duplicated normalization flow.
 - **Provider Infra**: `BaseConfig::provider_env_key()` env-key normalization now explicitly covers trimmed/case-variant provider input via regression test.
