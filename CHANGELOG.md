@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.1] - 2026-02-28
+
+### Fixed
+- fix(clippy): satisfy strict lints in audio service and router tests
+
+
+
+
 ## [0.4.0] - 2026-02-28
 
 
