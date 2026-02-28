@@ -7,8 +7,6 @@ use futures::Stream;
 use std::pin::Pin;
 
 use crate::core::providers::base::sse::{OpenAICompatibleTransformer, UnifiedSSEStream};
-use crate::core::providers::unified_provider::ProviderError;
-use crate::core::types::responses::ChatChunk;
 
 /// OpenAI uses OpenAI-compatible SSE format (naturally)
 pub type OpenAIStream = UnifiedSSEStream<
@@ -22,31 +20,6 @@ pub fn create_openai_stream(
 ) -> OpenAIStream {
     let transformer = OpenAICompatibleTransformer::new("openai");
     UnifiedSSEStream::new(Box::pin(stream), transformer)
-}
-
-/// Wrapper stream that keeps same type (for backward compatibility, now deprecated)
-pub struct OpenAIStreamCompat {
-    inner: OpenAIStream,
-}
-
-impl OpenAIStreamCompat {
-    pub fn new(stream: impl Stream<Item = Result<Bytes, reqwest::Error>> + Send + 'static) -> Self {
-        Self {
-            inner: create_openai_stream(stream),
-        }
-    }
-}
-
-impl Stream for OpenAIStreamCompat {
-    type Item = Result<ChatChunk, ProviderError>;
-
-    fn poll_next(
-        mut self: std::pin::Pin<&mut Self>,
-        cx: &mut std::task::Context<'_>,
-    ) -> std::task::Poll<Option<Self::Item>> {
-        use std::pin::Pin;
-        Pin::new(&mut self.inner).poll_next(cx)
-    }
 }
 
 #[cfg(test)]
@@ -333,24 +306,6 @@ mod tests {
 
         let result = openai_stream.next().await;
         assert!(result.is_none());
-    }
-
-    #[tokio::test]
-    async fn test_openai_stream_compat_creation() {
-        use futures::stream;
-
-        let data = vec![Ok(Bytes::from(
-            "data: {\"id\":\"compat\",\"object\":\"chat.completion.chunk\",\"created\":123,\"model\":\"gpt-4\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\"Test\"},\"finish_reason\":null}]}\n\n",
-        ))];
-
-        let mock_stream = stream::iter(data);
-        let mut compat_stream = OpenAIStreamCompat::new(mock_stream);
-
-        let result = compat_stream.next().await;
-        assert!(result.is_some());
-        if let Some(Ok(chunk)) = result {
-            assert_eq!(chunk.id, "compat");
-        }
     }
 
     // ==================== Edge Cases ====================
