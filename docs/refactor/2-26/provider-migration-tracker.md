@@ -11,9 +11,9 @@
 |---|---|---|---|---|---|
 | B1 | Tier 1（首批 8-15 个） | 统一宏路径 + 错误映射 | DONE | main 历史收敛 | 已合入 |
 | B2 | Tier 1（次批 8-15 个） | 统一配置 + 流式处理 | DONE | main 历史收敛 | 已合入 |
-| B3 | Tier 2（hooks） | 宏 + patch hooks | IN_PROGRESS | main | 持续中 |
-| B4 | Tier 3（特例） | 手写实现规范化 | IN_PROGRESS | main | 持续中 |
-| B5 | 收尾 | 删除兼容层 + CI 守卫 | IN_PROGRESS | main | 守卫已接入，兼容层继续收敛 |
+| B3 | Tier 2（hooks） | 宏 + patch hooks | DONE | main | 本轮已完成规范化收敛 |
+| B4 | Tier 3（特例） | 手写实现规范化 | DONE | main | 本轮已完成关键特例收敛 |
+| B5 | 收尾 | 删除兼容层 + CI 守卫 | DONE | main | 守卫 + 兼容层删除已闭环 |
 
 ---
 
@@ -40,11 +40,11 @@
 | maritalk | 1 | catalog -> OpenAILike | 统一骨�� | ☑ | ☑ | ☑ | ☑ | ☑ | DONE | B3 样本覆盖 |
 | siliconflow | 1 | catalog -> OpenAILike | 统一骨架 | ☑ | ☑ | ☑ | ☑ | ☑ | DONE | B3 样本覆盖 |
 | lemonade | 1 | catalog -> OpenAILike | 统一骨架 | ☑ | ☑ | ☑ | ☑ | ☑ | DONE | B3 样本覆盖 |
-| openai | 3 | 手写 | 手写规范化 | ☑ | ☑ | ☑ | ☑ | ☑ | IN_PROGRESS | `from_config_async` 直接分支 |
-| anthropic | 3 | 手写 | 手写规范化 | ☑ | ☑ | ☑ | ☑ | ☑ | IN_PROGRESS | 非 OpenAI 协议 |
-| bedrock | 3 | 手写 | 手写规范化 | ☑ | ☑ | ☑ | ☑ | ☑ | IN_PROGRESS | SigV4 特例 |
-| azure | 2 | 混合 | 宏+hooks / 手写规范化 | ☑ | ☑ | ☑ | ☑ | ☑ | IN_PROGRESS | 已移除 `AzureError` 兼容别名，统一 `ProviderError` |
-| cloudflare | 2 | 直接分支 | 手写规范化 | ☑ | ☑ | ☑ | ☑ | ☑ | IN_PROGRESS | `from_config_async` 直接分支 |
+| openai | 3 | 手写 | 手写规范化 | ☑ | ☑ | ☑ | ☑ | ☑ | DONE | `from_config_async` 已抽离 canonical config builder；stream compat wrapper 已移除 |
+| anthropic | 3 | 手写 | 手写规范化 | ☑ | ☑ | ☑ | ☑ | ☑ | DONE | `from_config_async` 已抽离 canonical config builder |
+| bedrock | 3 | 手写 | 手写规范化 | ☑ | ☑ | ☑ | ☑ | ☑ | DONE | 已移除 `BedrockError` 兼容别名，统一 `ProviderError`（保留 `BedrockErrorMapper`） |
+| azure | 2 | 混合 | 宏+hooks / 手写规范化 | ☑ | ☑ | ☑ | ☑ | ☑ | DONE | 已移除 `AzureError` 兼容别名，统一 `ProviderError` |
+| cloudflare | 2 | 直接分支 | 手写规范化 | ☑ | ☑ | ☑ | ☑ | ☑ | DONE | 已移除 `CloudflareError` 兼容别名；`from_config_async` 已抽离 canonical config builder |
 | vllm | 1 | catalog(local, skip_api_key) | 统一骨架 | ☑ | ☑ | ☑ | ☑ | ☑ | DONE | 已支持无 key 创建（env + validate） |
 
 ---
@@ -65,14 +65,17 @@
 - `cargo test core::providers::openai_like::streaming::tests:: --lib` ✅
 - `cargo test core::providers::together:: --lib` ✅
 - `cargo test core::providers::watsonx:: --lib` ✅
+- `cargo test core::providers::openai::streaming::tests:: --lib` ✅（20 passed）
+- `cargo test core::providers::cloudflare:: --lib` ✅（85 passed）
+- `cargo test core::providers::bedrock:: --lib` ✅（259 passed）
+- `cargo test --test lib integration::provider_factory_tests::tests::test_cloudflare_provider_from_config` ✅
 - `cargo check --all-features` ✅
-- `cargo test --all-features --lib` ✅（10213 passed）
+- `cargo test --all-features --lib` ✅（10220 passed）
 - `cargo test --all-features --test lib` ✅（126 passed）
 
 ---
 
-## 4) 未完成项（下一步）
+## 4) 收尾状态
 
-1. **B3/B4 深化**：继续将 Tier 2/3 provider 的错误映射、流式和配置路径规范化，减少局部差异实现。
-2. **B5 收尾**：schema 重复检查守卫已接入；继续删除剩余 legacy 兼容层。
-3. 将本跟踪表扩展到全量 provider（当前先覆盖关键路径与代表性样本）。
+1. 本轮 B3/B4/B5 计划项已全部完成并通过全量回归。
+2. 当前跟踪表仍为关键路径/代表性样本，不等同于全量 provider 清单。
