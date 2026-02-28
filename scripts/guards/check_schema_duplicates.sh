@@ -12,7 +12,18 @@ SEARCH_PATHS=(
 
 search_matches() {
   local pattern="$1"
-  rg -n --no-heading --color never "$pattern" "${SEARCH_PATHS[@]}" || true
+  if command -v rg >/dev/null 2>&1; then
+    rg -n --no-heading --color never "$pattern" "${SEARCH_PATHS[@]}" || true
+    return
+  fi
+
+  if command -v grep >/dev/null 2>&1; then
+    grep -R -n -E -- "$pattern" "${SEARCH_PATHS[@]}" || true
+    return
+  fi
+
+  echo "Schema guard failed: neither 'rg' nor 'grep' is available in PATH." >&2
+  exit 1
 }
 
 assert_single_definition() {
