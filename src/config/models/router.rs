@@ -160,28 +160,28 @@ mod tests {
     #[test]
     fn test_routing_strategy_round_robin_serialization() {
         let strategy = RoutingStrategyConfig::RoundRobin;
-        let json = serde_json::to_value(&strategy).unwrap();
+        let json = serde_json::to_value(strategy).unwrap();
         assert_eq!(json, serde_json::json!("round_robin"));
     }
 
     #[test]
     fn test_routing_strategy_latency_based_serialization() {
         let strategy = RoutingStrategyConfig::LatencyBased;
-        let json = serde_json::to_value(&strategy).unwrap();
+        let json = serde_json::to_value(strategy).unwrap();
         assert_eq!(json, serde_json::json!("latency_based"));
     }
 
     #[test]
     fn test_routing_strategy_cost_based_serialization() {
         let strategy = RoutingStrategyConfig::CostBased;
-        let json = serde_json::to_value(&strategy).unwrap();
+        let json = serde_json::to_value(strategy).unwrap();
         assert_eq!(json, serde_json::json!("cost_based"));
     }
 
     #[test]
     fn test_routing_strategy_simple_shuffle_serialization() {
         let strategy = RoutingStrategyConfig::SimpleShuffle;
-        let json = serde_json::to_value(&strategy).unwrap();
+        let json = serde_json::to_value(strategy).unwrap();
         assert_eq!(json, serde_json::json!("simple_shuffle"));
     }
 
@@ -195,8 +195,8 @@ mod tests {
     #[test]
     fn test_routing_strategy_clone() {
         let strategy = RoutingStrategyConfig::CostBased;
-        let cloned = strategy.clone();
-        assert_eq!(cloned, RoutingStrategyConfig::CostBased);
+        let copied = strategy;
+        assert_eq!(copied, RoutingStrategyConfig::CostBased);
     }
 
     // ==================== CircuitBreakerConfig Tests ====================

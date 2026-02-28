@@ -31,6 +31,12 @@ pub struct AudioService {
     speech_service: SpeechService,
 }
 
+impl Default for AudioService {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl AudioService {
     /// Create a new audio service
     pub fn new() -> Self {
